@@ -1,0 +1,92 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { verifyToken } from '@/lib/auth';
+import { addDailyUpload, getOrCreateActiveChallenge, formatDate } from '@/lib/challenges';
+import { cookies } from 'next/headers';
+import { writeFile, mkdir } from 'fs/promises';
+import { join } from 'path';
+import { existsSync } from 'fs';
+
+export async function POST(request: NextRequest) {
+  try {
+    // Check authentication
+    const cookieStore = await cookies();
+    const token = cookieStore.get('token')?.value;
+
+    if (!token) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    const decoded = verifyToken(token);
+    if (!decoded) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+
+    const userId = decoded.userId;
+
+    // Get form data
+    const formData = await request.formData();
+    const file = formData.get('photo') as File;
+    const uploadDate = formData.get('date') as string || formatDate(new Date());
+
+    if (!file) {
+      return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      return NextResponse.json({ error: 'File must be an image' }, { status: 400 });
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      return NextResponse.json({ error: 'File size must be less than 5MB' }, { status: 400 });
+    }
+
+    // Get or create active challenge
+    const challenge = getOrCreateActiveChallenge(userId);
+
+    // Check if upload already exists for this date
+    const today = formatDate(new Date());
+    if (uploadDate !== today) {
+      return NextResponse.json({ error: 'Can only upload for today' }, { status: 400 });
+    }
+
+    // Save file
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+
+    // Create uploads directory if it doesn't exist
+    const uploadsDir = join(process.cwd(), 'public', 'uploads', userId.toString());
+    if (!existsSync(uploadsDir)) {
+      await mkdir(uploadsDir, { recursive: true });
+    }
+
+    // Generate unique filename
+    const timestamp = Date.now();
+    const extension = file.name.split('.').pop() || 'jpg';
+    const filename = `${timestamp}.${extension}`;
+    const filepath = join(uploadsDir, filename);
+    const relativePath = `/uploads/${userId}/${filename}`;
+
+    await writeFile(filepath, buffer);
+
+    // Add to database
+    const upload = addDailyUpload(userId, challenge.id, uploadDate, relativePath);
+
+    return NextResponse.json({
+      message: 'Upload successful',
+      upload: {
+        id: upload.id,
+        upload_date: upload.upload_date,
+        photo_path: upload.photo_path,
+      },
+    });
+  } catch (error: any) {
+    console.error('Upload error:', error);
+    if (error.message === 'Upload already exists for this date') {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
