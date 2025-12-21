@@ -64,9 +64,20 @@ The database will be stored in the persistent volume at `/data/gymble.db`. The c
 ## Step 6: Configure Domain
 
 1. In Railway, go to your service
-2. Click "Settings" → "Generate Domain"
-3. Railway will provide a free `.railway.app` domain
-4. You can also add a custom domain if you have one
+2. Click on your service to open it
+3. Go to the **"Settings"** tab
+4. Scroll down to the **"Domains"** section
+5. Click **"Generate Domain"** button
+6. Railway will provide a free `.railway.app` domain (e.g., `your-app-name.up.railway.app`)
+7. Copy the domain URL
+8. Your app is now live! Visit the domain in your browser
+
+### Adding a Custom Domain (Optional)
+
+1. In the same "Domains" section, click **"Add Domain"**
+2. Enter your custom domain (e.g., `gymble.com`)
+3. Railway will provide DNS records to add to your domain registrar
+4. Follow the instructions to point your domain to Railway
 
 ## Step 7: Verify Deployment
 
