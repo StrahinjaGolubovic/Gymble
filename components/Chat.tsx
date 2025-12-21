@@ -121,7 +121,7 @@ export function Chat({ currentUserId, currentUsername, currentUserProfilePicture
     }
   }, [messages.length, isAtBottom]); // Only trigger when message count changes
 
-  // Format time
+  // Format time - show actual time like "03:10" or "23:43"
   const formatTime = (dateString: string) => {
     // SQLite returns datetime as 'YYYY-MM-DD HH:MM:SS' in localtime
     // Parse it as local time (no timezone conversion)
@@ -139,16 +139,10 @@ export function Chat({ currentUserId, currentUsername, currentUserProfilePicture
       localDate = new Date(dateString);
     }
     
-    const now = new Date();
-    const diffMs = now.getTime() - localDate.getTime();
-    const diffSecs = Math.floor(diffMs / 1000);
-    const diffMins = Math.floor(diffMs / 60000);
-
-    if (diffSecs < 10) return 'just now';
-    if (diffSecs < 60) return `${diffSecs}s ago`;
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
-    return localDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    // Return time in HH:MM format (24-hour)
+    const hours = localDate.getHours().toString().padStart(2, '0');
+    const minutes = localDate.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
   };
 
   return (
