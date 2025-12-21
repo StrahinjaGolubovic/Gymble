@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
-import { getUserDashboard } from '@/lib/challenges';
+import { getRecentMessages } from '@/lib/chat';
 import { cookies } from 'next/headers';
-import db from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,20 +18,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    const userId = decoded.userId;
-    const dashboard = getUserDashboard(userId);
-    
-    // Get user username and profile picture for admin check and display
-    const user = db.prepare('SELECT username, profile_picture FROM users WHERE id = ?').get(userId) as { username: string; profile_picture: string | null } | undefined;
-    
-    return NextResponse.json({
-      ...dashboard,
-      userId,
-      username: user?.username,
-      profilePicture: user?.profile_picture || null,
-    });
+    // Get limit from query params (default 100)
+    const { searchParams } = new URL(request.url);
+    const limit = parseInt(searchParams.get('limit') || '100', 10);
+
+    const messages = getRecentMessages(limit);
+
+    return NextResponse.json({ messages });
   } catch (error) {
-    console.error('Dashboard error:', error);
+    console.error('Get messages error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

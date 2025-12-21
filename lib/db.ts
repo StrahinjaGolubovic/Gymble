@@ -160,6 +160,18 @@ function initDatabase(database: Database) {
     )
   `);
 
+  // Global chat messages table
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS chat_messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      username TEXT NOT NULL,
+      message TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
   // Create indexes for better performance
   database.exec(`
     CREATE INDEX IF NOT EXISTS idx_challenges_user ON weekly_challenges(user_id);
@@ -170,6 +182,8 @@ function initDatabase(database: Database) {
     CREATE INDEX IF NOT EXISTS idx_invite_codes_code ON invite_codes(code);
     CREATE INDEX IF NOT EXISTS idx_friends_user ON friends(user_id);
     CREATE INDEX IF NOT EXISTS idx_friends_friend ON friends(friend_id);
+    CREATE INDEX IF NOT EXISTS idx_chat_messages_user ON chat_messages(user_id);
+    CREATE INDEX IF NOT EXISTS idx_chat_messages_created ON chat_messages(created_at);
   `);
 }
 

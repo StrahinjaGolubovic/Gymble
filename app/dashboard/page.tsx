@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ToastContainer, Toast } from '@/components/Toast';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { getImageUrl } from '@/lib/image-utils';
+import { Chat } from '@/components/Chat';
 
 interface DashboardData {
   challenge: {
@@ -29,6 +30,7 @@ interface DashboardData {
     longest_streak: number;
   };
   debt: number;
+  userId?: number;
   username?: string;
   profilePicture?: string | null;
 }
@@ -573,6 +575,17 @@ export default function DashboardPage() {
             })}
           </div>
         </div>
+
+        {/* Global Chat Section */}
+        {data?.userId && data?.username && (
+          <div className="mb-4 sm:mb-6">
+            <Chat
+              currentUserId={data.userId}
+              currentUsername={data.username}
+              currentUserProfilePicture={data.profilePicture}
+            />
+          </div>
+        )}
 
         {/* Friends Section */}
         <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-4 sm:p-5 md:p-6">
