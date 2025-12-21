@@ -124,24 +124,25 @@ export function Chat({ currentUserId, currentUsername, currentUserProfilePicture
   // Format time - show actual time like "03:10" or "23:43"
   const formatTime = (dateString: string) => {
     // SQLite returns datetime as 'YYYY-MM-DD HH:MM:SS' in localtime
-    // Parse it as local time (no timezone conversion)
-    let localDate: Date;
-    if (dateString.includes('T')) {
-      // ISO format with T
-      localDate = new Date(dateString);
-    } else if (dateString.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
-      // SQLite format: 'YYYY-MM-DD HH:MM:SS' - parse as local time
-      const [datePart, timePart] = dateString.split(' ');
-      const [year, month, day] = datePart.split('-').map(Number);
-      const [hour, minute, second] = timePart.split(':').map(Number);
-      localDate = new Date(year, month - 1, day, hour, minute, second);
-    } else {
-      localDate = new Date(dateString);
+    // Extract time directly from the string to avoid timezone conversion issues
+    if (dateString.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
+      // SQLite format: 'YYYY-MM-DD HH:MM:SS' - extract time part directly
+      const timePart = dateString.split(' ')[1]; // Get "HH:MM:SS"
+      const [hour, minute] = timePart.split(':'); // Get hour and minute
+      return `${hour}:${minute}`;
+    } else if (dateString.includes('T')) {
+      // ISO format: extract time from "YYYY-MM-DDTHH:MM:SS"
+      const timePart = dateString.split('T')[1]?.split('.')[0]; // Get "HH:MM:SS"
+      if (timePart) {
+        const [hour, minute] = timePart.split(':');
+        return `${hour}:${minute}`;
+      }
     }
     
-    // Return time in HH:MM format (24-hour)
-    const hours = localDate.getHours().toString().padStart(2, '0');
-    const minutes = localDate.getMinutes().toString().padStart(2, '0');
+    // Fallback: try to parse as Date
+    const date = new Date(dateString);
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
     return `${hours}:${minutes}`;
   };
 
