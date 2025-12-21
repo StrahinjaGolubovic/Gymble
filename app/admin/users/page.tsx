@@ -121,12 +121,29 @@ export default function AdminUsers() {
   const filteredUsers = users
     .filter((user) => user.username.toLowerCase().includes(searchTerm.toLowerCase()))
     .sort((a, b) => {
-      let aVal: any = a[sortBy];
-      let bVal: any = b[sortBy];
+      let aVal: string | number;
+      let bVal: string | number;
 
-      if (sortBy === 'created') {
-        aVal = new Date(a.created_at).getTime();
-        bVal = new Date(b.created_at).getTime();
+      switch (sortBy) {
+        case 'username':
+          aVal = a.username.toLowerCase();
+          bVal = b.username.toLowerCase();
+          break;
+        case 'debt':
+          aVal = a.debt;
+          bVal = b.debt;
+          break;
+        case 'streak':
+          aVal = a.current_streak;
+          bVal = b.current_streak;
+          break;
+        case 'created':
+          aVal = new Date(a.created_at).getTime();
+          bVal = new Date(b.created_at).getTime();
+          break;
+        default:
+          aVal = a.username.toLowerCase();
+          bVal = b.username.toLowerCase();
       }
 
       if (sortOrder === 'asc') {
@@ -215,7 +232,12 @@ export default function AdminUsers() {
             />
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === 'username' || value === 'debt' || value === 'streak' || value === 'created') {
+                  setSortBy(value);
+                }
+              }}
               className="bg-gray-900 border border-gray-600 rounded-md px-4 py-2.5 text-base text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 min-h-[44px]"
             >
               <option value="username">Sort by Username</option>
