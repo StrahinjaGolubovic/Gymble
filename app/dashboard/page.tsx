@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { ToastContainer, Toast } from '@/components/Toast';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { getImageUrl } from '@/lib/image-utils';
@@ -371,12 +372,12 @@ export default function DashboardPage() {
               )}
             </div>
             {data && (data.username === 'admin' || data.username === 'seuq') && (
-              <button
-                onClick={() => router.push('/admin')}
+              <Link
+                href="/admin/dashboard"
                 className="text-primary-400 hover:text-primary-300 px-3 sm:px-4 py-1.5 sm:py-2 rounded-md hover:bg-gray-700 transition-colors text-sm sm:text-base"
               >
                 Admin Panel
-              </button>
+              </Link>
             )}
             <button
               onClick={handleLogout}
