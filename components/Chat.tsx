@@ -9,6 +9,7 @@ interface ChatMessage {
   username: string;
   message: string;
   created_at: string;
+  profile_picture?: string | null;
 }
 
 interface ChatProps {
@@ -64,10 +65,11 @@ export function Chat({ currentUserId, currentUsername, currentUserProfilePicture
         const data = await response.json();
         setMessages((prev) => [...prev, data.message]);
         setNewMessage('');
+        setIsAtBottom(true); // User just sent a message, so scroll to bottom
         // Scroll to bottom after sending
-        setTimeout(() => {
+        requestAnimationFrame(() => {
           messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
+        });
       } else {
         const errorData = await response.json();
         setError(errorData.error || 'Failed to send message');
@@ -78,6 +80,24 @@ export function Chat({ currentUserId, currentUsername, currentUserProfilePicture
       setSending(false);
     }
   };
+
+  // Track if user is at bottom of chat
+  const [isAtBottom, setIsAtBottom] = useState(true);
+
+  // Check scroll position
+  useEffect(() => {
+    const container = chatContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const threshold = 100;
+      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < threshold;
+      setIsAtBottom(isNearBottom);
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Initial load and periodic refresh
   useEffect(() => {
@@ -90,19 +110,26 @@ export function Chat({ currentUserId, currentUsername, currentUserProfilePicture
     return () => clearInterval(interval);
   }, []);
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom only if user is at bottom or when sending a message
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    if (isAtBottom && messages.length > 0) {
+      // Use requestAnimationFrame to ensure DOM has updated
+      requestAnimationFrame(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      });
+    }
+  }, [messages.length, isAtBottom]); // Only trigger when message count changes
 
   // Format time
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
+    const diffSecs = Math.floor(diffMs / 1000);
     const diffMins = Math.floor(diffMs / 60000);
 
-    if (diffMins < 1) return 'just now';
+    if (diffSecs < 10) return 'just now';
+    if (diffSecs < 60) return `${diffSecs}s ago`;
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
     return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
@@ -137,6 +164,9 @@ export function Chat({ currentUserId, currentUsername, currentUserProfilePicture
         ) : (
           messages.map((msg) => {
             const isOwnMessage = msg.user_id === currentUserId;
+            // Use profile picture from message data, or fallback to current user's if it's their message
+            const profilePicture = msg.profile_picture || (isOwnMessage ? currentUserProfilePicture : null);
+            
             return (
               <div
                 key={msg.id}
@@ -144,7 +174,23 @@ export function Chat({ currentUserId, currentUsername, currentUserProfilePicture
               >
                 {/* Profile Picture */}
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-700 border border-gray-600 flex items-center justify-center">
+                  {profilePicture ? (
+                    <img
+                      src={getImageUrl(profilePicture) || ''}
+                      alt={msg.username}
+                      className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-gray-600 object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                        if (fallback) {
+                          fallback.style.display = 'flex';
+                        }
+                      }}
+                    />
+                  ) : null}
+                  <div 
+                    className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-700 border border-gray-600 flex items-center justify-center ${profilePicture ? 'hidden' : ''}`}
+                  >
                     <span className="text-gray-400 text-xs sm:text-sm font-semibold">
                       {msg.username.charAt(0).toUpperCase()}
                     </span>

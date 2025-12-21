@@ -27,8 +27,12 @@ export function cleanupOldMessages(): void {
   }
 }
 
+export interface ChatMessageWithProfile extends ChatMessage {
+  profile_picture: string | null;
+}
+
 // Get recent messages (last 24 hours, limit 100)
-export function getRecentMessages(limit: number = 100): ChatMessage[] {
+export function getRecentMessages(limit: number = 100): ChatMessageWithProfile[] {
   // Clean up old messages first
   cleanupOldMessages();
   
@@ -40,13 +44,15 @@ export function getRecentMessages(limit: number = 100): ChatMessage[] {
           cm.user_id,
           cm.username,
           cm.message,
-          cm.created_at
+          cm.created_at,
+          u.profile_picture
          FROM chat_messages cm
+         JOIN users u ON cm.user_id = u.id
          WHERE cm.created_at >= datetime('now', '-24 hours')
          ORDER BY cm.created_at ASC
          LIMIT ?`
       )
-      .all(limit) as ChatMessage[];
+      .all(limit) as ChatMessageWithProfile[];
     
     return messages;
   } catch (error) {
@@ -56,7 +62,7 @@ export function getRecentMessages(limit: number = 100): ChatMessage[] {
 }
 
 // Add a new message
-export function addMessage(userId: number, username: string, message: string): ChatMessage | null {
+export function addMessage(userId: number, username: string, message: string): ChatMessageWithProfile | null {
   try {
     // Clean up old messages before adding new one
     cleanupOldMessages();
@@ -77,10 +83,21 @@ export function addMessage(userId: number, username: string, message: string): C
       )
       .run(userId, username, trimmedMessage);
     
-    // Return the newly created message
+    // Return the newly created message with profile picture
     const newMessage = db
-      .prepare('SELECT * FROM chat_messages WHERE id = ?')
-      .get(result.lastInsertRowid) as ChatMessage;
+      .prepare(
+        `SELECT 
+          cm.id,
+          cm.user_id,
+          cm.username,
+          cm.message,
+          cm.created_at,
+          u.profile_picture
+         FROM chat_messages cm
+         JOIN users u ON cm.user_id = u.id
+         WHERE cm.id = ?`
+      )
+      .get(result.lastInsertRowid) as ChatMessageWithProfile;
     
     return newMessage;
   } catch (error) {
