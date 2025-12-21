@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import { addDailyUpload, getOrCreateActiveChallenge, formatDate } from '@/lib/challenges';
+import { formatDateSerbia } from '@/lib/timezone';
 import { cookies } from 'next/headers';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
     // Get form data
     const formData = await request.formData();
     const file = formData.get('photo') as File;
-    const uploadDate = formData.get('date') as string || formatDate(new Date());
+    const uploadDate = formData.get('date') as string || formatDateSerbia();
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
     const challenge = getOrCreateActiveChallenge(userId);
 
     // Check if upload already exists for this date
-    const today = formatDate(new Date());
+    const today = formatDateSerbia();
     if (uploadDate !== today) {
       return NextResponse.json({ error: 'Can only upload for today' }, { status: 400 });
     }

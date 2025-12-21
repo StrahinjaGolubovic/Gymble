@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ToastContainer, Toast } from '@/components/Toast';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { getImageUrl } from '@/lib/image-utils';
+import { formatDateDisplay } from '@/lib/timezone';
 
 interface User {
   id: number;
@@ -308,7 +309,7 @@ export default function AdminUsers() {
                     </td>
                     <td className="px-4 py-3">
                       <span className="text-xs sm:text-sm text-gray-300">
-                        {new Date(user.created_at).toLocaleDateString()}
+                        {formatDateDisplay(user.created_at)}
                       </span>
                     </td>
                     <td className="px-4 py-3">

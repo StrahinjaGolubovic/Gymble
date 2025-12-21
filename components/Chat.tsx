@@ -56,15 +56,21 @@ export function Chat({ currentUserId, currentUsername, currentUserProfilePicture
     setError('');
 
     try {
-      // Get current time in user's local timezone
+      // Get current time in Serbia timezone
       const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const day = String(now.getDate()).padStart(2, '0');
-      const hours = String(now.getHours()).padStart(2, '0');
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      const seconds = String(now.getSeconds()).padStart(2, '0');
-      const clientTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Europe/Belgrade',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      });
+      const parts = formatter.formatToParts(now);
+      const getPart = (type: string) => parts.find(p => p.type === type)?.value || '00';
+      const clientTime = `${getPart('year')}-${getPart('month')}-${getPart('day')} ${getPart('hour')}:${getPart('minute')}:${getPart('second')}`;
       
       const response = await fetch('/api/chat/send', {
         method: 'POST',
@@ -135,9 +141,9 @@ export function Chat({ currentUserId, currentUsername, currentUserProfilePicture
     }
   }, [messages.length, isAtBottom]); // Only trigger when message count changes
 
-  // Format time - show actual time like "03:10" or "23:43"
+  // Format time - show actual time like "03:10" or "23:43" (Serbia timezone)
   const formatTime = (dateString: string) => {
-    // SQLite returns datetime as 'YYYY-MM-DD HH:MM:SS' in localtime
+    // SQLite returns datetime as 'YYYY-MM-DD HH:MM:SS' in Serbia timezone
     // Extract time directly from the string to avoid timezone conversion issues
     if (dateString.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
       // SQLite format: 'YYYY-MM-DD HH:MM:SS' - extract time part directly
@@ -153,7 +159,7 @@ export function Chat({ currentUserId, currentUsername, currentUserProfilePicture
       }
     }
     
-    // Fallback: try to parse as Date
+    // Fallback: try to parse as Date (shouldn't happen with SQLite format)
     const date = new Date(dateString);
     const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');

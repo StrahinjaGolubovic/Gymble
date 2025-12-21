@@ -1,4 +1,5 @@
 import db from './db';
+import { formatDateSerbia, formatDateDisplay, isTodaySerbia, isPastSerbia, parseSerbiaDate } from './timezone';
 
 export interface WeeklyChallenge {
   id: number;
@@ -60,12 +61,9 @@ export function getWeekEndForUser(weekStart: Date): Date {
   return end;
 }
 
-// Format date as YYYY-MM-DD (using local time, not UTC)
-export function formatDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+// Format date as YYYY-MM-DD (using Serbia timezone)
+export function formatDate(date: Date = new Date()): string {
+  return formatDateSerbia(date);
 }
 
 // Get or create active challenge for user
@@ -245,7 +243,7 @@ export function getUserStreak(userId: number): Streak {
 // Update streak based on daily upload (days instead of weeks)
 export function updateStreak(userId: number, challengeCompleted: boolean): void {
   const streak = getUserStreak(userId);
-  const today = formatDate(new Date());
+  const today = formatDateSerbia();
 
   if (challengeCompleted) {
     // Check if last activity was yesterday

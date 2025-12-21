@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { hashPassword, getUserByUsername } from '@/lib/auth';
 import db from '@/lib/db';
+import { getSerbiaDateSQLite } from '@/lib/timezone';
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,15 +30,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Username already taken' }, { status: 400 });
     }
 
-    // Hash password and create user (explicitly set credits to 0 and local date)
+    // Hash password and create user (explicitly set credits to 0 and Serbia date)
     const passwordHash = await hashPassword(password);
-    // Get local date as YYYY-MM-DD (not UTC)
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const localDate = `${year}-${month}-${day}`;
-    const result = db.prepare('INSERT INTO users (username, password_hash, credits, created_at) VALUES (?, ?, ?, ?)').run(username, passwordHash, 0, localDate);
+    // Get Serbia date as YYYY-MM-DD
+    const serbiaDate = getSerbiaDateSQLite();
+    const result = db.prepare('INSERT INTO users (username, password_hash, credits, created_at) VALUES (?, ?, ?, ?)').run(username, passwordHash, 0, serbiaDate);
 
     return NextResponse.json(
       {

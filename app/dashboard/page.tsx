@@ -421,8 +421,8 @@ export default function DashboardPage() {
             <div>
               <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-100">Weekly Challenge</h2>
               <p className="text-xs sm:text-sm text-gray-400 mt-1">
-                {new Date(data.challenge.start_date).toLocaleDateString()} -{' '}
-                {new Date(data.challenge.end_date).toLocaleDateString()}
+                {formatDateDisplay(data.challenge.start_date)} -{' '}
+                {formatDateDisplay(data.challenge.end_date)}
               </p>
             </div>
             <div className="text-left sm:text-right">
@@ -491,10 +491,10 @@ export default function DashboardPage() {
           <div className="block sm:hidden">
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-3 sm:mx-0 px-3 sm:px-0 scrollbar-hide">
               {data.progress.days.map((day, index) => {
-                const dayName = new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' });
-                const dayNumber = new Date(day.date).getDate();
-                const isToday = day.date === new Date().toISOString().split('T')[0];
-                const isPast = new Date(day.date) < new Date();
+                const dayName = formatDateDisplay(day.date, { weekday: 'short' });
+                const dayNumber = parseInt(day.date.split('-')[2], 10);
+                const isToday = isTodaySerbia(day.date);
+                const isPast = isPastSerbia(day.date);
 
                 return (
                   <div
@@ -540,10 +540,10 @@ export default function DashboardPage() {
           {/* Desktop: Grid layout */}
           <div className="hidden sm:grid grid-cols-7 gap-2 sm:gap-3 md:gap-4">
             {data.progress.days.map((day, index) => {
-              const dayName = new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' });
-              const dayNumber = new Date(day.date).getDate();
-              const isToday = day.date === new Date().toISOString().split('T')[0];
-              const isPast = new Date(day.date) < new Date();
+              const dayName = formatDateDisplay(day.date, { weekday: 'short' });
+              const dayNumber = parseInt(day.date.split('-')[2], 10);
+              const isToday = isTodaySerbia(day.date);
+              const isPast = isPastSerbia(day.date);
 
               return (
                 <div
@@ -713,7 +713,7 @@ export default function DashboardPage() {
                           <div>
                             <span className="text-gray-400">Member since: </span>
                             <span className="text-gray-300">
-                              {new Date(friend.created_at).toLocaleDateString()}
+                              {formatDateDisplay(friend.created_at)}
                             </span>
                           </div>
                         </div>

@@ -1,4 +1,5 @@
 import db from './db';
+import { formatDateTimeSerbia } from './timezone';
 
 export interface ChatMessage {
   id: number;
@@ -11,13 +12,18 @@ export interface ChatMessage {
 // Clean up messages older than 24 hours
 export function cleanupOldMessages(): void {
   try {
-    // Delete messages older than 24 hours
+    // Delete messages older than 24 hours (using Serbia timezone)
+    // Calculate 24 hours ago in Serbia timezone
+    const now = new Date();
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const cutoffTime = formatDateTimeSerbia(yesterday);
+    
     const result = db
       .prepare(
         `DELETE FROM chat_messages 
-         WHERE created_at < datetime('now', 'localtime', '-24 hours')`
+         WHERE created_at < ?`
       )
-      .run();
+      .run(cutoffTime);
     
     if (result.changes > 0) {
       console.log(`Cleaned up ${result.changes} old chat messages`);
@@ -37,6 +43,11 @@ export function getRecentMessages(limit: number = 100): ChatMessageWithProfile[]
   cleanupOldMessages();
   
   try {
+    // Calculate 24 hours ago in Serbia timezone
+    const now = new Date();
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const cutoffTime = formatDateTimeSerbia(yesterday);
+    
     const messages = db
       .prepare(
         `SELECT 
@@ -48,11 +59,11 @@ export function getRecentMessages(limit: number = 100): ChatMessageWithProfile[]
           u.profile_picture
          FROM chat_messages cm
          JOIN users u ON cm.user_id = u.id
-         WHERE cm.created_at >= datetime('now', 'localtime', '-24 hours')
+         WHERE cm.created_at >= ?
          ORDER BY cm.created_at ASC
          LIMIT ?`
       )
-      .all(limit) as ChatMessageWithProfile[];
+      .all(cutoffTime, limit) as ChatMessageWithProfile[];
     
     return messages;
   } catch (error) {
@@ -82,15 +93,8 @@ export function addMessage(userId: number, username: string, message: string, cl
       // Client sends time in format "YYYY-MM-DD HH:MM:SS" in their local timezone
       timeString = clientTime;
     } else {
-      // Fallback to server time
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const day = String(now.getDate()).padStart(2, '0');
-      const hours = String(now.getHours()).padStart(2, '0');
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      const seconds = String(now.getSeconds()).padStart(2, '0');
-      timeString = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+      // Fallback to server time in Serbia timezone
+      timeString = formatDateTimeSerbia();
     }
     
     const result = db

@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import db from '@/lib/db';
 import { statSync } from 'fs';
 import { join } from 'path';
+import { formatDateDisplay } from '@/lib/timezone';
 
 export async function GET(request: NextRequest) {
   try {
@@ -57,8 +58,8 @@ export async function GET(request: NextRequest) {
       databaseSize: dbSize,
       totalTables: tables.length,
       totalRecords,
-      oldestUser: oldestUser ? `${oldestUser.username} (${new Date(oldestUser.created_at).toLocaleDateString()})` : 'N/A',
-      newestUser: newestUser ? `${newestUser.username} (${new Date(newestUser.created_at).toLocaleDateString()})` : 'N/A',
+      oldestUser: oldestUser ? `${oldestUser.username} (${formatDateDisplay(oldestUser.created_at)})` : 'N/A',
+      newestUser: newestUser ? `${newestUser.username} (${formatDateDisplay(newestUser.created_at)})` : 'N/A',
     });
   } catch (error) {
     console.error('System stats error:', error);

@@ -56,7 +56,7 @@ function initDatabase(database: Database) {
       password_hash TEXT NOT NULL,
       credits INTEGER DEFAULT 0,
       profile_picture TEXT,
-      created_at DATE DEFAULT (date('now', 'localtime'))
+      created_at DATE
     )
   `);
 

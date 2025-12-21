@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { checkAdmin } from '@/lib/admin';
 import { cookies } from 'next/headers';
 import db from '@/lib/db';
+import { formatDateTimeSerbia } from '@/lib/timezone';
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,6 +18,11 @@ export async function GET(request: NextRequest) {
     const totalUsers = db.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number };
 
     // Get active users (users with streak > 0 or recent activity)
+    // Calculate 7 days ago in Serbia timezone
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const cutoffTime = formatDateTimeSerbia(sevenDaysAgo);
+    
     const activeUsers = db
       .prepare(
         `SELECT COUNT(DISTINCT u.id) as count 
@@ -24,10 +30,10 @@ export async function GET(request: NextRequest) {
          LEFT JOIN streaks s ON u.id = s.user_id
          WHERE s.current_streak > 0 OR u.id IN (
            SELECT DISTINCT user_id FROM daily_uploads 
-           WHERE created_at >= datetime('now', 'localtime', '-7 days')
+           WHERE created_at >= ?
          )`
       )
-      .get() as { count: number };
+      .get(cutoffTime) as { count: number };
 
     // Get total uploads
     const totalUploads = db.prepare('SELECT COUNT(*) as count FROM daily_uploads').get() as { count: number };
@@ -45,10 +51,12 @@ export async function GET(request: NextRequest) {
       .prepare('SELECT AVG(current_streak) as avg FROM streaks WHERE current_streak > 0')
       .get() as { avg: number | null };
 
-    // Get chat messages in last 24 hours
+    // Get chat messages in last 24 hours (Serbia timezone)
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const messageCutoffTime = formatDateTimeSerbia(yesterday);
     const totalMessages = db
-      .prepare("SELECT COUNT(*) as count FROM chat_messages WHERE created_at >= datetime('now', 'localtime', '-24 hours')")
-      .get() as { count: number };
+      .prepare("SELECT COUNT(*) as count FROM chat_messages WHERE created_at >= ?")
+      .get(messageCutoffTime) as { count: number };
 
     return NextResponse.json({
       totalUsers: totalUsers.count,

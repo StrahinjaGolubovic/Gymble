@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ToastContainer, Toast } from '@/components/Toast';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { getImageUrl } from '@/lib/image-utils';
+import { formatDateDisplay, formatDateTimeDisplay } from '@/lib/timezone';
 
 interface PendingUpload {
   id: number;
@@ -233,10 +234,10 @@ export default function AdminVerification() {
                       </span>
                     </div>
                     <p className="text-xs sm:text-sm text-gray-400">
-                      Upload Date: {new Date(upload.upload_date).toLocaleDateString()}
+                      Upload Date: {formatDateDisplay(upload.upload_date)}
                     </p>
                     <p className="text-xs sm:text-sm text-gray-400">
-                      Submitted: {new Date(upload.created_at).toLocaleString()}
+                      Submitted: {formatDateTimeDisplay(upload.created_at)}
                     </p>
                   </div>
                 </div>
@@ -310,7 +311,7 @@ export default function AdminVerification() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-400">Submitted</p>
-                  <p className="text-base text-gray-100">{new Date(selectedUpload.created_at).toLocaleString()}</p>
+                  <p className="text-base text-gray-100">{formatDateTimeDisplay(selectedUpload.created_at)}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-400">Photo Path</p>
