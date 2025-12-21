@@ -100,22 +100,22 @@ export function parseSerbiaDate(dateString: string): Date {
 }
 
 /**
- * Format date for display in Serbia locale
+ * Format date for display in English locale (but using Serbia timezone)
  */
 export function formatDateDisplay(date: Date | string, options?: Intl.DateTimeFormatOptions): string {
   const dateObj = typeof date === 'string' ? parseSerbiaDate(date) : date;
-  return dateObj.toLocaleDateString('sr-RS', {
+  return dateObj.toLocaleDateString('en-US', {
     timeZone: SERBIA_TIMEZONE,
     ...options,
   });
 }
 
 /**
- * Format datetime for display in Serbia locale
+ * Format datetime for display in English locale (but using Serbia timezone)
  */
 export function formatDateTimeDisplay(date: Date | string, options?: Intl.DateTimeFormatOptions): string {
   const dateObj = typeof date === 'string' ? parseSerbiaDate(date) : date;
-  return dateObj.toLocaleString('sr-RS', {
+  return dateObj.toLocaleString('en-US', {
     timeZone: SERBIA_TIMEZONE,
     ...options,
   });
