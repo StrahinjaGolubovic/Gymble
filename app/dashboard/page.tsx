@@ -493,9 +493,13 @@ export default function DashboardPage() {
                     key={day.date}
                     className={`border-2 rounded-lg p-3 text-center flex-shrink-0 w-[85px] ${
                       day.uploaded
-                        ? 'border-green-500 bg-green-900/20'
+                        ? day.verification_status === 'pending'
+                          ? 'border-yellow-500 bg-yellow-900/20'
+                          : day.verification_status === 'rejected'
+                          ? 'border-red-500 bg-red-900/20'
+                          : 'border-green-500 bg-green-900/20'
                         : isToday
-                        ? 'border-primary-500 bg-primary-900/20'
+                        ? 'border-yellow-500 bg-yellow-900/20'
                         : isPast
                         ? 'border-red-700 bg-red-900/20'
                         : 'border-gray-700 bg-gray-700/50'
@@ -505,18 +509,20 @@ export default function DashboardPage() {
                     <div className="text-xl font-bold text-gray-100 mt-1">{dayNumber}</div>
                     {day.uploaded ? (
                       <div className="mt-2">
-                        <div className="text-green-400 text-[10px] font-medium">✓</div>
-                        {day.verification_status === 'pending' && (
-                          <div className="text-yellow-400 text-[10px]">⏳</div>
-                        )}
-                        {day.verification_status === 'rejected' && (
-                          <div className="text-red-400 text-[10px]">✗</div>
+                        {day.verification_status === 'pending' ? (
+                          <div className="text-yellow-400 text-[10px] font-medium bg-yellow-900/30 px-1.5 py-0.5 rounded">Verifying</div>
+                        ) : day.verification_status === 'rejected' ? (
+                          <div className="text-red-400 text-[10px] font-medium">✗ Rejected</div>
+                        ) : (
+                          <div className="text-green-400 text-[10px] font-medium">✓ Uploaded</div>
                         )}
                       </div>
+                    ) : isToday ? (
+                      <div className="mt-2 text-yellow-400 text-[10px] font-medium bg-yellow-900/30 px-1.5 py-0.5 rounded">Missing</div>
                     ) : isPast ? (
-                      <div className="mt-2 text-red-400 text-[10px] font-medium">✗</div>
+                      <div className="mt-2 text-red-400 text-[10px] font-medium">✗ Missed</div>
                     ) : (
-                      <div className="mt-2 text-gray-500 text-[10px]">-</div>
+                      <div className="mt-2 text-gray-500 text-[10px]">Pending</div>
                     )}
                   </div>
                 );
@@ -536,9 +542,13 @@ export default function DashboardPage() {
                   key={day.date}
                   className={`border-2 rounded-lg p-2 sm:p-3 md:p-4 text-center ${
                     day.uploaded
-                      ? 'border-green-500 bg-green-900/20'
+                      ? day.verification_status === 'pending'
+                        ? 'border-yellow-500 bg-yellow-900/20'
+                        : day.verification_status === 'rejected'
+                        ? 'border-red-500 bg-red-900/20'
+                        : 'border-green-500 bg-green-900/20'
                       : isToday
-                      ? 'border-primary-500 bg-primary-900/20'
+                      ? 'border-yellow-500 bg-yellow-900/20'
                       : isPast
                       ? 'border-red-700 bg-red-900/20'
                       : 'border-gray-700 bg-gray-700/50'
@@ -548,12 +558,12 @@ export default function DashboardPage() {
                   <div className="text-lg sm:text-xl md:text-2xl font-bold text-gray-100 mt-1">{dayNumber}</div>
                   {day.uploaded ? (
                     <div className="mt-2">
-                      <div className="text-green-400 text-xs font-medium">✓ Uploaded</div>
-                      {day.verification_status === 'pending' && (
-                        <div className="text-yellow-400 text-xs">⏳ Pending Review</div>
-                      )}
-                      {day.verification_status === 'rejected' && (
-                        <div className="text-red-400 text-xs">✗ Rejected</div>
+                      {day.verification_status === 'pending' ? (
+                        <div className="text-yellow-400 text-xs font-medium bg-yellow-900/30 px-2 py-1 rounded mb-2">Verifying</div>
+                      ) : day.verification_status === 'rejected' ? (
+                        <div className="text-red-400 text-xs font-medium mb-2">✗ Rejected</div>
+                      ) : (
+                        <div className="text-green-400 text-xs font-medium mb-2">✓ Uploaded</div>
                       )}
                       {day.photo_path && (
                         <div className="mt-2 relative w-full aspect-square rounded overflow-hidden bg-gray-700">
@@ -565,6 +575,8 @@ export default function DashboardPage() {
                         </div>
                       )}
                     </div>
+                  ) : isToday ? (
+                    <div className="mt-2 text-yellow-400 text-xs font-medium bg-yellow-900/30 px-2 py-1 rounded">Missing</div>
                   ) : isPast ? (
                     <div className="mt-2 text-red-400 text-xs font-medium">✗ Missed</div>
                   ) : (
