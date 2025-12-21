@@ -11,7 +11,3 @@ restartPolicyMaxRetries = 10
 [environments.production]
 variables = { NODE_ENV = "production" }
 
-# Build configuration for better-sqlite3
-[build.buildCommand]
-command = "npm install && npm run build"
-
