@@ -576,19 +576,8 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Global Chat Section */}
-        {data?.userId && data?.username && (
-          <div className="mb-4 sm:mb-6">
-            <Chat
-              currentUserId={data.userId}
-              currentUsername={data.username}
-              currentUserProfilePicture={data.profilePicture}
-            />
-          </div>
-        )}
-
         {/* Friends Section */}
-        <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-4 sm:p-5 md:p-6">
+        <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-4 sm:p-5 md:p-6 mb-4 sm:mb-6">
           <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-100 mb-4 sm:mb-5 md:mb-6">Friends</h2>
 
           {/* Invite Code Section */}
@@ -722,6 +711,17 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
+
+        {/* Global Chat Section */}
+        {data?.userId && data?.username && (
+          <div className="mb-4 sm:mb-6">
+            <Chat
+              currentUserId={data.userId}
+              currentUsername={data.username}
+              currentUserProfilePicture={data.profilePicture}
+            />
+          </div>
+        )}
       </main>
       <ToastContainer toasts={toasts} onRemove={removeToast} />
       <ConfirmModal

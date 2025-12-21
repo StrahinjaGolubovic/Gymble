@@ -15,7 +15,7 @@ export function cleanupOldMessages(): void {
     const result = db
       .prepare(
         `DELETE FROM chat_messages 
-         WHERE created_at < datetime('now', '-24 hours')`
+         WHERE created_at < datetime('now', 'localtime', '-24 hours')`
       )
       .run();
     
@@ -48,7 +48,7 @@ export function getRecentMessages(limit: number = 100): ChatMessageWithProfile[]
           u.profile_picture
          FROM chat_messages cm
          JOIN users u ON cm.user_id = u.id
-         WHERE cm.created_at >= datetime('now', '-24 hours')
+         WHERE cm.created_at >= datetime('now', 'localtime', '-24 hours')
          ORDER BY cm.created_at ASC
          LIMIT ?`
       )
@@ -79,7 +79,7 @@ export function addMessage(userId: number, username: string, message: string): C
     const result = db
       .prepare(
         `INSERT INTO chat_messages (user_id, username, message, created_at)
-         VALUES (?, ?, ?, datetime('now'))`
+         VALUES (?, ?, ?, datetime('now', 'localtime'))`
       )
       .run(userId, username, trimmedMessage);
     

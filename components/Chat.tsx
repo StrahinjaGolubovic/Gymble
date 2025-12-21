@@ -48,6 +48,7 @@ export function Chat({ currentUserId, currentUsername, currentUserProfilePicture
   // Send message
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation(); // Prevent form from causing page scroll
     
     if (!newMessage.trim() || sending) return;
 
@@ -122,9 +123,24 @@ export function Chat({ currentUserId, currentUsername, currentUserProfilePicture
 
   // Format time
   const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
+    // SQLite returns datetime as 'YYYY-MM-DD HH:MM:SS' in localtime
+    // Parse it as local time (no timezone conversion)
+    let localDate: Date;
+    if (dateString.includes('T')) {
+      // ISO format with T
+      localDate = new Date(dateString);
+    } else if (dateString.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
+      // SQLite format: 'YYYY-MM-DD HH:MM:SS' - parse as local time
+      const [datePart, timePart] = dateString.split(' ');
+      const [year, month, day] = datePart.split('-').map(Number);
+      const [hour, minute, second] = timePart.split(':').map(Number);
+      localDate = new Date(year, month - 1, day, hour, minute, second);
+    } else {
+      localDate = new Date(dateString);
+    }
+    
     const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
+    const diffMs = now.getTime() - localDate.getTime();
     const diffSecs = Math.floor(diffMs / 1000);
     const diffMins = Math.floor(diffMs / 60000);
 
@@ -132,7 +148,7 @@ export function Chat({ currentUserId, currentUsername, currentUserProfilePicture
     if (diffSecs < 60) return `${diffSecs}s ago`;
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
-    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    return localDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   };
 
   return (
