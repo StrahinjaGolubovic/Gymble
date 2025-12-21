@@ -1,4 +1,4 @@
-import Database from 'better-sqlite3';
+import Database, { Statement } from 'better-sqlite3';
 import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 
@@ -172,10 +172,19 @@ function initDatabase(database: Database) {
   `);
 }
 
+// Database interface for the exported db object
+interface DatabaseInterface {
+  prepare: (sql: string) => Statement;
+  exec: (sql: string) => Database;
+  pragma: (pragma: string, options?: { simple?: boolean }) => any;
+}
+
 // Export database - initialization happens on first access
-export default {
+const db: DatabaseInterface = {
   prepare: (sql: string) => getDb().prepare(sql),
   exec: (sql: string) => getDb().exec(sql),
-  pragma: (pragma: string) => getDb().pragma(pragma),
-} as Database;
+  pragma: (pragma: string, options?: { simple?: boolean }) => getDb().pragma(pragma, options),
+};
+
+export default db;
 
