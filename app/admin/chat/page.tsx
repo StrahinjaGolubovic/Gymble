@@ -59,12 +59,12 @@ export default function AdminChat() {
   }
 
   function showToast(message: string, type: 'success' | 'error' | 'info' = 'info') {
-    const id = Date.now();
+    const id = Date.now().toString();
     setToasts((prev) => [...prev, { id, message, type }]);
     setTimeout(() => removeToast(id), 5000);
   }
 
-  function removeToast(id: number) {
+  function removeToast(id: string) {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }
 
