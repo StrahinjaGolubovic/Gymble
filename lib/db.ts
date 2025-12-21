@@ -4,7 +4,7 @@ import { join } from 'path';
 
 const dbPath = process.env.DATABASE_PATH || './data/gymble.db';
 
-let db: Database | null = null;
+let databaseInstance: Database | null = null;
 let initialized = false;
 
 // Ensure directories exist (lazy)
@@ -31,18 +31,18 @@ function ensureDirectories() {
 
 // Get database instance (lazy initialization)
 function getDb(): Database {
-  if (!db) {
+  if (!databaseInstance) {
     ensureDirectories();
-    db = new Database(dbPath);
+    databaseInstance = new Database(dbPath);
     // Enable foreign keys
-    db.pragma('foreign_keys = ON');
+    databaseInstance.pragma('foreign_keys = ON');
     // Initialize schema immediately after creating db
     if (!initialized) {
-      initDatabase(db);
+      initDatabase(databaseInstance);
       initialized = true;
     }
   }
-  return db;
+  return databaseInstance;
 }
 
 // Initialize database schema
