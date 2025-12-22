@@ -17,6 +17,17 @@
   animation: slide-in 0.3s ease-out;
 }
 
+@keyframes altcha-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 body {
   @apply bg-gray-900 text-gray-100;
 }
@@ -37,6 +48,13 @@ altcha-widget {
   width: 100%;
   margin-top: 1rem;
   margin-bottom: 1rem;
+  animation: altcha-fade-in 220ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  altcha-widget {
+    animation: none;
+  }
 }
 
 /* Remove the native checkbox focus outline/border (this is what you're seeing) */
