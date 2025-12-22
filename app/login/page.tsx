@@ -16,6 +16,7 @@ export default function LoginPage() {
   const [altchaSolution, setAltchaSolution] = useState<string | null>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [altchaReady, setAltchaReady] = useState(false);
+  const [altchaStartTime] = useState(() => Date.now());
 
   useEffect(() => {
     // Check if script is already loaded and element is defined
@@ -41,8 +42,10 @@ export default function LoginPage() {
     const setupWidget = () => {
       const widget = document.querySelector('altcha-widget');
       if (widget) {
-        // Mark ready on next tick so CSS can crossfade cleanly (no flash)
-        requestAnimationFrame(() => setAltchaReady(true));
+        // Keep loader visible for at least 2 seconds (polished appearance)
+        const elapsed = Date.now() - altchaStartTime;
+        const remaining = Math.max(0, 2000 - elapsed);
+        window.setTimeout(() => setAltchaReady(true), remaining);
 
         widget.addEventListener('verified', (e: any) => {
           setAltchaSolution(e.detail.payload);
