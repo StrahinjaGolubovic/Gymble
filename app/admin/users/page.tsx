@@ -14,6 +14,7 @@ interface User {
   debt: number;
   current_streak: number;
   longest_streak: number;
+  last_activity_date?: string | null;
   created_at: string;
   profile_picture: string | null;
   total_uploads: number;
@@ -40,6 +41,23 @@ export default function AdminUsers() {
     message: '',
     onConfirm: () => {},
   });
+
+  const [editUser, setEditUser] = useState<User | null>(null);
+  const [editForm, setEditForm] = useState<{
+    debt: string;
+    current_streak: string;
+    longest_streak: string;
+    last_activity_date: string;
+  }>({
+    debt: '',
+    current_streak: '',
+    longest_streak: '',
+    last_activity_date: '',
+  });
+
+  const [passwordUser, setPasswordUser] = useState<User | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
 
   useEffect(() => {
     fetchUsers();
@@ -112,6 +130,96 @@ export default function AdminUsers() {
         fetchUsers();
       } else {
         showToast('Failed to delete user', 'error');
+      }
+    } catch (err) {
+      showToast('An error occurred', 'error');
+    }
+  }
+
+  function openEdit(user: User) {
+    setEditUser(user);
+    setEditForm({
+      debt: String(user.debt ?? 0),
+      current_streak: String(user.current_streak ?? 0),
+      longest_streak: String(user.longest_streak ?? 0),
+      last_activity_date: user.last_activity_date ? String(user.last_activity_date) : '',
+    });
+  }
+
+  async function saveUserEdits() {
+    if (!editUser) return;
+    try {
+      const response = await fetch('/api/admin/update-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: editUser.id,
+          debt: editForm.debt,
+          current_streak: editForm.current_streak,
+          longest_streak: editForm.longest_streak,
+          last_activity_date: editForm.last_activity_date,
+        }),
+      });
+
+      if (response.ok) {
+        showToast(`Updated @${editUser.username}`, 'success');
+        setEditUser(null);
+        fetchUsers();
+      } else {
+        const data = await response.json().catch(() => ({}));
+        showToast(data.error || 'Failed to update user', 'error');
+      }
+    } catch (err) {
+      showToast('An error occurred', 'error');
+    }
+  }
+
+  function openPasswordReset(user: User) {
+    setPasswordUser(user);
+    setNewPassword('');
+    setGeneratedPassword(null);
+  }
+
+  async function resetPasswordSubmit() {
+    if (!passwordUser) return;
+    try {
+      const response = await fetch('/api/admin/reset-user-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: passwordUser.id,
+          newPassword: newPassword.trim().length > 0 ? newPassword.trim() : undefined,
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (response.ok) {
+        setGeneratedPassword(data.newPassword || null);
+        showToast(`Password reset for @${passwordUser.username}`, 'success');
+        fetchUsers();
+      } else {
+        showToast(data.error || 'Failed to reset password', 'error');
+      }
+    } catch (err) {
+      showToast('An error occurred', 'error');
+    }
+  }
+
+  async function impersonateUser(userId: number, username: string) {
+    try {
+      const response = await fetch('/api/admin/impersonate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      });
+
+      if (response.ok) {
+        // Session cookie is now the user's token, so jump to dashboard as that user.
+        router.push('/dashboard');
+      } else {
+        const data = await response.json().catch(() => ({}));
+        showToast(data.error || 'Failed to login as user', 'error');
       }
     } catch (err) {
       showToast('An error occurred', 'error');
@@ -315,6 +423,12 @@ export default function AdminUsers() {
                     <td className="px-4 py-3">
                       <div className="flex flex-col sm:flex-row gap-2">
                         <button
+                          onClick={() => openEdit(user)}
+                          className="px-3 py-1.5 bg-gray-600 text-white rounded text-xs sm:text-sm hover:bg-gray-500 transition-colors"
+                        >
+                          Edit
+                        </button>
+                        <button
                           onClick={() =>
                             showConfirm(
                               'Reset Debt',
@@ -326,6 +440,25 @@ export default function AdminUsers() {
                           className="px-3 py-1.5 bg-blue-600 text-white rounded text-xs sm:text-sm hover:bg-blue-700 transition-colors"
                         >
                           Reset Debt
+                        </button>
+                        <button
+                          onClick={() => openPasswordReset(user)}
+                          className="px-3 py-1.5 bg-indigo-600 text-white rounded text-xs sm:text-sm hover:bg-indigo-700 transition-colors"
+                        >
+                          Reset Password
+                        </button>
+                        <button
+                          onClick={() =>
+                            showConfirm(
+                              'Login as User',
+                              `This will switch your session to @${user.username}. You can return to admin later.`,
+                              () => impersonateUser(user.id, user.username),
+                              'default'
+                            )
+                          }
+                          className="px-3 py-1.5 bg-green-600 text-white rounded text-xs sm:text-sm hover:bg-green-700 transition-colors"
+                        >
+                          Login As
                         </button>
                         <button
                           onClick={() =>
@@ -371,6 +504,148 @@ export default function AdminUsers() {
         onCancel={() => setConfirmModal({ isOpen: false, title: '', message: '', onConfirm: () => {} })}
         variant={confirmModal.variant}
       />
+
+      {/* Edit User Modal */}
+      {editUser && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          onClick={() => setEditUser(null)}
+        >
+          <div
+            className="bg-gray-800 border border-gray-700 rounded-lg shadow-xl p-6 max-w-lg w-full mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold text-gray-100 mb-1">Edit @{editUser.username}</h3>
+            <p className="text-sm text-gray-300 mb-5">Set values manually (non-negative integers). Dates must be YYYY-MM-DD.</p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <label className="text-sm text-gray-200">
+                Debt
+                <input
+                  type="number"
+                  min={0}
+                  value={editForm.debt}
+                  onChange={(e) => setEditForm((p) => ({ ...p, debt: e.target.value }))}
+                  className="mt-1 w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </label>
+
+              <label className="text-sm text-gray-200">
+                Current streak
+                <input
+                  type="number"
+                  min={0}
+                  value={editForm.current_streak}
+                  onChange={(e) => setEditForm((p) => ({ ...p, current_streak: e.target.value }))}
+                  className="mt-1 w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </label>
+
+              <label className="text-sm text-gray-200">
+                Longest streak
+                <input
+                  type="number"
+                  min={0}
+                  value={editForm.longest_streak}
+                  onChange={(e) => setEditForm((p) => ({ ...p, longest_streak: e.target.value }))}
+                  className="mt-1 w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </label>
+
+              <label className="text-sm text-gray-200">
+                Last activity (YYYY-MM-DD)
+                <input
+                  type="text"
+                  placeholder="2025-12-23"
+                  value={editForm.last_activity_date}
+                  onChange={(e) => setEditForm((p) => ({ ...p, last_activity_date: e.target.value }))}
+                  className="mt-1 w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </label>
+            </div>
+
+            <div className="mt-6 flex gap-3 justify-end">
+              <button
+                onClick={() => setEditUser(null)}
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-100 rounded-md transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveUserEdits}
+                className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md transition-colors font-medium"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Password Modal */}
+      {passwordUser && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          onClick={() => setPasswordUser(null)}
+        >
+          <div
+            className="bg-gray-800 border border-gray-700 rounded-lg shadow-xl p-6 max-w-lg w-full mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold text-gray-100 mb-1">Reset password for @{passwordUser.username}</h3>
+            <p className="text-sm text-gray-300 mb-5">
+              You can’t view existing passwords. This will set a new password (leave blank to generate a temporary one).
+            </p>
+
+            <label className="text-sm text-gray-200 block mb-3">
+              New password (optional)
+              <input
+                type="text"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="mt-1 w-full bg-gray-900 border border-gray-600 rounded-md px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+            </label>
+
+            {generatedPassword && (
+              <div className="mb-4 p-3 bg-gray-900 border border-gray-700 rounded-md">
+                <div className="text-xs text-gray-300 mb-1">New password</div>
+                <div className="flex items-center gap-2">
+                  <code className="text-sm text-green-300 break-all flex-1">{generatedPassword}</code>
+                  <button
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(generatedPassword);
+                        showToast('Copied password', 'success');
+                      } catch {
+                        showToast('Copy failed', 'error');
+                      }
+                    }}
+                    className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-100 rounded-md text-sm"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="mt-6 flex gap-3 justify-end">
+              <button
+                onClick={() => setPasswordUser(null)}
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-100 rounded-md transition-colors"
+              >
+                Close
+              </button>
+              <button
+                onClick={resetPasswordSubmit}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors font-medium"
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

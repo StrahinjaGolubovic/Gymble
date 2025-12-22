@@ -51,6 +51,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isImpersonating, setIsImpersonating] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [friends, setFriends] = useState<Friend[]>([]);
@@ -77,6 +78,7 @@ export default function DashboardPage() {
     fetchDashboard();
     fetchFriends();
     fetchInviteCode();
+    fetchImpersonationStatus();
     
     // Send heartbeat to indicate user is online
     const sendHeartbeat = async () => {
@@ -97,6 +99,29 @@ export default function DashboardPage() {
 
     return () => clearInterval(heartbeatInterval);
   }, []);
+
+  async function fetchImpersonationStatus() {
+    try {
+      const res = await fetch('/api/admin/impersonation-status');
+      if (res.ok) {
+        const json = await res.json();
+        setIsImpersonating(!!json.impersonating);
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  async function stopImpersonating() {
+    try {
+      const res = await fetch('/api/admin/stop-impersonate', { method: 'POST' });
+      if (res.ok) {
+        window.location.href = '/admin/dashboard';
+      }
+    } catch {
+      // ignore
+    }
+  }
 
   async function fetchDashboard() {
     try {
@@ -342,6 +367,21 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-900">
+      {isImpersonating && (
+        <div className="bg-yellow-900/40 border-b border-yellow-700/60 text-yellow-200">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-2 flex items-center justify-between gap-3">
+            <div className="text-sm font-medium">
+              You are currently <span className="font-semibold">logged in as another user</span> (admin impersonation).
+            </div>
+            <button
+              onClick={stopImpersonating}
+              className="px-3 py-1.5 bg-yellow-700 hover:bg-yellow-600 text-black rounded-md text-sm font-semibold"
+            >
+              Return to Admin
+            </button>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <header className="bg-gray-800 border-b border-gray-700 shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-2.5 sm:py-3 md:py-4 flex justify-between items-center">
