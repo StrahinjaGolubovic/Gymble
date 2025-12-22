@@ -21,6 +21,21 @@ body {
   @apply bg-gray-900 text-gray-100;
 }
 
+/* Custom ALTCHA styling */
+altcha-widget {
+  --altcha-bg: #374151; /* gray-700 */
+  --altcha-border: #4b5563; /* gray-600 */
+  --altcha-text: #f3f4f6; /* gray-100 */
+  --altcha-color: #38bdf8; /* primary-400 */
+  --altcha-width: 100%;
+  --altcha-max-width: 100%;
+  --altcha-border-radius: 0.375rem; /* rounded-md */
+  display: block;
+  width: 100%;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
 /* Mobile optimizations */
 .scrollbar-hide {
   -ms-overflow-style: none;

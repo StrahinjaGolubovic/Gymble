@@ -194,14 +194,16 @@ export default function RegisterPage() {
             {scriptLoaded && React.createElement('altcha-widget', {
               challengeurl: '/api/altcha/challenge',
               workerurl: '/worker.js',
+              theme: 'dark',
+              hidelogo: true,
+              hidefooter: true,
               strings: JSON.stringify({
                 label: 'Verification',
                 error: 'Verification failed. Please try again.',
               }),
-              className: 'mb-4',
             })}
             {!scriptLoaded && (
-              <div className="mb-4 p-4 bg-gray-700 rounded text-gray-300 text-sm">
+              <div className="mb-4 p-4 bg-gray-700 border border-gray-600 rounded text-gray-300 text-sm">
                 Loading verification...
               </div>
             )}
