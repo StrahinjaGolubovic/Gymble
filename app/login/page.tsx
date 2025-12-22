@@ -143,10 +143,10 @@ export default function LoginPage() {
           <div>
             {scriptLoaded && React.createElement('altcha-widget', {
               challengeurl: '/api/altcha/challenge',
-              strings: {
+              strings: JSON.stringify({
                 label: 'Verification',
                 error: 'Verification failed. Please try again.',
-              },
+              }),
               className: 'mb-4',
             })}
             {!scriptLoaded && (
