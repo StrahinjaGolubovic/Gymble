@@ -17,37 +17,39 @@ export default function LoginPage() {
   const [scriptLoaded, setScriptLoaded] = useState(false);
 
   useEffect(() => {
-    // Wait for custom element to be defined
-    const checkCustomElement = async () => {
-      if (typeof window !== 'undefined' && (window as any).customElements) {
-        try {
-          await (window as any).customElements.whenDefined('altcha-widget');
-          setScriptLoaded(true);
-        } catch (e) {
-          // If not defined yet, wait a bit and try again
-          setTimeout(checkCustomElement, 100);
-        }
+    // Check if script is already loaded and element is defined
+    const checkDefined = () => {
+      if (typeof window !== 'undefined' && (window as any).customElements && (window as any).customElements.get('altcha-widget')) {
+        setScriptLoaded(true);
+        return true;
       }
+      return false;
     };
 
-    checkCustomElement();
+    if (!checkDefined()) {
+      const interval = setInterval(() => {
+        if (checkDefined()) clearInterval(interval);
+      }, 100);
+      return () => clearInterval(interval);
+    }
   }, []);
 
   useEffect(() => {
     if (!scriptLoaded) return;
 
-    // Use a small delay to ensure widget is in DOM
-    const timer = setTimeout(() => {
+    const setupWidget = () => {
       const widget = document.querySelector('altcha-widget');
       if (widget) {
-        const handleVerified = (e: any) => {
+        widget.addEventListener('verified', (e: any) => {
           setAltchaSolution(e.detail.payload);
-        };
-        widget.addEventListener('verified', handleVerified);
+        });
+      } else {
+        // Retry once if not found immediately
+        setTimeout(setupWidget, 100);
       }
-    }, 100);
+    };
 
-    return () => clearTimeout(timer);
+    setupWidget();
   }, [scriptLoaded]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -87,7 +89,7 @@ export default function LoginPage() {
     <>
       <Script 
         src="/altcha.js" 
-        strategy="lazyOnload"
+        strategy="afterInteractive"
         onLoad={() => setScriptLoaded(true)}
       />
       <link rel="stylesheet" href="/altcha.css" />
