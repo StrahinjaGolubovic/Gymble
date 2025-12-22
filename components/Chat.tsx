@@ -201,13 +201,15 @@ export function Chat({ currentUserId, currentUsername, currentUserProfilePicture
     <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-lg flex flex-col h-[500px] sm:h-[600px]">
       {/* Chat Header */}
       <div className="border-b border-gray-700 p-3 sm:p-4 flex items-center justify-between bg-gray-800/50">
-        <div className="flex items-center gap-2">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-100">Global Chat</h3>
-          {onlineUsers > 0 && (
-            <span className="text-xs sm:text-sm font-medium text-green-400">
-              {onlineUsers} online
-            </span>
-          )}
+        <div className="flex items-center gap-2 relative">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-100 relative z-10 pl-8">
+            Global Chat
+            {onlineUsers > 0 && (
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 text-xs sm:text-sm font-bold text-green-400 bg-green-900/40 border-2 border-green-500/60 rounded-full px-2 py-0.5 min-w-[28px] text-center shadow-lg shadow-green-500/20">
+                {onlineUsers}
+              </span>
+            )}
+          </h3>
           <span className="text-xs text-gray-400">(clears every 24h)</span>
         </div>
         {error && (
