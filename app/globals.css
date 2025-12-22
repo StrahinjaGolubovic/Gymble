@@ -48,12 +48,38 @@ altcha-widget {
   width: 100%;
   margin-top: 1rem;
   margin-bottom: 1rem;
-  animation: altcha-fade-in 220ms ease-out both;
+  /* Polished mount: start hidden, fade in when container marks ready */
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 240ms ease, transform 240ms ease;
+}
+
+/* Wrapper used on login/register to avoid any flash of "Loading..." behind the widget */
+.altcha-appear {
+  position: relative;
+}
+
+.altcha-appear .altcha-loading {
+  transition: opacity 200ms ease;
+}
+
+.altcha-appear[data-ready="true"] altcha-widget {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.altcha-appear[data-ready="true"] .altcha-loading {
+  opacity: 0;
+  pointer-events: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
   altcha-widget {
-    animation: none;
+    transition: none;
+    transform: none;
+  }
+  .altcha-appear .altcha-loading {
+    transition: none;
   }
 }
 

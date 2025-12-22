@@ -15,6 +15,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [altchaSolution, setAltchaSolution] = useState<string | null>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
+  const [altchaReady, setAltchaReady] = useState(false);
 
   useEffect(() => {
     // Check if script is already loaded and element is defined
@@ -40,6 +41,9 @@ export default function LoginPage() {
     const setupWidget = () => {
       const widget = document.querySelector('altcha-widget');
       if (widget) {
+        // Mark ready on next tick so CSS can crossfade cleanly (no flash)
+        requestAnimationFrame(() => setAltchaReady(true));
+
         widget.addEventListener('verified', (e: any) => {
           setAltchaSolution(e.detail.payload);
         });
@@ -175,7 +179,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div>
+          <div className="altcha-appear" data-ready={altchaReady ? 'true' : 'false'}>
             {scriptLoaded && React.createElement('altcha-widget', {
               challengeurl: '/api/altcha/challenge',
               workerurl: '/worker.js',
@@ -188,8 +192,8 @@ export default function LoginPage() {
                 error: 'Verification failed. Please try again.',
               }),
             })}
-            {!scriptLoaded && (
-              <div className="mb-4 p-4 bg-gray-700 border border-gray-600 rounded text-gray-300 text-sm">
+            {!altchaReady && (
+              <div className="altcha-loading mb-4 p-4 bg-gray-700 border border-gray-600 rounded text-gray-300 text-sm">
                 Loading verification...
               </div>
             )}
