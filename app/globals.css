@@ -50,17 +50,24 @@ altcha-widget {
   margin-bottom: 1rem;
   /* Polished mount: start hidden, fade in when container marks ready */
   opacity: 0;
-  transform: translateY(6px);
-  transition: opacity 240ms ease, transform 240ms ease;
+  transform: translateY(10px);
+  transition: opacity 650ms ease, transform 650ms ease;
 }
 
 /* Wrapper used on login/register to avoid any flash of "Loading..." behind the widget */
 .altcha-appear {
   position: relative;
+  /* Reserve space so layout doesn't jump while the widget initializes */
+  min-height: 68px;
 }
 
 .altcha-appear .altcha-loading {
-  transition: opacity 200ms ease;
+  /* Overlay loader so it's never visible "behind" the widget */
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  transition: opacity 350ms ease, visibility 0s linear 350ms;
+  visibility: visible;
 }
 
 .altcha-appear[data-ready="true"] altcha-widget {
@@ -71,6 +78,7 @@ altcha-widget {
 .altcha-appear[data-ready="true"] .altcha-loading {
   opacity: 0;
   pointer-events: none;
+  visibility: hidden;
 }
 
 @media (prefers-reduced-motion: reduce) {

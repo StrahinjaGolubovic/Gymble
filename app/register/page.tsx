@@ -243,8 +243,11 @@ export default function RegisterPage() {
               }),
             })}
             {!altchaReady && (
-              <div className="altcha-loading mb-4 p-4 bg-gray-700 border border-gray-600 rounded text-gray-300 text-sm">
-                Loading verification...
+              <div className="altcha-loading mb-4 p-4 bg-gray-700 border border-gray-600 rounded">
+                <div className="flex items-center justify-center gap-3 text-gray-300">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-400 border-t-primary-400" />
+                  <span className="text-sm">Loading…</span>
+                </div>
               </div>
             )}
           </div>
