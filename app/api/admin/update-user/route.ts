@@ -60,7 +60,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const tx = db.transaction(() => {
+    // `@/lib/db` is a thin wrapper, so we use explicit BEGIN/COMMIT for atomic updates.
+    db.exec('BEGIN');
+    try {
       if (debtInt !== undefined) {
         db.prepare('UPDATE users SET credits = ? WHERE id = ?').run(debtInt, userId);
       }
@@ -89,9 +91,16 @@ export async function POST(request: NextRequest) {
           db.prepare('UPDATE streaks SET last_activity_date = ? WHERE user_id = ?').run(lastToSet, userId);
         }
       }
-    });
 
-    tx();
+      db.exec('COMMIT');
+    } catch (e) {
+      try {
+        db.exec('ROLLBACK');
+      } catch {
+        // ignore rollback errors
+      }
+      throw e;
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
