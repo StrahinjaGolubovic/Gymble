@@ -19,6 +19,7 @@ interface ChatProps {
 }
 
 export function Chat({ currentUserId, currentUsername, currentUserProfilePicture }: ChatProps) {
+  const [onlineUsers, setOnlineUsers] = useState<number>(0);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -42,6 +43,30 @@ export function Chat({ currentUserId, currentUsername, currentUserProfilePicture
       setError('Failed to load messages');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Send heartbeat to indicate user is online
+  const sendHeartbeat = async () => {
+    try {
+      await fetch('/api/user-heartbeat', {
+        method: 'POST',
+      });
+    } catch (err) {
+      // Silently fail - don't show error for heartbeat
+    }
+  };
+
+  // Fetch online users count
+  const fetchOnlineUsers = async () => {
+    try {
+      const response = await fetch('/api/active-users');
+      if (response.ok) {
+        const data = await response.json();
+        setOnlineUsers(data.onlineUsers || 0);
+      }
+    } catch (err) {
+      // Silently fail - don't show error for online users count
     }
   };
 
@@ -123,9 +148,15 @@ export function Chat({ currentUserId, currentUsername, currentUserProfilePicture
   useEffect(() => {
     setLoading(true);
     fetchMessages();
+    sendHeartbeat(); // Send initial heartbeat
+    fetchOnlineUsers();
 
-    // Refresh messages every 5 seconds
-    const interval = setInterval(fetchMessages, 5000);
+    // Send heartbeat and refresh messages/online users every 5 seconds
+    const interval = setInterval(() => {
+      fetchMessages();
+      sendHeartbeat(); // Keep user marked as online
+      fetchOnlineUsers();
+    }, 5000);
 
     return () => clearInterval(interval);
   }, []);
@@ -172,6 +203,11 @@ export function Chat({ currentUserId, currentUsername, currentUserProfilePicture
       <div className="border-b border-gray-700 p-3 sm:p-4 flex items-center justify-between bg-gray-800/50">
         <div className="flex items-center gap-2">
           <h3 className="text-base sm:text-lg font-semibold text-gray-100">Global Chat</h3>
+          {onlineUsers > 0 && (
+            <span className="text-xs sm:text-sm font-medium text-green-400">
+              {onlineUsers} online
+            </span>
+          )}
           <span className="text-xs text-gray-400">(clears every 24h)</span>
         </div>
         {error && (

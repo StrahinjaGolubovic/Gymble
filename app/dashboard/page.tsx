@@ -77,6 +77,25 @@ export default function DashboardPage() {
     fetchDashboard();
     fetchFriends();
     fetchInviteCode();
+    
+    // Send heartbeat to indicate user is online
+    const sendHeartbeat = async () => {
+      try {
+        await fetch('/api/user-heartbeat', {
+          method: 'POST',
+        });
+      } catch (err) {
+        // Silently fail
+      }
+    };
+
+    // Send initial heartbeat
+    sendHeartbeat();
+
+    // Send heartbeat every 30 seconds to keep user marked as online
+    const heartbeatInterval = setInterval(sendHeartbeat, 30000);
+
+    return () => clearInterval(heartbeatInterval);
   }, []);
 
   async function fetchDashboard() {
