@@ -202,10 +202,10 @@ export function Chat({ currentUserId, currentUsername, currentUserProfilePicture
       {/* Chat Header */}
       <div className="border-b border-gray-700 p-3 sm:p-4 flex items-center justify-between bg-gray-800/50">
         <div className="flex items-center gap-2 relative">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-100 relative z-10 pl-8">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-100 relative z-10 pl-7">
             Global Chat
             {onlineUsers > 0 && (
-              <span className="absolute left-0 top-1/2 -translate-y-1/2 text-xs sm:text-sm font-bold text-green-400 bg-green-900/40 border-2 border-green-500/60 rounded-full px-2 py-0.5 min-w-[28px] text-center shadow-lg shadow-green-500/20">
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 text-[10px] sm:text-xs font-bold text-green-400 bg-green-900/40 border border-green-500/60 rounded-full px-1.5 py-0.5 min-w-[20px] text-center shadow-md shadow-green-500/20">
                 {onlineUsers}
               </span>
             )}
