@@ -2,7 +2,7 @@
 
 /// <reference path="../../types/altcha.d.ts" />
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Script from 'next/script';
@@ -113,14 +113,14 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <altcha-widget
-              challengeurl="/api/altcha/challenge"
-              strings={{
+            {React.createElement('altcha-widget', {
+              challengeurl: '/api/altcha/challenge',
+              strings: {
                 label: 'Verification',
                 error: 'Verification failed. Please try again.',
-              }}
-              className="mb-4"
-            ></altcha-widget>
+              },
+              className: 'mb-4',
+            })}
           </div>
 
           <div>
