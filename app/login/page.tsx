@@ -1,5 +1,7 @@
 'use client';
 
+/// <reference path="../../types/altcha.d.ts" />
+
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
