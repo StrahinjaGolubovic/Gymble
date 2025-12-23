@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import { addDailyUpload, getOrCreateActiveChallenge, formatDate } from '@/lib/challenges';
 import { formatDateSerbia } from '@/lib/timezone';
+import { updateUploadMetadata } from '@/lib/verification';
 import { cookies } from 'next/headers';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
@@ -28,6 +29,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get('photo') as File;
     const uploadDate = formData.get('date') as string || formatDateSerbia();
+    const metadataStr = formData.get('metadata') as string | null;
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
@@ -89,6 +91,17 @@ export async function POST(request: NextRequest) {
 
     // Add to database
     const upload = addDailyUpload(userId, challenge.id, uploadDate, relativePath);
+
+    // Store metadata if provided (EXIF extracted client-side from original file).
+    if (metadataStr && typeof metadataStr === 'string') {
+      try {
+        // Basic sanity check (must be JSON object/stringifiable)
+        const parsed = JSON.parse(metadataStr);
+        updateUploadMetadata(upload.id, JSON.stringify(parsed));
+      } catch {
+        // ignore invalid metadata payloads
+      }
+    }
 
     return NextResponse.json({
       message: 'Upload successful',

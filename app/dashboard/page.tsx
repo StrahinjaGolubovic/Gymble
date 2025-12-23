@@ -181,6 +181,44 @@ export default function DashboardPage() {
 
     const formData = new FormData();
 
+    // Extract EXIF metadata from the ORIGINAL file (before any conversion/compression),
+    // so admins can verify legitimacy even if we later compress for resource savings.
+    try {
+      const mod: any = await import('exifr');
+      const exifr = mod?.default || mod;
+      const exifData = await exifr.parse(file, {
+        pick: [
+          'DateTimeOriginal',
+          'CreateDate',
+          'ModifyDate',
+          'GPSLatitude',
+          'GPSLongitude',
+          'GPSAltitude',
+          'Make',
+          'Model',
+          'Software',
+          'ImageWidth',
+          'ImageHeight',
+          'Orientation',
+          'XResolution',
+          'YResolution',
+        ],
+      });
+
+      formData.append(
+        'metadata',
+        JSON.stringify({
+          exif: exifData || null,
+          originalFileName: file.name || null,
+          originalFileType: file.type || null,
+          originalFileSize: file.size,
+          extractedAt: new Date().toISOString(),
+        })
+      );
+    } catch {
+      // Ignore metadata extraction failures (some formats / browsers may not support it).
+    }
+
     // Convert HEIC/HEIF to JPEG so it displays in all browsers (most browsers can't render HEIC).
     let uploadFile: File = file;
     try {
