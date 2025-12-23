@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import Image from 'next/image';
 import { getImageUrl } from '@/lib/image-utils';
 
 interface ChatMessage {
@@ -25,6 +26,7 @@ export function Chat({ currentUserId, currentUsername, currentUserProfilePicture
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
+  const [brokenAvatars, setBrokenAvatars] = useState<Set<number>>(() => new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -235,6 +237,8 @@ export function Chat({ currentUserId, currentUsername, currentUserProfilePicture
             const isOwnMessage = msg.user_id === currentUserId;
             // Use profile picture from message data, or fallback to current user's if it's their message
             const profilePicture = msg.profile_picture || (isOwnMessage ? currentUserProfilePicture : null);
+            const avatarSrc = profilePicture ? (getImageUrl(profilePicture) || '') : '';
+            const showAvatar = !!avatarSrc && !brokenAvatars.has(msg.id);
             
             return (
               <div
@@ -243,27 +247,29 @@ export function Chat({ currentUserId, currentUsername, currentUserProfilePicture
               >
                 {/* Profile Picture */}
                 <div className="flex-shrink-0">
-                  {profilePicture ? (
-                    <img
-                      src={getImageUrl(profilePicture) || ''}
+                  {showAvatar ? (
+                    <Image
+                      src={avatarSrc}
                       alt={msg.username}
+                      width={40}
+                      height={40}
+                      unoptimized
                       className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-gray-600 object-cover"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                        const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                        if (fallback) {
-                          fallback.style.display = 'flex';
-                        }
+                      onError={() => {
+                        setBrokenAvatars((prev) => {
+                          const next = new Set(prev);
+                          next.add(msg.id);
+                          return next;
+                        });
                       }}
                     />
-                  ) : null}
-                  <div 
-                    className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-700 border border-gray-600 flex items-center justify-center ${profilePicture ? 'hidden' : ''}`}
-                  >
-                    <span className="text-gray-400 text-xs sm:text-sm font-semibold">
-                      {msg.username.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
+                  ) : (
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-700 border border-gray-600 flex items-center justify-center">
+                      <span className="text-gray-400 text-xs sm:text-sm font-semibold">
+                        {msg.username.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Message Content */}

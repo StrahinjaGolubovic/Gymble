@@ -135,6 +135,15 @@ function initDatabase(database: Database) {
     )
   `);
 
+  // User activity table (for "online users" tracking)
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS user_activity (
+      user_id INTEGER PRIMARY KEY,
+      last_seen DATETIME NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
   // Invite codes table
   database.exec(`
     CREATE TABLE IF NOT EXISTS invite_codes (
@@ -184,6 +193,7 @@ function initDatabase(database: Database) {
     CREATE INDEX IF NOT EXISTS idx_friends_friend ON friends(friend_id);
     CREATE INDEX IF NOT EXISTS idx_chat_messages_user ON chat_messages(user_id);
     CREATE INDEX IF NOT EXISTS idx_chat_messages_created ON chat_messages(created_at);
+    CREATE INDEX IF NOT EXISTS idx_user_activity_last_seen ON user_activity(last_seen);
   `);
 }
 

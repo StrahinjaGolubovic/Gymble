@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ToastContainer, Toast } from '@/components/Toast';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { getImageUrl } from '@/lib/image-utils';
@@ -42,11 +43,7 @@ export default function AdminVerification() {
     onConfirm: () => {},
   });
 
-  useEffect(() => {
-    fetchPendingUploads();
-  }, []);
-
-  async function fetchPendingUploads() {
+  const fetchPendingUploads = useCallback(async () => {
     try {
       const response = await fetch('/api/admin/pending-uploads');
       if (response.ok) {
@@ -60,7 +57,11 @@ export default function AdminVerification() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [router]);
+
+  useEffect(() => {
+    fetchPendingUploads();
+  }, [fetchPendingUploads]);
 
   function showToast(message: string, type: 'success' | 'error' | 'info' = 'info') {
     const id = Date.now().toString();
@@ -243,11 +244,16 @@ export default function AdminVerification() {
                 </div>
 
                 <div className="mb-3 sm:mb-4">
-                  <img
-                    src={getImageUrl(upload.photo_path) || ''}
-                    alt={`Upload from ${upload.username}`}
-                    className="w-full h-auto rounded-lg border border-gray-700 max-h-48 sm:max-h-64 object-contain bg-gray-900"
-                  />
+                  <div className="relative w-full h-48 sm:h-64 rounded-lg border border-gray-700 bg-gray-900 overflow-hidden">
+                    <Image
+                      src={getImageUrl(upload.photo_path) || ''}
+                      alt={`Upload from ${upload.username}`}
+                      fill
+                      unoptimized
+                      className="object-contain"
+                      sizes="(max-width: 640px) 100vw, 50vw"
+                    />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 sm:flex sm:flex-row gap-2 sm:gap-3">

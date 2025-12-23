@@ -131,7 +131,7 @@ export default function LoginPage() {
         strategy="afterInteractive"
         onLoad={() => setScriptLoaded(true)}
       />
-      <link rel="stylesheet" href="/altcha.css" />
+      {/* altcha.css is loaded globally via app/globals.css */}
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-6 sm:space-y-8 bg-gray-800 border border-gray-700 p-6 sm:p-8 rounded-xl shadow-2xl">
         <div>
@@ -206,7 +206,7 @@ export default function LoginPage() {
 
           <div className="text-center">
             <p className="text-sm text-gray-400">
-              Don't have an account?{' '}
+              Don’t have an account?{' '}
               <Link href="/register" className="font-medium text-primary-400 hover:text-primary-300">
                 Sign up
               </Link>

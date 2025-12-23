@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ToastContainer, Toast } from '@/components/Toast';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { getImageUrl } from '@/lib/image-utils';
@@ -35,14 +36,7 @@ export default function AdminChat() {
     onConfirm: () => {},
   });
 
-  useEffect(() => {
-    fetchMessages();
-    // Refresh every 10 seconds
-    const interval = setInterval(fetchMessages, 10000);
-    return () => clearInterval(interval);
-  }, []);
-
-  async function fetchMessages() {
+  const fetchMessages = useCallback(async () => {
     try {
       const response = await fetch('/api/admin/chat-messages');
       if (response.ok) {
@@ -56,7 +50,14 @@ export default function AdminChat() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [router]);
+
+  useEffect(() => {
+    fetchMessages();
+    // Refresh every 10 seconds
+    const interval = setInterval(fetchMessages, 10000);
+    return () => clearInterval(interval);
+  }, [fetchMessages]);
 
   function showToast(message: string, type: 'success' | 'error' | 'info' = 'info') {
     const id = Date.now().toString();
@@ -240,9 +241,12 @@ export default function AdminChat() {
                   >
                     <div className="flex-shrink-0">
                       {msg.profile_picture ? (
-                        <img
+                        <Image
                           src={getImageUrl(msg.profile_picture) || ''}
                           alt={msg.username}
+                          width={48}
+                          height={48}
+                          unoptimized
                           className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-gray-600 object-cover"
                         />
                       ) : (

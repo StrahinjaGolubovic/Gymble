@@ -3,6 +3,9 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Fix Next.js incorrectly inferring a higher-level workspace root when multiple lockfiles exist.
+  // This ensures output file tracing stays scoped to this project directory (important for deploys).
+  outputFileTracingRoot: __dirname,
   // Ensure better-sqlite3 is only used server-side
   serverExternalPackages: ['better-sqlite3'],
   // Configure webpack to properly handle native modules

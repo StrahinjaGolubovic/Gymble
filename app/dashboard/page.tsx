@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ToastContainer, Toast } from '@/components/Toast';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { getImageUrl } from '@/lib/image-utils';
@@ -52,6 +53,8 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isImpersonating, setIsImpersonating] = useState(false);
+  const [profilePicBroken, setProfilePicBroken] = useState(false);
+  const [brokenFriendPics, setBrokenFriendPics] = useState<Set<number>>(() => new Set());
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [friends, setFriends] = useState<Friend[]>([]);
@@ -73,6 +76,63 @@ export default function DashboardPage() {
     message: '',
     onConfirm: () => {},
   });
+
+  const fetchDashboard = useCallback(async () => {
+    try {
+      const response = await fetch('/api/dashboard');
+      if (response.ok) {
+        const dashboardData = await response.json();
+        setData(dashboardData);
+      } else if (response.status === 401) {
+        router.push('/login');
+      } else {
+        setError('Failed to load dashboard');
+      }
+    } catch (err) {
+      setError('An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  }, [router]);
+
+  const fetchFriends = useCallback(async () => {
+    setFriendsLoading(true);
+    try {
+      const response = await fetch('/api/friends/list');
+      if (response.ok) {
+        const data = await response.json();
+        setFriends(data.friends || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch friends:', err);
+    } finally {
+      setFriendsLoading(false);
+    }
+  }, []);
+
+  const fetchInviteCode = useCallback(async () => {
+    try {
+      const response = await fetch('/api/friends/invite-code');
+      if (response.ok) {
+        const data = await response.json();
+        setInviteCode(data.code);
+      }
+    } catch (err) {
+      console.error('Failed to fetch invite code:', err);
+    }
+  }, []);
+
+  const fetchImpersonationStatus = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/impersonation-status');
+      if (res.ok) {
+        const json = await res.json();
+        setIsImpersonating(!!json.impersonating);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   useEffect(() => {
     fetchDashboard();
@@ -98,19 +158,7 @@ export default function DashboardPage() {
     const heartbeatInterval = setInterval(sendHeartbeat, 30000);
 
     return () => clearInterval(heartbeatInterval);
-  }, []);
-
-  async function fetchImpersonationStatus() {
-    try {
-      const res = await fetch('/api/admin/impersonation-status');
-      if (res.ok) {
-        const json = await res.json();
-        setIsImpersonating(!!json.impersonating);
-      }
-    } catch {
-      // ignore
-    }
-  }
+  }, [fetchDashboard, fetchFriends, fetchInviteCode, fetchImpersonationStatus]);
 
   async function stopImpersonating() {
     try {
@@ -120,24 +168,6 @@ export default function DashboardPage() {
       }
     } catch {
       // ignore
-    }
-  }
-
-  async function fetchDashboard() {
-    try {
-      const response = await fetch('/api/dashboard');
-      if (response.ok) {
-        const dashboardData = await response.json();
-        setData(dashboardData);
-      } else if (response.status === 401) {
-        router.push('/login');
-      } else {
-        setError('Failed to load dashboard');
-      }
-    } catch (err) {
-      setError('An error occurred');
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -215,33 +245,6 @@ export default function DashboardPage() {
     await fetch('/api/auth/logout', { method: 'POST' });
     router.push('/login');
     router.refresh();
-  }
-
-  async function fetchFriends() {
-    setFriendsLoading(true);
-    try {
-      const response = await fetch('/api/friends/list');
-      if (response.ok) {
-        const data = await response.json();
-        setFriends(data.friends || []);
-      }
-    } catch (err) {
-      console.error('Failed to fetch friends:', err);
-    } finally {
-      setFriendsLoading(false);
-    }
-  }
-
-  async function fetchInviteCode() {
-    try {
-      const response = await fetch('/api/friends/invite-code');
-      if (response.ok) {
-        const data = await response.json();
-        setInviteCode(data.code);
-      }
-    } catch (err) {
-      console.error('Failed to fetch invite code:', err);
-    }
   }
 
   function showToast(message: string, type: 'success' | 'error' | 'info' = 'info') {
@@ -459,29 +462,24 @@ export default function DashboardPage() {
                   className="hidden"
                 />
                 <div className="relative">
-                  {data?.profilePicture ? (
-                    <img
+                  {data?.profilePicture && !profilePicBroken ? (
+                    <Image
                       key={`profile-img-${data.profilePicture}`}
                       src={data.profilePicture}
-                      alt=""
+                      alt="Profile picture"
+                      width={48}
+                      height={48}
+                      unoptimized
                       className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-gray-600 object-cover hover:border-primary-400 transition-colors"
-                      onError={(e) => {
-                        // Hide image on error and show fallback
-                        e.currentTarget.style.display = 'none';
-                        const fallback = e.currentTarget.nextElementSibling as HTMLElement;
-                        if (fallback) {
-                          fallback.classList.remove('hidden');
-                        }
-                      }}
+                      onError={() => setProfilePicBroken(true)}
                     />
-                  ) : null}
-                  <div 
-                    className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-700 border-2 border-gray-600 flex items-center justify-center hover:border-primary-400 transition-colors ${data?.profilePicture ? 'hidden' : ''}`}
-                  >
-                    <span className="text-gray-400 text-lg font-semibold">
-                      {data?.username?.charAt(0).toUpperCase() || 'U'}
-                    </span>
-                  </div>
+                  ) : (
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-700 border-2 border-gray-600 flex items-center justify-center hover:border-primary-400 transition-colors">
+                      <span className="text-gray-400 text-lg font-semibold">
+                        {data?.username?.charAt(0).toUpperCase() || 'U'}
+                      </span>
+                    </div>
+                  )}
                   {profilePictureUploading && (
                     <div className="absolute inset-0 bg-gray-900/50 rounded-full flex items-center justify-center">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-400"></div>
@@ -573,7 +571,7 @@ export default function DashboardPage() {
           {/* Status Message */}
           {data.progress.completedDays >= 5 ? (
             <div className="bg-green-900/30 border border-green-700 text-green-300 px-4 py-3 rounded-md mb-6">
-              ✅ You're on track! Complete {daysRemaining} more day(s) to maintain your streak.
+              ✅ You’re on track! Complete {daysRemaining} more day(s) to maintain your streak.
             </div>
           ) : (
             <div className="bg-yellow-900/30 border border-yellow-700 text-yellow-300 px-4 py-3 rounded-md mb-6">
@@ -583,7 +581,7 @@ export default function DashboardPage() {
 
           {/* Upload Section */}
           <div className="border-t border-gray-700 pt-4 sm:pt-5 md:pt-6">
-            <h3 className="text-base sm:text-lg font-semibold text-gray-100 mb-3 sm:mb-4">Upload Today's Photo</h3>
+            <h3 className="text-base sm:text-lg font-semibold text-gray-100 mb-3 sm:mb-4">Upload Today’s Photo</h3>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
               <label className="flex-1">
                 <input
@@ -607,7 +605,7 @@ export default function DashboardPage() {
 
         {/* Days Grid */}
         <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-3 sm:p-4 md:p-6 mb-4 sm:mb-6 md:mb-8">
-          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-100 mb-3 sm:mb-4 md:mb-6">This Week's Progress</h2>
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-100 mb-3 sm:mb-4 md:mb-6">This Week’s Progress</h2>
           {/* Mobile: Horizontal scroll, Desktop: Grid */}
           <div className="block sm:hidden">
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-3 sm:mx-0 px-3 sm:px-0 scrollbar-hide">
@@ -696,10 +694,13 @@ export default function DashboardPage() {
                       )}
                       {day.photo_path && (
                         <div className="mt-2 relative w-full aspect-square rounded overflow-hidden bg-gray-700">
-                          <img
+                          <Image
                             src={getImageUrl(day.photo_path) || ''}
                             alt={`Photo for ${day.date}`}
-                            className="w-full h-full object-cover"
+                            fill
+                            unoptimized
+                            className="object-cover"
+                            sizes="(max-width: 640px) 100vw, 200px"
                           />
                         </div>
                       )}
@@ -788,15 +789,29 @@ export default function DashboardPage() {
                         <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
                           <div className="flex items-center gap-2 sm:gap-3">
                             {friend.profile_picture ? (
-                              <img
-                                src={getImageUrl(friend.profile_picture) || ''}
-                                alt={friend.username}
-                                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-gray-600 object-cover flex-shrink-0"
-                                onError={(e) => {
-                                  // Hide image and show fallback if it fails to load
-                                  e.currentTarget.style.display = 'none';
-                                }}
-                              />
+                              !brokenFriendPics.has(friend.id) ? (
+                                <Image
+                                  src={getImageUrl(friend.profile_picture) || ''}
+                                  alt={friend.username}
+                                  width={48}
+                                  height={48}
+                                  unoptimized
+                                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-gray-600 object-cover flex-shrink-0"
+                                  onError={() =>
+                                    setBrokenFriendPics((prev) => {
+                                      const next = new Set(prev);
+                                      next.add(friend.id);
+                                      return next;
+                                    })
+                                  }
+                                />
+                              ) : (
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-700 border border-gray-600 flex items-center justify-center flex-shrink-0">
+                                  <span className="text-gray-400 text-sm sm:text-base font-semibold">
+                                    {friend.username.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                              )
                             ) : (
                               <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-700 border border-gray-600 flex items-center justify-center flex-shrink-0">
                                 <span className="text-gray-400 text-sm sm:text-base font-semibold">

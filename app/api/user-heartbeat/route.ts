@@ -24,20 +24,6 @@ export async function POST(request: NextRequest) {
     const now = formatDateTimeSerbia();
 
     // Update or insert user's last activity timestamp
-    // We'll use a simple approach: store in a user_activity table or update users table
-    // For simplicity, we can use a user_activity table
-    try {
-      db.exec(`
-        CREATE TABLE IF NOT EXISTS user_activity (
-          user_id INTEGER PRIMARY KEY,
-          last_seen DATETIME NOT NULL,
-          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-        )
-      `);
-    } catch (error) {
-      // Table might already exist
-    }
-
     // Upsert user activity (SQLite doesn't support ON CONFLICT, so we use REPLACE)
     db.prepare(
       `INSERT OR REPLACE INTO user_activity (user_id, last_seen) 

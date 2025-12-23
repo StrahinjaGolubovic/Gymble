@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ToastContainer, Toast } from '@/components/Toast';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { getImageUrl } from '@/lib/image-utils';
@@ -59,11 +60,7 @@ export default function AdminUsers() {
   const [newPassword, setNewPassword] = useState('');
   const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  async function fetchUsers() {
+  const fetchUsers = useCallback(async () => {
     try {
       const response = await fetch('/api/admin/users');
       if (response.ok) {
@@ -77,7 +74,11 @@ export default function AdminUsers() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [router]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   function showToast(message: string, type: 'success' | 'error' | 'info' = 'info') {
     const id = Date.now().toString();
@@ -383,9 +384,12 @@ export default function AdminUsers() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2 sm:gap-3">
                         {user.profile_picture ? (
-                          <img
+                          <Image
                             src={getImageUrl(user.profile_picture) || ''}
                             alt={user.username}
+                            width={40}
+                            height={40}
+                            unoptimized
                             className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-gray-600 object-cover"
                           />
                         ) : (

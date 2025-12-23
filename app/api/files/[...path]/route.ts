@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readFile } from 'fs/promises';
-import { join } from 'path';
+import { join, resolve, sep } from 'path';
 import { existsSync } from 'fs';
 
 // Serve files from the persistent volume
@@ -22,10 +22,11 @@ export async function GET(
       ? join(process.env.DATABASE_PATH, '..')
       : join(process.cwd(), 'data');
     
-    const fullPath = join(baseDir, filePath);
+    const baseDirResolved = resolve(baseDir);
+    const fullPath = resolve(baseDirResolved, filePath);
 
     // Security: Prevent directory traversal
-    if (!fullPath.startsWith(baseDir)) {
+    if (!(fullPath === baseDirResolved || fullPath.startsWith(baseDirResolved + sep))) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
