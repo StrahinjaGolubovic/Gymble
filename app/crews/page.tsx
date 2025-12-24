@@ -384,6 +384,18 @@ export default function CrewsPage() {
                 )}
               </div>
             </div>
+
+            {/* Crew Chat */}
+            {currentUserId && currentUsername && (
+              <div className="mt-6">
+                <CrewChat
+                  crewId={myCrew.id}
+                  currentUserId={currentUserId}
+                  currentUsername={currentUsername}
+                  currentUserProfilePicture={currentUserProfilePicture}
+                />
+              </div>
+            )}
           </div>
         )}
 
@@ -609,7 +621,7 @@ export default function CrewsPage() {
               )}
 
               {/* Members List */}
-              <div className="mb-4 sm:mb-6">
+              <div>
                 <h4 className="text-base sm:text-lg font-semibold text-gray-100 mb-3 flex items-center gap-2">
                   <span>👥</span>
                   <span>Members ({crewDetails.members.length})</span>
@@ -658,18 +670,6 @@ export default function CrewsPage() {
                   ))}
                 </div>
               </div>
-
-              {/* Crew Chat */}
-              {currentUserId && currentUsername && (
-                <div>
-                  <CrewChat
-                    crewId={crewDetails.crew.id}
-                    currentUserId={currentUserId}
-                    currentUsername={currentUsername}
-                    currentUserProfilePicture={currentUserProfilePicture}
-                  />
-                </div>
-              )}
             </div>
           </div>
         )}

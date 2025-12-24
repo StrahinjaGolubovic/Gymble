@@ -1030,16 +1030,41 @@ export default function DashboardPage() {
                           </div>
                         </div>
                       </Link>
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleRemoveFriend(friend.id);
-                        }}
-                        className="self-start sm:self-auto px-3 sm:px-4 py-2 bg-red-900/50 border border-red-700 text-red-300 rounded-md hover:bg-red-900/70 transition-colors text-xs sm:text-sm whitespace-nowrap"
-                      >
-                        Remove
-                      </button>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <button
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            try {
+                              const response = await fetch('/api/friends/nudge', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ friend_id: friend.id }),
+                              });
+                              if (response.ok) {
+                                showToast(`Nudged @${friend.username}!`, 'success');
+                              } else {
+                                showToast('Failed to nudge friend', 'error');
+                              }
+                            } catch (err) {
+                              showToast('An error occurred while nudging friend', 'error');
+                            }
+                          }}
+                          className="self-start sm:self-auto px-3 sm:px-4 py-2 bg-primary-600/50 border border-primary-700 text-primary-300 rounded-md hover:bg-primary-600/70 transition-colors text-xs sm:text-sm whitespace-nowrap"
+                        >
+                          👋 Nudge
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleRemoveFriend(friend.id);
+                          }}
+                          className="self-start sm:self-auto px-3 sm:px-4 py-2 bg-red-900/50 border border-red-700 text-red-300 rounded-md hover:bg-red-900/70 transition-colors text-xs sm:text-sm whitespace-nowrap"
+                        >
+                          Remove
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
