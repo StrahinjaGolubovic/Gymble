@@ -208,6 +208,44 @@ function initDatabase(database: Database) {
     )
   `);
 
+  // Crews table
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS crews (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT UNIQUE NOT NULL,
+      leader_id INTEGER NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (leader_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  // Crew members table
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS crew_members (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      crew_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (crew_id) REFERENCES crews(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE(crew_id, user_id)
+    )
+  `);
+
+  // Crew join requests table
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS crew_requests (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      crew_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      status TEXT DEFAULT 'pending',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (crew_id) REFERENCES crews(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE(crew_id, user_id)
+    )
+  `);
+
   // Create indexes for better performance
   database.exec(`
     CREATE INDEX IF NOT EXISTS idx_challenges_user ON weekly_challenges(user_id);
@@ -223,6 +261,13 @@ function initDatabase(database: Database) {
     CREATE INDEX IF NOT EXISTS idx_user_activity_last_seen ON user_activity(last_seen);
     CREATE INDEX IF NOT EXISTS idx_trophy_transactions_user ON trophy_transactions(user_id);
     CREATE INDEX IF NOT EXISTS idx_trophy_transactions_upload ON trophy_transactions(upload_id);
+    CREATE INDEX IF NOT EXISTS idx_crews_leader ON crews(leader_id);
+    CREATE INDEX IF NOT EXISTS idx_crews_name ON crews(name);
+    CREATE INDEX IF NOT EXISTS idx_crew_members_crew ON crew_members(crew_id);
+    CREATE INDEX IF NOT EXISTS idx_crew_members_user ON crew_members(user_id);
+    CREATE INDEX IF NOT EXISTS idx_crew_requests_crew ON crew_requests(crew_id);
+    CREATE INDEX IF NOT EXISTS idx_crew_requests_user ON crew_requests(user_id);
+    CREATE INDEX IF NOT EXISTS idx_crew_requests_status ON crew_requests(status);
   `);
 }
 

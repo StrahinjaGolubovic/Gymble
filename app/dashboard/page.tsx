@@ -50,6 +50,17 @@ interface Friend {
   created_at: string;
 }
 
+interface Crew {
+  id: number;
+  name: string;
+  leader_username: string;
+  member_count: number;
+  average_streak: number;
+  average_trophies: number;
+  is_member: boolean;
+  is_leader: boolean;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const [data, setData] = useState<DashboardData | null>(null);
@@ -67,6 +78,7 @@ export default function DashboardPage() {
   const [inviteInput, setInviteInput] = useState('');
   const [friendsLoading, setFriendsLoading] = useState(false);
   const [inviteLoading, setInviteLoading] = useState(false);
+  const [myCrew, setMyCrew] = useState<Crew | null>(null);
   const [profilePictureUploading, setProfilePictureUploading] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [confirmModal, setConfirmModal] = useState<{
@@ -127,6 +139,18 @@ export default function DashboardPage() {
     }
   }, []);
 
+  const fetchMyCrew = useCallback(async () => {
+    try {
+      const response = await fetch('/api/crews/my-crew');
+      if (response.ok) {
+        const data = await response.json();
+        setMyCrew(data.crew);
+      }
+    } catch (err) {
+      console.error('Failed to fetch crew:', err);
+    }
+  }, []);
+
   const fetchImpersonationStatus = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/impersonation-status');
@@ -144,6 +168,7 @@ export default function DashboardPage() {
     fetchFriends();
     fetchInviteCode();
     fetchImpersonationStatus();
+    fetchMyCrew();
     
     // Send heartbeat to indicate user is online
     const sendHeartbeat = async () => {
@@ -163,7 +188,7 @@ export default function DashboardPage() {
     const heartbeatInterval = setInterval(sendHeartbeat, 30000);
 
     return () => clearInterval(heartbeatInterval);
-  }, [fetchDashboard, fetchFriends, fetchInviteCode, fetchImpersonationStatus]);
+  }, [fetchDashboard, fetchFriends, fetchInviteCode, fetchImpersonationStatus, fetchMyCrew]);
 
   useEffect(() => {
     if (!profileMenuOpen) return;
@@ -648,6 +673,12 @@ export default function DashboardPage() {
                 </div>
               )}
             </div>
+            <Link
+              href="/crews"
+              className="text-primary-400 hover:text-primary-300 px-3 sm:px-4 py-1.5 sm:py-2 rounded-md hover:bg-gray-700 transition-colors text-sm sm:text-base"
+            >
+              Crews
+            </Link>
             {data && (data.username === 'admin' || data.username === 'seuq' || data.username === 'jakow' || data.username === 'nikola') && (
               <Link
                 href="/admin/dashboard"
@@ -868,6 +899,41 @@ export default function DashboardPage() {
             })}
           </div>
         </div>
+
+        {/* Crew Section */}
+        {myCrew && (
+          <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-4 sm:p-5 md:p-6 mb-4 sm:mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+              <div>
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-100 mb-2">My Crew: {myCrew.name}</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-400">Members:</span>
+                    <span className="ml-2 text-gray-100 font-semibold">{myCrew.member_count}/30</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Avg Streak:</span>
+                    <span className="ml-2 text-gray-100 font-semibold">{myCrew.average_streak}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Avg Trophies:</span>
+                    <span className="ml-2 text-gray-100 font-semibold">{myCrew.average_trophies}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Leader:</span>
+                    <span className="ml-2 text-gray-100 font-semibold">@{myCrew.leader_username}</span>
+                  </div>
+                </div>
+              </div>
+              <Link
+                href="/crews"
+                className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors text-sm sm:text-base text-center"
+              >
+                View Crew
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* Friends Section */}
         <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-4 sm:p-5 md:p-6 mb-4 sm:mb-6">
