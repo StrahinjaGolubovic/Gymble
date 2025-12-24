@@ -527,8 +527,6 @@ export default function DashboardPage() {
   }
 
   const progressPercentage = (data.progress.completedDays / data.progress.totalDays) * 100;
-  const daysRemaining = data.progress.totalDays - data.progress.completedDays;
-  const needsMoreDays = Math.max(0, 5 - data.progress.completedDays);
 
   return (
     <div className="min-h-screen bg-gray-900">
@@ -727,17 +725,6 @@ export default function DashboardPage() {
               ></div>
             </div>
           </div>
-
-          {/* Status Message */}
-          {data.progress.completedDays >= 5 ? (
-            <div className="bg-green-900/30 border border-green-700 text-green-300 px-4 py-3 rounded-md mb-6">
-              ✅ You’re on track! Complete {daysRemaining} more day(s) to maintain your streak.
-            </div>
-          ) : (
-            <div className="bg-yellow-900/30 border border-yellow-700 text-yellow-300 px-4 py-3 rounded-md mb-6">
-              ⚠️ You need to complete at least {needsMoreDays} more day(s) this week to maintain your streak and earn trophies.
-            </div>
-          )}
 
           {/* Upload Section */}
           <div className="border-t border-gray-700 pt-4 sm:pt-5 md:pt-6">
