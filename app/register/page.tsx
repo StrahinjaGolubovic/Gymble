@@ -15,6 +15,7 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [altchaSolution, setAltchaSolution] = useState<string | null>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [altchaReady, setAltchaReady] = useState(false);
@@ -114,6 +115,11 @@ export default function RegisterPage() {
 
     if (password.length < 6) {
       setError('Password must be at least 6 characters');
+      return;
+    }
+
+    if (!acceptedTerms) {
+      setError('You must accept the Terms of Service to continue');
       return;
     }
 
@@ -237,6 +243,28 @@ export default function RegisterPage() {
                 className="mt-1 appearance-none relative block w-full px-4 py-3 bg-gray-700 border border-gray-600 placeholder-gray-400 text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:z-10 text-base sm:text-sm min-h-[44px]"
                 placeholder="Confirm your password"
               />
+            </div>
+          </div>
+
+          <div className="flex items-start">
+            <div className="flex items-center h-5">
+              <input
+                id="accept-terms"
+                name="accept-terms"
+                type="checkbox"
+                required
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-600 rounded bg-gray-700"
+              />
+            </div>
+            <div className="ml-3 text-sm">
+              <label htmlFor="accept-terms" className="text-gray-300">
+                I agree to the{' '}
+                <Link href="/terms" target="_blank" className="text-primary-400 hover:text-primary-300 underline">
+                  Terms of Service
+                </Link>
+              </label>
             </div>
           </div>
 
