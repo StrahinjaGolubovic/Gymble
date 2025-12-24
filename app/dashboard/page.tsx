@@ -901,9 +901,9 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          {/* Add Friend Section */}
-          <div className="mb-4 sm:mb-6 md:mb-8">
-            <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-100 mb-3 sm:mb-4">Add Friend</h3>
+          {/* Accept Invite Section */}
+          <div className="mb-4 sm:mb-6 md:mb-8 p-3 sm:p-4 bg-gray-700/50 rounded-lg">
+            <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-100 mb-3 sm:mb-4">Add Friend by Invite Code</h3>
             <form onSubmit={handleAcceptInvite} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
               <input
                 type="text"
@@ -942,41 +942,69 @@ export default function DashboardPage() {
                   return (
                     <div
                       key={friend.id}
-                      className="bg-gray-700 rounded-lg p-3 sm:p-4 md:p-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4"
+                      className="bg-gray-700/50 border border-gray-600 rounded-lg p-3 sm:p-4 md:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4"
                     >
-                      <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                        {friend.profile_picture ? (
-                          !brokenFriendPics.has(friend.id) ? (
-                            <Image
-                              src={getImageUrl(friend.profile_picture) || ''}
-                              alt={friend.username}
-                              width={48}
-                              height={48}
-                              unoptimized
-                              className="w-12 h-12 rounded-full border-2 border-gray-600 object-cover flex-shrink-0"
-                              onError={() => setBrokenFriendPics((prev) => new Set(prev).add(friend.id))}
-                            />
-                          ) : (
-                            <div className="w-12 h-12 rounded-full bg-gray-600 flex items-center justify-center text-gray-300 font-semibold flex-shrink-0">
-                              {friend.username[0].toUpperCase()}
-                            </div>
-                          )
-                        ) : (
-                          <div className="w-12 h-12 rounded-full bg-gray-600 flex items-center justify-center text-gray-300 font-semibold flex-shrink-0">
-                            {friend.username[0].toUpperCase()}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            {friend.profile_picture ? (
+                              !brokenFriendPics.has(friend.id) ? (
+                                <Image
+                                  src={getImageUrl(friend.profile_picture) || ''}
+                                  alt={friend.username}
+                                  width={48}
+                                  height={48}
+                                  unoptimized
+                                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-gray-600 object-cover flex-shrink-0"
+                                  onError={() =>
+                                    setBrokenFriendPics((prev) => {
+                                      const next = new Set(prev);
+                                      next.add(friend.id);
+                                      return next;
+                                    })
+                                  }
+                                />
+                              ) : (
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-700 border border-gray-600 flex items-center justify-center flex-shrink-0">
+                                  <span className="text-gray-400 text-sm sm:text-base font-semibold">
+                                    {friend.username.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                              )
+                            ) : (
+                              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-700 border border-gray-600 flex items-center justify-center flex-shrink-0">
+                                <span className="text-gray-400 text-sm sm:text-base font-semibold">
+                                  {friend.username.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                            )}
+                            <h4 className="text-base sm:text-lg font-semibold text-gray-100 truncate">@{friend.username}</h4>
                           </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                            <h4 className="text-base sm:text-lg font-semibold text-gray-100">@{friend.username}</h4>
+                          <span className="px-2.5 py-1.5 bg-yellow-900/50 border border-yellow-700 text-yellow-300 text-xs sm:text-sm rounded whitespace-nowrap">
+                            🏆 {friend.trophies.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 sm:gap-4 text-sm sm:text-base">
+                          <div>
+                            <span className="text-gray-400">Current Streak: </span>
+                            <span className="text-primary-400 font-semibold">
+                              {friend.current_streak} days
+                            </span>
                           </div>
-                          <div className="flex flex-wrap gap-3 sm:gap-4 text-xs sm:text-sm">
-                            <div><span className="text-gray-400">Trophies: </span><span className="font-semibold text-yellow-400">{friend.trophies}</span></div>
-                            <div><span className="text-gray-400">Rank: </span><span className="font-semibold" style={getRankColorStyle(friend.trophies)}>{getTrophyRank(friend.trophies)}</span></div>
-                            <div><span className="text-gray-400">Current Streak: </span><span className="font-semibold text-primary-400">{friend.current_streak} days</span></div>
-                            <div><span className="text-gray-400">Longest Streak: </span><span className="font-semibold text-gray-100">{friend.longest_streak} days</span></div>
+                          <div>
+                            <span className="text-gray-400">Longest Streak: </span>
+                            <span className="text-gray-300 font-semibold">
+                              {friend.longest_streak} days
+                            </span>
                           </div>
-                          <div className="text-xs text-gray-500 mt-1 sm:mt-2">
+                          <div>
+                            <span className="text-gray-400">Rank: </span>
+                            <span className="font-semibold" style={getRankColorStyle(friend.trophies)}>
+                              {getTrophyRank(friend.trophies)}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-400">Member since: </span>
                             <span className="text-gray-300">
                               {formatDateDisplay(friend.created_at)}
                             </span>
