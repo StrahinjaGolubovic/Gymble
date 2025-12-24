@@ -17,20 +17,21 @@ export function getTrophyRank(trophies: number): string {
 }
 
 /**
- * Get rank color based on trophy count - vibrant and powerful colors
+ * Get rank color style based on trophy count - vibrant and powerful colors
+ * Using inline styles to ensure colors always display correctly
  */
-export function getRankColor(trophies: number): string {
-  if (trophies < 100) return '!text-orange-400'; // Bronze - vibrant orange
-  if (trophies < 200) return '!text-gray-200'; // Silver - bright silver
-  if (trophies < 300) return '!text-yellow-400'; // Gold - bright gold
-  if (trophies < 400) return '!text-cyan-300'; // Platinum - bright cyan
-  if (trophies < 500) return '!text-blue-400'; // Diamond - vibrant blue
-  if (trophies < 600) return '!text-purple-400'; // Master - vibrant purple
-  if (trophies < 700) return '!text-pink-400'; // Grandmaster - vibrant pink
-  if (trophies < 800) return '!text-red-400'; // Champion - powerful red
-  if (trophies < 900) return '!text-indigo-400'; // Legend - vibrant indigo
-  if (trophies < 1000) return '!text-amber-300'; // Elite - bright amber
-  return '!text-yellow-300'; // Supreme - glowing yellow
+export function getRankColorStyle(trophies: number): { color: string } {
+  if (trophies < 100) return { color: '#fb923c' }; // orange-400 - Bronze
+  if (trophies < 200) return { color: '#e5e7eb' }; // gray-200 - Silver
+  if (trophies < 300) return { color: '#facc15' }; // yellow-400 - Gold
+  if (trophies < 400) return { color: '#22d3ee' }; // cyan-400 - Platinum
+  if (trophies < 500) return { color: '#60a5fa' }; // blue-400 - Diamond
+  if (trophies < 600) return { color: '#a78bfa' }; // purple-400 - Master
+  if (trophies < 700) return { color: '#f472b6' }; // pink-400 - Grandmaster
+  if (trophies < 800) return { color: '#f87171' }; // red-400 - Champion
+  if (trophies < 900) return { color: '#818cf8' }; // indigo-400 - Legend
+  if (trophies < 1000) return { color: '#fbbf24' }; // amber-400 - Elite
+  return { color: '#fde047' }; // yellow-300 - Supreme
 }
 
 /**

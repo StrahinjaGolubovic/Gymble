@@ -10,7 +10,7 @@ import { getImageUrl } from '@/lib/image-utils';
 import { Chat } from '@/components/Chat';
 import { formatDateSerbia, isTodaySerbia, isPastSerbia, formatDateDisplay, formatDateTimeDisplay } from '@/lib/timezone';
 import { compressImageToJpeg } from '@/lib/image-compress';
-import { getTrophyRank, getRankColor, getRankGradient } from '@/lib/ranks';
+import { getTrophyRank, getRankColorStyle, getRankGradient } from '@/lib/ranks';
 
 interface DashboardData {
   challenge: {
@@ -686,11 +686,11 @@ export default function DashboardPage() {
             <div className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-100">{data.streak.longest_streak} days</div>
           </div>
           <div className={`${getRankGradient(data.trophies)} rounded-lg shadow-lg p-4 sm:p-5 md:p-6`}>
-            <div className={`text-xs sm:text-sm font-medium ${getRankColor(data.trophies)} mb-1 flex items-center gap-1.5`}>
+            <div className="text-xs sm:text-sm font-medium mb-1 flex items-center gap-1.5" style={getRankColorStyle(data.trophies)}>
               <span>⭐</span>
               <span>Rank</span>
             </div>
-            <div className={`text-xl sm:text-2xl md:text-3xl font-bold ${getRankColor(data.trophies)}`}>
+            <div className="text-xl sm:text-2xl md:text-3xl font-bold" style={getRankColorStyle(data.trophies)}>
               {getTrophyRank(data.trophies)}
             </div>
           </div>
@@ -991,7 +991,7 @@ export default function DashboardPage() {
                           </div>
                           <div>
                             <span className="text-gray-400">Rank: </span>
-                            <span className={`font-semibold ${getRankColor(friend.trophies)}`}>
+                            <span className="font-semibold" style={getRankColorStyle(friend.trophies)}>
                               {getTrophyRank(friend.trophies)}
                             </span>
                           </div>
