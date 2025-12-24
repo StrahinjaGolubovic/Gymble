@@ -30,6 +30,14 @@
   }
 }
 
+@keyframes streakdWobble {
+  0% { transform: translateY(0) rotate(0deg) scale(1); }
+  18% { transform: translateY(-2px) rotate(-2deg) scale(1.03); }
+  45% { transform: translateY(1px) rotate(2deg) scale(1.06); }
+  70% { transform: translateY(-1px) rotate(-1deg) scale(1.04); }
+  100% { transform: translateY(0) rotate(0deg) scale(1.02); }
+}
+
 body {
   @apply bg-gray-900 text-gray-100;
 }

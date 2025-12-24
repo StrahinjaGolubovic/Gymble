@@ -5,8 +5,21 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Gymble',
+  title: {
+    default: 'STREAKD.',
+    template: '%s · STREAKD.',
+  },
   description: 'Stay consistent with your gym routine through streak-based challenges',
+  applicationName: 'STREAKD.',
+  icons: {
+    // Place these files at: public/streakd_logo.png and public/title.png
+    icon: [
+      { url: '/streakd_logo.png', type: 'image/png' },
+      { url: '/title.png', type: 'image/png' },
+    ],
+    shortcut: ['/streakd_logo.png', '/title.png'],
+    apple: [{ url: '/streakd_logo.png', type: 'image/png' }],
+  },
 };
 
 export const viewport: Viewport = {

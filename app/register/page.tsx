@@ -168,7 +168,7 @@ export default function RegisterPage() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-6 sm:space-y-8 bg-gray-800 border border-gray-700 p-6 sm:p-8 rounded-xl shadow-2xl">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-center text-primary-400 mb-2">Gymble</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold text-center text-primary-400 mb-2">STREAKD.</h1>
           <h2 className="text-xl sm:text-2xl font-semibold text-center text-gray-100">Create your account</h2>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
