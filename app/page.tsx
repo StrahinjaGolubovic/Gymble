@@ -35,14 +35,14 @@ export default function Home() {
             <div className="absolute inset-0 blur-2xl opacity-35 transition-opacity duration-500 group-hover:opacity-70 bg-gradient-to-r from-primary-500/40 via-blue-500/30 to-cyan-400/30 rounded-full" />
 
             {/* Logo */}
-            <div className="relative">
+            <div className="relative h-28 w-28 sm:h-32 sm:w-32">
               <Image
                 src="/streakd_logo.png"
                 alt="STREAKD. logo"
-                width={160}
-                height={160}
+                fill
+                priority
                 unoptimized
-                className="h-28 w-28 sm:h-32 sm:w-32 rounded-2xl border border-gray-700/70 bg-gray-900/40 shadow-xl transition-all duration-500 ease-out
+                className="object-contain rounded-2xl border border-gray-700/70 bg-gray-900/40 shadow-xl transition-all duration-500 ease-out
                   group-hover:scale-[1.06] group-hover:-rotate-2 group-hover:shadow-2xl
                   group-hover:border-primary-500/50
                   group-hover:animate-[streakdWobble_900ms_ease-in-out]"
