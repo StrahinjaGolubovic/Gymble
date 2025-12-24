@@ -1,6 +1,6 @@
 # Railway Deployment Guide
 
-This guide will help you deploy Gymble to Railway.
+This guide will help you deploy STREAKD. to Railway.
 
 ## Prerequisites
 

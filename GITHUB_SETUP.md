@@ -36,14 +36,14 @@ git init
 git add .
 
 # Create first commit
-git commit -m "Initial commit - Gymble app ready for Railway deployment"
+git commit -m "Initial commit - STREAKD. app ready for Railway deployment"
 ```
 
 ## Step 5: Create a GitHub Repository
 
 1. Go to https://github.com and sign in (or create an account)
 2. Click the **"+"** icon in the top right → **"New repository"**
-3. Repository name: `Gymble` (or any name you want)
+3. Repository name: `streakd` (or any name you want)
 4. Description: "Gym accountability platform with streak tracking"
 5. Choose **Public** or **Private**
 6. **DO NOT** check "Initialize with README" (we already have files)
@@ -55,7 +55,7 @@ After creating the repository, GitHub will show you commands. Use these:
 
 ```bash
 # Add GitHub as remote (replace YOUR_USERNAME with your GitHub username)
-git remote add origin https://github.com/YOUR_USERNAME/Gymble.git
+git remote add origin https://github.com/YOUR_USERNAME/streakd.git
 
 # Rename branch to main (if needed)
 git branch -M main
@@ -72,7 +72,7 @@ git push -u origin main
 
 1. Go to GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
 2. Click "Generate new token (classic)"
-3. Give it a name like "Gymble Deployment"
+3. Give it a name like "STREAKD Deployment"
 4. Select scopes: Check **"repo"** (this gives full repository access)
 5. Click "Generate token"
 6. **Copy the token immediately** (you won't see it again!)
@@ -105,7 +105,7 @@ Once your code is on GitHub:
 3. Click "New Project"
 4. Select "Deploy from GitHub repo"
 5. Authorize Railway to access your GitHub
-6. Select your `Gymble` repository
+6. Select your `streakd` repository
 7. Railway will automatically start building!
 
 ## Troubleshooting

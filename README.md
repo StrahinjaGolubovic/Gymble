@@ -1,4 +1,4 @@
-# Gymble - Gym Accountability Platform
+# STREAKD. - Gym Accountability Platform
 
 A web platform that motivates users to go to the gym consistently through a streak-based accountability system. Users participate in weekly challenges, upload daily photos as proof of gym attendance, and face penalties for incomplete weeks.
 

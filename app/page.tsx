@@ -52,14 +52,9 @@ export default function Home() {
           </div>
 
           <div className="flex flex-col items-center gap-2">
-            <Image
-              src="/title.png"
-              alt="STREAKD."
-              width={420}
-              height={80}
-              unoptimized
-              className="h-10 w-auto opacity-95 drop-shadow-[0_0_18px_rgba(59,130,246,0.15)]"
-            />
+            <div className="text-3xl sm:text-4xl font-extrabold tracking-wide text-gray-100 drop-shadow-[0_0_18px_rgba(59,130,246,0.15)]">
+              STREAKD.
+            </div>
             <div className="text-sm text-gray-400">
               Checking session…
             </div>
