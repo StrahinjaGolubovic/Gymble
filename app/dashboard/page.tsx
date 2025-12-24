@@ -497,7 +497,7 @@ export default function DashboardPage() {
   const progressPercentage = data.progress.totalDays > 0 ? (data.progress.completedDays / data.progress.totalDays) * 100 : 0;
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="bg-gray-900">
       {isImpersonating && (
         <div className="bg-yellow-900/40 border-b border-yellow-700/60 text-yellow-200">
           <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-2 flex items-center justify-between gap-3">
