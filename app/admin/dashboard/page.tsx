@@ -9,7 +9,6 @@ interface Stats {
   activeUsers: number;
   totalUploads: number;
   pendingVerifications: number;
-  totalDebt: number;
   averageStreak: number;
   totalMessages: number;
 }
@@ -118,10 +117,6 @@ export default function AdminDashboard() {
             <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 sm:p-5 md:p-6">
               <div className="text-xs sm:text-sm font-medium text-gray-400 mb-1">Total Uploads</div>
               <div className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-100">{stats.totalUploads}</div>
-            </div>
-            <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 sm:p-5 md:p-6">
-              <div className="text-xs sm:text-sm font-medium text-gray-400 mb-1">Total Debt</div>
-              <div className="text-xl sm:text-2xl md:text-3xl font-bold text-red-400">{stats.totalDebt}</div>
             </div>
             <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 sm:p-5 md:p-6">
               <div className="text-xs sm:text-sm font-medium text-gray-400 mb-1">Avg. Streak</div>

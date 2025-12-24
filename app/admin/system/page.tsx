@@ -71,21 +71,6 @@ export default function AdminSystem() {
     setConfirmModal({ isOpen: true, title, message, onConfirm, variant });
   }
 
-  async function resetAllDebt() {
-    try {
-      const response = await fetch('/api/admin/reset-debt', {
-        method: 'POST',
-      });
-
-      if (response.ok) {
-        showToast('All user debt reset to 0', 'success');
-      } else {
-        showToast('Failed to reset debt', 'error');
-      }
-    } catch (err) {
-      showToast('An error occurred', 'error');
-    }
-  }
 
   async function cleanupOldChat() {
     try {
@@ -202,20 +187,6 @@ export default function AdminSystem() {
         <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 sm:p-5 md:p-6">
           <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-100 mb-4 sm:mb-6">System Actions</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-            <button
-              onClick={() =>
-                showConfirm(
-                  'Reset All Debt',
-                  'Are you sure you want to reset all user debt to 0? This action cannot be undone.',
-                  resetAllDebt,
-                  'danger'
-                )
-              }
-              className="p-4 bg-gray-700/50 border border-gray-600 rounded-lg hover:bg-gray-700 transition-colors text-left"
-            >
-              <div className="text-base sm:text-lg font-semibold text-gray-100 mb-1">Reset All Debt</div>
-              <div className="text-xs sm:text-sm text-gray-400">Set all user debt to 0</div>
-            </button>
             <button
               onClick={() =>
                 showConfirm(

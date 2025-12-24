@@ -43,9 +43,6 @@ export async function GET(request: NextRequest) {
       .prepare("SELECT COUNT(*) as count FROM daily_uploads WHERE verification_status = 'pending'")
       .get() as { count: number };
 
-    // Get total debt
-    const totalDebt = db.prepare('SELECT SUM(credits) as total FROM users').get() as { total: number | null };
-
     // Get average streak
     const avgStreak = db
       .prepare('SELECT AVG(current_streak) as avg FROM streaks WHERE current_streak > 0')
@@ -63,7 +60,6 @@ export async function GET(request: NextRequest) {
       activeUsers: activeUsers.count,
       totalUploads: totalUploads.count,
       pendingVerifications: pendingVerifications.count,
-      totalDebt: totalDebt.total || 0,
       averageStreak: avgStreak.avg || 0,
       totalMessages: totalMessages.count,
     });

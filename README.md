@@ -9,8 +9,7 @@ A web platform that motivates users to go to the gym consistently through a stre
 - **Photo Upload**: One photo per day as proof of gym attendance
 - **Progress Tracking**: Visual dashboard showing daily uploads and weekly progress
 - **Streak System**: Tracks current and longest streaks of completed weeks
-- **Credit System**: Users start with 1000 credits; lose 200 credits for incomplete weeks (< 5 days)
-- **Penalty System**: Automatic 200 credit deduction when a week is not completed (fewer than 5 days)
+- **Trophy System**: Users earn trophies for approved photos (26-32 per photo). Streak multipliers increase rewards, and penalties apply for missed streaks or rejected photos
 
 ## Tech Stack
 
@@ -95,11 +94,13 @@ The database is automatically initialized on first run. The SQLite database file
 - Streaks reset to 0 if a week is not completed
 - The platform tracks both current streak and longest streak
 
-### Credit System
+### Trophy System
 
-- New users start with 1000 credits
-- If a week is not completed (< 5 days), 200 credits are deducted
-- Credits are displayed on the dashboard
+- Users earn 26-32 trophies per approved photo
+- Streak multipliers: 1.2x for 7+ days, 1.5x for 14+ days, 2x for 30+ days
+- Weekly completion bonus: +100 trophies for completing 5+ days
+- Penalties: Trophies are halved when a streak is missed, and additional penalties apply for rejected photos
+- Trophies are displayed on the dashboard
 
 ## API Endpoints
 
@@ -116,7 +117,7 @@ The database is automatically initialized on first run. The SQLite database file
 
 ### Dashboard
 
-- `GET /api/dashboard` - Get user dashboard data (challenge, progress, streak, credits)
+- `GET /api/dashboard` - Get user dashboard data (challenge, progress, streak, trophies)
 
 ## Development
 
@@ -129,7 +130,7 @@ npm start
 
 ### Database Schema
 
-- **users**: User accounts with email, password hash, and credits
+- **users**: User accounts with username, password hash, and trophies
 - **weekly_challenges**: Weekly challenge records
 - **daily_uploads**: Daily photo uploads
 - **streaks**: User streak tracking

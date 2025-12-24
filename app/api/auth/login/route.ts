@@ -50,7 +50,6 @@ export async function POST(request: NextRequest) {
       user: {
         id: user.id,
         username: user.username,
-        debt: user.credits, // credits column stores debt
       },
     });
   } catch (error) {

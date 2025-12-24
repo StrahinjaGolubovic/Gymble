@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Username already taken' }, { status: 400 });
     }
 
-    // Hash password and create user (explicitly set credits to 0 and Serbia date)
+    // Hash password and create user (Serbia date)
     const passwordHash = await hashPassword(password);
     // Get Serbia date as YYYY-MM-DD
     const serbiaDate = getSerbiaDateSQLite();

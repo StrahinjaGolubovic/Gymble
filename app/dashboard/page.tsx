@@ -735,7 +735,7 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="bg-yellow-900/30 border border-yellow-700 text-yellow-300 px-4 py-3 rounded-md mb-6">
-              ⚠️ You need to complete at least {needsMoreDays} more day(s) this week to avoid adding 200 to your debt.
+              ⚠️ You need to complete at least {needsMoreDays} more day(s) this week to maintain your streak and earn trophies.
             </div>
           )}
 
