@@ -7,6 +7,8 @@ import Image from 'next/image';
 import { ToastContainer, Toast } from '@/components/Toast';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { getImageUrl } from '@/lib/image-utils';
+import { EmptyState } from '@/components/EmptyState';
+import { MobileNav } from '@/components/MobileNav';
 
 interface CrewInfo {
   id: number;
@@ -399,7 +401,16 @@ export default function CrewsPage() {
             )}
 
             {!searching && searchQuery && searchResults.length === 0 && (
-              <div className="text-center py-4 text-gray-400">No crews found</div>
+              <EmptyState
+                icon="🔍"
+                title="No crews found"
+                description={`No crews match "${searchQuery}". Try a different search term or create your own crew!`}
+                action={{
+                  label: 'Create Crew',
+                  onClick: () => setShowCreateModal(true),
+                }}
+                className="py-8"
+              />
             )}
 
             {!searching && searchResults.length > 0 && (

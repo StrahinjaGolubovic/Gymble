@@ -188,3 +188,35 @@ altcha-widget::part(state) {
   background-color: #1f2937;
 }
 
+/* Micro-interactions */
+@keyframes button-press {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+@keyframes card-lift {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-2px); }
+}
+
+/* Smooth transitions for interactive elements */
+button, a, [role="button"] {
+  transition: all 0.15s ease-in-out;
+}
+
+/* Enhanced focus states */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Mobile bottom nav spacing */
+@media (max-width: 640px) {
+  main {
+    padding-bottom: 5rem; /* Space for bottom nav */
+  }
+}
+

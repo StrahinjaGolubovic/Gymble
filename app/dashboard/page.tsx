@@ -11,6 +11,10 @@ import { Chat } from '@/components/Chat';
 import { formatDateSerbia, isTodaySerbia, isPastSerbia, formatDateDisplay, formatDateTimeDisplay } from '@/lib/timezone';
 import { compressImageToJpeg } from '@/lib/image-compress';
 import { getTrophyRank, getRankColorStyle, getRankGradient, getRankBorderStyle } from '@/lib/ranks';
+import { Skeleton, SkeletonGrid, SkeletonCard, SkeletonList } from '@/components/Skeleton';
+import { CircularProgress } from '@/components/CircularProgress';
+import { EmptyState } from '@/components/EmptyState';
+import { MobileNav } from '@/components/MobileNav';
 
 interface DashboardData {
   challenge: {
@@ -538,8 +542,22 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-400"></div>
+      <div className="min-h-screen bg-gray-900">
+        <header className="bg-gray-800 border-b border-gray-700 shadow-sm sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4">
+            <div className="flex items-center justify-between">
+              <Skeleton variant="rectangular" width={120} height={32} />
+              <Skeleton variant="circular" width={40} height={40} />
+            </div>
+          </div>
+        </header>
+        <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4 md:py-6 lg:py-8">
+          <SkeletonGrid count={4} />
+          <div className="mt-6">
+            <SkeletonCard />
+          </div>
+        </main>
+        <MobileNav />
       </div>
     );
   }
@@ -694,7 +712,7 @@ export default function DashboardPage() {
       <main className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4 md:py-6 lg:py-8">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
-          <div className="bg-gradient-to-br from-yellow-900/40 to-yellow-800/20 border-2 border-yellow-600/50 rounded-lg shadow-lg p-4 sm:p-5 md:p-6">
+          <div className="bg-gradient-to-br from-yellow-900/40 to-yellow-800/20 border-2 border-yellow-600/50 rounded-lg shadow-lg p-4 sm:p-5 md:p-6 hover:scale-[1.02] hover:shadow-xl transition-all duration-200 cursor-default">
             <div className="text-xs sm:text-sm font-medium text-yellow-300 mb-1 flex items-center gap-1.5">
               <span>🏆</span>
               <span>Trophies</span>
@@ -708,15 +726,15 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
-          <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-4 sm:p-5 md:p-6">
+          <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-4 sm:p-5 md:p-6 hover:scale-[1.02] hover:shadow-xl hover:border-primary-500/30 transition-all duration-200 cursor-default">
             <div className="text-xs sm:text-sm font-medium text-gray-400 mb-1">Current Streak</div>
             <div className="text-xl sm:text-2xl md:text-3xl font-bold text-primary-400">{data.streak.current_streak} days</div>
           </div>
-          <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-4 sm:p-5 md:p-6">
+          <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-4 sm:p-5 md:p-6 hover:scale-[1.02] hover:shadow-xl hover:border-gray-600 transition-all duration-200 cursor-default">
             <div className="text-xs sm:text-sm font-medium text-gray-400 mb-1">Longest Streak</div>
             <div className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-100">{data.streak.longest_streak} days</div>
           </div>
-          <div className={`${getRankGradient(data.trophies)} rounded-lg shadow-lg p-4 sm:p-5 md:p-6`} style={getRankBorderStyle(data.trophies)}>
+          <div className={`${getRankGradient(data.trophies)} rounded-lg shadow-lg p-4 sm:p-5 md:p-6 hover:scale-[1.02] hover:shadow-xl transition-all duration-200 cursor-default`} style={getRankBorderStyle(data.trophies)}>
             <div className="text-xs sm:text-sm font-medium mb-1 flex items-center gap-1.5" style={getRankColorStyle(data.trophies)}>
               <span>⭐</span>
               <span>Rank</span>
@@ -745,19 +763,31 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Progress Bar */}
-          <div className="mb-6">
-            <div className="flex justify-between text-sm text-gray-300 mb-2">
-              <span>Progress</span>
-              <span>{Math.round(progressPercentage)}%</span>
+          {/* Progress Indicator */}
+          <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex-1 w-full sm:w-auto">
+              <div className="flex justify-between text-sm text-gray-300 mb-2">
+                <span>Progress</span>
+                <span>{Math.round(progressPercentage)}%</span>
+              </div>
+              <div className="w-full bg-gray-700 rounded-full h-3">
+                <div
+                  className={`h-3 rounded-full transition-all duration-500 ${
+                    progressPercentage >= 71.4 ? 'bg-green-500' : 'bg-primary-500'
+                  }`}
+                  style={{ width: `${progressPercentage}%` }}
+                ></div>
+              </div>
             </div>
-            <div className="w-full bg-gray-700 rounded-full h-3">
-              <div
-                className={`h-3 rounded-full transition-all ${
-                  progressPercentage >= 71.4 ? 'bg-green-500' : 'bg-primary-500'
-                }`}
-                style={{ width: `${progressPercentage}%` }}
-              ></div>
+            <div className="flex-shrink-0">
+              <CircularProgress
+                value={progressPercentage}
+                size={100}
+                strokeWidth={8}
+                showLabel={true}
+                color={progressPercentage >= 71.4 ? 'green' : progressPercentage >= 50 ? 'primary' : 'red'}
+                className="sm:ml-4"
+              />
             </div>
           </div>
 
@@ -773,7 +803,7 @@ export default function DashboardPage() {
                   disabled={uploading}
                   className="hidden"
                 />
-                <div className="cursor-pointer bg-primary-600 text-white px-5 sm:px-6 py-3 sm:py-3.5 rounded-md hover:bg-primary-700 active:bg-primary-800 text-center text-base sm:text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation min-h-[44px] flex items-center justify-center">
+                <div className="cursor-pointer bg-primary-600 text-white px-5 sm:px-6 py-3 sm:py-3.5 rounded-md hover:bg-primary-700 active:bg-primary-800 active:scale-95 text-center text-base sm:text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 touch-manipulation min-h-[44px] flex items-center justify-center shadow-md hover:shadow-lg">
                   {uploading ? 'Uploading...' : 'Choose Photo'}
                 </div>
               </label>
@@ -927,7 +957,7 @@ export default function DashboardPage() {
               </div>
               <Link
                 href="/crews"
-                className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors text-sm sm:text-base text-center"
+                className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 active:scale-95 transition-all duration-150 text-sm sm:text-base text-center shadow-md hover:shadow-lg"
               >
                 View Crew
               </Link>
@@ -949,7 +979,7 @@ export default function DashboardPage() {
               <button
                 onClick={handleCopyInviteCode}
                 disabled={!inviteCode}
-                className="px-5 sm:px-6 py-3 sm:py-3.5 bg-primary-600 text-white rounded-md hover:bg-primary-700 active:bg-primary-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-base sm:text-base whitespace-nowrap touch-manipulation min-h-[44px]"
+                className="px-5 sm:px-6 py-3 sm:py-3.5 bg-primary-600 text-white rounded-md hover:bg-primary-700 active:bg-primary-800 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 text-base sm:text-base whitespace-nowrap touch-manipulation min-h-[44px] shadow-md hover:shadow-lg"
               >
                 Copy
               </button>
@@ -974,7 +1004,7 @@ export default function DashboardPage() {
               <button
                 type="submit"
                 disabled={!inviteInput.trim() || inviteLoading}
-                className="px-5 sm:px-6 py-3 sm:py-3.5 bg-primary-600 text-white rounded-md hover:bg-primary-700 active:bg-primary-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-base sm:text-base whitespace-nowrap touch-manipulation min-h-[44px]"
+                className="px-5 sm:px-6 py-3 sm:py-3.5 bg-primary-600 text-white rounded-md hover:bg-primary-700 active:bg-primary-800 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 text-base sm:text-base whitespace-nowrap touch-manipulation min-h-[44px] shadow-md hover:shadow-lg"
               >
                 {inviteLoading ? 'Adding...' : 'Add Friend'}
               </button>
@@ -987,13 +1017,17 @@ export default function DashboardPage() {
               Your Friends ({friends.length})
             </h3>
             {friendsLoading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-400 mx-auto"></div>
-              </div>
+              <SkeletonList count={3} />
             ) : friends.length === 0 ? (
-              <div className="text-center py-8 text-gray-400">
-                <p className="text-sm sm:text-base">No friends yet. Share your invite code to get started!</p>
-              </div>
+              <EmptyState
+                icon="👥"
+                title="No friends yet"
+                description="Share your invite code with friends to start building your network and compete together!"
+                action={{
+                  label: 'Copy Invite Code',
+                  onClick: handleCopyInviteCode,
+                }}
+              />
             ) : (
               <div className="space-y-3">
                 {friends.map((friend) => {
@@ -1071,7 +1105,7 @@ export default function DashboardPage() {
                       </div>
                       <button
                         onClick={() => handleRemoveFriend(friend.id)}
-                        className="self-start sm:self-auto px-3 sm:px-4 py-2 bg-red-900/50 border border-red-700 text-red-300 rounded-md hover:bg-red-900/70 transition-colors text-xs sm:text-sm whitespace-nowrap"
+                        className="self-start sm:self-auto px-3 sm:px-4 py-2 bg-red-900/50 border border-red-700 text-red-300 rounded-md hover:bg-red-900/70 active:scale-95 transition-all duration-150 text-xs sm:text-sm whitespace-nowrap shadow-sm hover:shadow-md"
                       >
                         Remove
                       </button>
@@ -1094,6 +1128,9 @@ export default function DashboardPage() {
           </div>
         )}
       </main>
+
+      <MobileNav />
+
       <ToastContainer toasts={toasts} onRemove={removeToast} />
       <ConfirmModal
         isOpen={confirmModal.isOpen}
