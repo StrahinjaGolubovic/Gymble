@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -56,6 +56,9 @@ export default function DashboardPage() {
   const [isImpersonating, setIsImpersonating] = useState(false);
   const [profilePicBroken, setProfilePicBroken] = useState(false);
   const [brokenFriendPics, setBrokenFriendPics] = useState<Set<number>>(() => new Set());
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+  const profileFileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [friends, setFriends] = useState<Friend[]>([]);
@@ -160,6 +163,29 @@ export default function DashboardPage() {
 
     return () => clearInterval(heartbeatInterval);
   }, [fetchDashboard, fetchFriends, fetchInviteCode, fetchImpersonationStatus]);
+
+  useEffect(() => {
+    if (!profileMenuOpen) return;
+
+    const onMouseDown = (e: MouseEvent) => {
+      const el = profileMenuRef.current;
+      if (!el) return;
+      if (!el.contains(e.target as Node)) {
+        setProfileMenuOpen(false);
+      }
+    };
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setProfileMenuOpen(false);
+    };
+
+    document.addEventListener('mousedown', onMouseDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onMouseDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [profileMenuOpen]);
 
   async function stopImpersonating() {
     try {
@@ -537,49 +563,90 @@ export default function DashboardPage() {
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             {/* Profile Picture */}
-            <div className="relative group">
-              <label className="cursor-pointer">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleProfilePictureUpload}
-                  disabled={profilePictureUploading}
-                  className="hidden"
-                />
-                <div className="relative">
-                  {data?.profilePicture && !profilePicBroken ? (
-                    <Image
-                      key={`profile-img-${data.profilePicture}`}
-                      src={data.profilePicture}
-                      alt="Profile picture"
-                      width={48}
-                      height={48}
-                      unoptimized
-                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-gray-600 object-cover hover:border-primary-400 transition-colors"
-                      onError={() => setProfilePicBroken(true)}
-                    />
-                  ) : (
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-700 border-2 border-gray-600 flex items-center justify-center hover:border-primary-400 transition-colors">
-                      <span className="text-gray-400 text-lg font-semibold">
-                        {data?.username?.charAt(0).toUpperCase() || 'U'}
-                      </span>
-                    </div>
-                  )}
-                  {profilePictureUploading && (
-                    <div className="absolute inset-0 bg-gray-900/50 rounded-full flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-400"></div>
-                    </div>
-                  )}
-                </div>
-              </label>
-              {data?.profilePicture && (
-                <button
-                  onClick={handleRemoveProfilePicture}
-                  className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
-                  title="Remove profile picture"
+            <div className="relative" ref={profileMenuRef}>
+              <input
+                ref={profileFileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleProfilePictureUpload}
+                disabled={profilePictureUploading}
+                className="hidden"
+              />
+
+              <button
+                type="button"
+                onClick={() => setProfileMenuOpen((v) => !v)}
+                aria-haspopup="menu"
+                aria-expanded={profileMenuOpen}
+                className="relative"
+              >
+                {data?.profilePicture && !profilePicBroken ? (
+                  <Image
+                    key={`profile-img-${data.profilePicture}`}
+                    src={data.profilePicture}
+                    alt="Profile picture"
+                    width={48}
+                    height={48}
+                    unoptimized
+                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-gray-600 object-cover hover:border-primary-400 transition-colors"
+                    onError={() => setProfilePicBroken(true)}
+                  />
+                ) : (
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-700 border-2 border-gray-600 flex items-center justify-center hover:border-primary-400 transition-colors">
+                    <span className="text-gray-400 text-lg font-semibold">
+                      {data?.username?.charAt(0).toUpperCase() || 'U'}
+                    </span>
+                  </div>
+                )}
+                {profilePictureUploading && (
+                  <div className="absolute inset-0 bg-gray-900/50 rounded-full flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-400"></div>
+                  </div>
+                )}
+              </button>
+
+              {profileMenuOpen && (
+                <div
+                  role="menu"
+                  className="absolute right-0 mt-2 w-56 rounded-lg border border-gray-700 bg-gray-800 shadow-xl overflow-hidden z-50"
                 >
-                  ×
-                </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="w-full text-left px-4 py-2.5 text-sm text-gray-100 hover:bg-gray-700 transition-colors"
+                    onClick={() => {
+                      setProfileMenuOpen(false);
+                      profileFileInputRef.current?.click();
+                    }}
+                  >
+                    Change profile picture
+                  </button>
+                  {data?.profilePicture && (
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="w-full text-left px-4 py-2.5 text-sm text-red-300 hover:bg-gray-700 transition-colors"
+                      onClick={() => {
+                        setProfileMenuOpen(false);
+                        handleRemoveProfilePicture();
+                      }}
+                    >
+                      Remove profile picture
+                    </button>
+                  )}
+                  <div className="h-px bg-gray-700" />
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="w-full text-left px-4 py-2.5 text-sm text-gray-100 hover:bg-gray-700 transition-colors"
+                    onClick={() => {
+                      setProfileMenuOpen(false);
+                      handleLogout();
+                    }}
+                  >
+                    Logout
+                  </button>
+                </div>
               )}
             </div>
             {data && (data.username === 'admin' || data.username === 'seuq') && (
@@ -590,12 +657,6 @@ export default function DashboardPage() {
                 Admin Panel
               </Link>
             )}
-            <button
-              onClick={handleLogout}
-              className="text-gray-400 hover:text-gray-100 px-3 sm:px-4 py-1.5 sm:py-2 rounded-md hover:bg-gray-700 transition-colors text-sm sm:text-base"
-            >
-              Logout
-            </button>
           </div>
         </div>
       </header>
