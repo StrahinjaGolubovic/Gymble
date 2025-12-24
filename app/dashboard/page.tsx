@@ -687,8 +687,8 @@ export default function DashboardPage() {
           </div>
           <div className={`${getRankGradient(data.trophies)} rounded-lg shadow-lg p-4 sm:p-5 md:p-6`}>
             <div className={`text-xs sm:text-sm font-medium ${getRankColor(data.trophies)} mb-1 flex items-center gap-1.5`}>
-              <span>Rank</span>
               <span>⭐</span>
+              <span>Rank</span>
             </div>
             <div className={`text-xl sm:text-2xl md:text-3xl font-bold ${getRankColor(data.trophies)}`}>
               {getTrophyRank(data.trophies)}
