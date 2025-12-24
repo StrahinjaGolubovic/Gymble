@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ToastContainer, Toast } from '@/components/Toast';
 import { ConfirmModal } from '@/components/ConfirmModal';
+import { CrewChat } from '@/components/CrewChat';
 import { getImageUrl } from '@/lib/image-utils';
 
 interface CrewInfo {
@@ -60,6 +61,9 @@ export default function CrewsPage() {
   } | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [brokenPics, setBrokenPics] = useState<Set<number>>(() => new Set());
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [currentUsername, setCurrentUsername] = useState<string>('');
+  const [currentUserProfilePicture, setCurrentUserProfilePicture] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
@@ -90,6 +94,19 @@ export default function CrewsPage() {
 
   useEffect(() => {
     fetchMyCrew();
+    // Fetch current user info for crew chat
+    fetch('/api/dashboard')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.userId) {
+          setCurrentUserId(data.userId);
+          setCurrentUsername(data.username || '');
+          setCurrentUserProfilePicture(data.profilePicture || null);
+        }
+      })
+      .catch(() => {
+        // Ignore errors
+      });
   }, [fetchMyCrew]);
 
   const handleSearch = useCallback(async (query: string) => {
@@ -592,7 +609,7 @@ export default function CrewsPage() {
               )}
 
               {/* Members List */}
-              <div>
+              <div className="mb-4 sm:mb-6">
                 <h4 className="text-base sm:text-lg font-semibold text-gray-100 mb-3 flex items-center gap-2">
                   <span>👥</span>
                   <span>Members ({crewDetails.members.length})</span>
@@ -641,6 +658,18 @@ export default function CrewsPage() {
                   ))}
                 </div>
               </div>
+
+              {/* Crew Chat */}
+              {currentUserId && currentUsername && (
+                <div>
+                  <CrewChat
+                    crewId={crewDetails.crew.id}
+                    currentUserId={currentUserId}
+                    currentUsername={currentUsername}
+                    currentUserProfilePicture={currentUserProfilePicture}
+                  />
+                </div>
+              )}
             </div>
           </div>
         )}

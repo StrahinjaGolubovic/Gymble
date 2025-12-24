@@ -8,6 +8,8 @@ import { ToastContainer, Toast } from '@/components/Toast';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { getImageUrl } from '@/lib/image-utils';
 import { Chat } from '@/components/Chat';
+import { ImageCropper } from '@/components/ImageCropper';
+import { Notifications } from '@/components/Notifications';
 import { formatDateSerbia, isTodaySerbia, isPastSerbia, formatDateDisplay, formatDateTimeDisplay } from '@/lib/timezone';
 import { compressImageToJpeg } from '@/lib/image-compress';
 import { getTrophyRank, getRankColorStyle, getRankGradient, getRankBorderStyle } from '@/lib/ranks';
@@ -80,6 +82,7 @@ export default function DashboardPage() {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [myCrew, setMyCrew] = useState<Crew | null>(null);
   const [profilePictureUploading, setProfilePictureUploading] = useState(false);
+  const [croppingImage, setCroppingImage] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
@@ -304,24 +307,29 @@ export default function DashboardPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Show cropper with the selected image
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const imageUrl = event.target?.result as string;
+      setCroppingImage(imageUrl);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  }
+
+  async function handleCroppedImage(croppedImageUrl: string) {
+    setCroppingImage(null);
     setProfilePictureUploading(true);
 
     try {
+      // Convert data URL to File
+      const response = await fetch(croppedImageUrl);
+      const blob = await response.blob();
+      const file = new File([blob], 'profile.jpg', { type: 'image/jpeg' });
+
       let uploadFile = file;
-
-      if (file.type === 'image/heic' || file.type === 'image/heif' || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
-        const heic2any = (await import('heic2any')).default;
-        const converted = await heic2any({
-          blob: file,
-          toType: 'image/jpeg',
-          quality: 0.9,
-        });
-        const blob = Array.isArray(converted) ? converted[0] : converted;
-        uploadFile = new File([blob], file.name.replace(/\.(heic|heif)$/i, '.jpg'), { type: 'image/jpeg' });
-      }
-
       try {
-        uploadFile = await compressImageToJpeg(uploadFile, {
+        uploadFile = await compressImageToJpeg(file, {
           maxBytes: 1.8 * 1024 * 1024,
           maxDimension: 1920,
           quality: 0.85,
@@ -333,27 +341,26 @@ export default function DashboardPage() {
       const formData = new FormData();
       formData.append('picture', uploadFile);
 
-      const response = await fetch('/api/profile/picture', {
+      const uploadResponse = await fetch('/api/profile/picture', {
         method: 'POST',
         body: formData,
       });
 
-      if (response.ok) {
-        const result = await response.json();
+      if (uploadResponse.ok) {
+        const result = await uploadResponse.json();
         if (result.profile_picture && data) {
           setData({ ...data, profilePicture: result.profile_picture });
         }
         await fetchDashboard();
         showToast('Profile picture updated!', 'success');
       } else {
-        const result = await response.json();
+        const result = await uploadResponse.json();
         showToast(result.error || 'Failed to upload profile picture', 'error');
       }
     } catch (err) {
       showToast('An error occurred while uploading profile picture', 'error');
     } finally {
       setProfilePictureUploading(false);
-      e.target.value = '';
     }
   }
 
@@ -528,6 +535,7 @@ export default function DashboardPage() {
             />
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
+            {data?.userId && <Notifications userId={data.userId} />}
             {/* Profile Picture */}
             <div className="relative" ref={profileMenuRef}>
               <input
@@ -1052,6 +1060,13 @@ export default function DashboardPage() {
         )}
       </main>
 
+      {croppingImage && (
+        <ImageCropper
+          image={croppingImage}
+          onCropComplete={handleCroppedImage}
+          onCancel={() => setCroppingImage(null)}
+        />
+      )}
       <ToastContainer toasts={toasts} onRemove={removeToast} />
       <ConfirmModal
         isOpen={confirmModal.isOpen}
