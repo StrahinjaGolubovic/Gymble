@@ -199,7 +199,7 @@ export default function ProfilePage() {
                 )}
                 
                 {/* Rank Badge */}
-                <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 ${getRankGradient(user.trophies)} px-4 py-1.5 rounded-full border-2 shadow-lg`} style={getRankBorderStyle(user.trophies)}>
+                <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 bg-gray-900 px-4 py-1.5 rounded-full border-2 shadow-lg`} style={getRankBorderStyle(user.trophies)}>
                   <span className="text-sm font-bold rank-shine" style={{ ...getRankColorStyle(user.trophies), fontFamily: 'var(--font-orbitron), sans-serif' }}>
                     {getTrophyRank(user.trophies)}
                   </span>
