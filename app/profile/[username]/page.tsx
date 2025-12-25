@@ -174,8 +174,7 @@ export default function ProfilePage() {
 
       <main className="max-w-5xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-8">
         {/* Profile Header - Enhanced */}
-        <div className={`${getRankGradient(user.trophies)} border rounded-xl shadow-2xl p-1 mb-6`} style={getRankBorderStyle(user.trophies)}>
-          <div className="bg-gray-800/95 rounded-lg p-6 sm:p-8">
+        <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl p-6 sm:p-8 mb-6">
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
               {/* Profile Picture - Enhanced */}
               <div className="relative">
@@ -285,7 +284,6 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
-        </div>
         </div>
 
         {/* Stats Grid - Enhanced */}
