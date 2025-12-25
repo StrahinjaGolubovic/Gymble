@@ -1114,43 +1114,9 @@ export default function DashboardPage() {
 
           {/* Friends List */}
           <div>
-            <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-100">
-                Your Friends ({friends.length})
-              </h3>
-              {!friendsLoading && friends.length > 0 && (
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => {
-                      const container = document.getElementById('friends-scroll-container');
-                      if (container) {
-                        container.scrollBy({ left: -300, behavior: 'smooth' });
-                      }
-                    }}
-                    className="p-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-lg transition-colors"
-                    aria-label="Scroll left"
-                  >
-                    <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => {
-                      const container = document.getElementById('friends-scroll-container');
-                      if (container) {
-                        container.scrollBy({ left: 300, behavior: 'smooth' });
-                      }
-                    }}
-                    className="p-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-lg transition-colors"
-                    aria-label="Scroll right"
-                  >
-                    <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
-              )}
-            </div>
+            <h3 className="text-base sm:text-lg font-semibold text-gray-100 mb-3 sm:mb-4">
+              Your Friends ({friends.length})
+            </h3>
             {friendsLoading ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-400 mx-auto"></div>
@@ -1160,129 +1126,162 @@ export default function DashboardPage() {
                 <p className="text-sm sm:text-base">No friends yet. Share your invite code to get started!</p>
               </div>
             ) : (
-              <div 
-                id="friends-scroll-container"
-                className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scroll-smooth"
-                style={{ scrollbarWidth: 'thin' }}
-              >
-                {friends.map((friend) => {
-                  return (
-                    <div
-                      key={friend.id}
-                      className="relative group flex-shrink-0"
-                    >
-                      <Link
-                        href={`/profile/${encodeURIComponent(friend.username)}`}
-                        className="block bg-gray-700/50 border border-gray-600 rounded-lg p-3 sm:p-4 hover:bg-gray-700 hover:border-gray-500 transition-all w-32 sm:w-40"
+              <div className="relative">
+                {/* Left Arrow */}
+                <button
+                  onClick={() => {
+                    const container = document.getElementById('friends-scroll-container');
+                    if (container) {
+                      container.scrollBy({ left: -300, behavior: 'smooth' });
+                    }
+                  }}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-3 bg-gray-800/90 hover:bg-gray-700 border border-gray-600 rounded-full transition-colors shadow-lg"
+                  aria-label="Scroll left"
+                >
+                  <svg className="w-6 h-6 text-gray-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+
+                {/* Right Arrow */}
+                <button
+                  onClick={() => {
+                    const container = document.getElementById('friends-scroll-container');
+                    if (container) {
+                      container.scrollBy({ left: 300, behavior: 'smooth' });
+                    }
+                  }}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 p-3 bg-gray-800/90 hover:bg-gray-700 border border-gray-600 rounded-full transition-colors shadow-lg"
+                  aria-label="Scroll right"
+                >
+                  <svg className="w-6 h-6 text-gray-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+
+                {/* Scrollable Container */}
+                <div 
+                  id="friends-scroll-container"
+                  className="flex gap-3 sm:gap-4 overflow-x-auto px-12 py-2 scroll-smooth scrollbar-hide"
+                >
+                  {friends.map((friend) => {
+                    return (
+                      <div
+                        key={friend.id}
+                        className="flex-shrink-0 w-40 sm:w-48"
                       >
-                        <div className="flex flex-col items-center gap-2 sm:gap-3">
-                          {/* Profile Picture */}
-                          {friend.profile_picture ? (
-                            !brokenFriendPics.has(friend.id) ? (
-                              <Image
-                                src={getImageUrl(friend.profile_picture) || ''}
-                                alt={friend.username}
-                                width={80}
-                                height={80}
-                                unoptimized
-                                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-gray-600 object-cover"
-                                onError={() =>
-                                  setBrokenFriendPics((prev) => {
-                                    const next = new Set(prev);
-                                    next.add(friend.id);
-                                    return next;
-                                  })
-                                }
-                              />
+                        <Link
+                          href={`/profile/${encodeURIComponent(friend.username)}`}
+                          className="block bg-gray-700/50 border border-gray-600 rounded-lg p-4 hover:bg-gray-700 hover:border-gray-500 transition-all"
+                        >
+                          <div className="flex flex-col items-center gap-3">
+                            {/* Profile Picture */}
+                            {friend.profile_picture ? (
+                              !brokenFriendPics.has(friend.id) ? (
+                                <Image
+                                  src={getImageUrl(friend.profile_picture) || ''}
+                                  alt={friend.username}
+                                  width={96}
+                                  height={96}
+                                  unoptimized
+                                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 border-gray-600 object-cover"
+                                  onError={() =>
+                                    setBrokenFriendPics((prev) => {
+                                      const next = new Set(prev);
+                                      next.add(friend.id);
+                                      return next;
+                                    })
+                                  }
+                                />
+                              ) : (
+                                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gray-700 border-2 border-gray-600 flex items-center justify-center">
+                                  <span className="text-gray-400 text-2xl sm:text-3xl font-semibold">
+                                    {friend.username.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                              )
                             ) : (
-                              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-700 border-2 border-gray-600 flex items-center justify-center">
-                                <span className="text-gray-400 text-xl sm:text-2xl font-semibold">
+                              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gray-700 border-2 border-gray-600 flex items-center justify-center">
+                                <span className="text-gray-400 text-2xl sm:text-3xl font-semibold">
                                   {friend.username.charAt(0).toUpperCase()}
                                 </span>
                               </div>
-                            )
-                          ) : (
-                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-700 border-2 border-gray-600 flex items-center justify-center">
-                              <span className="text-gray-400 text-xl sm:text-2xl font-semibold">
-                                {friend.username.charAt(0).toUpperCase()}
-                              </span>
+                            )}
+                            
+                            {/* Username */}
+                            <div className="text-center w-full">
+                              <h4 className="text-sm sm:text-base font-semibold text-gray-100 truncate">
+                                @{friend.username}
+                              </h4>
+                              <div className="flex items-center justify-center gap-1 mt-1">
+                                <span className="text-yellow-400 text-xs">🏆</span>
+                                <span className="text-xs text-gray-400">{friend.trophies.toLocaleString()}</span>
+                              </div>
                             </div>
-                          )}
-                          
-                          {/* Username */}
-                          <div className="text-center w-full">
-                            <h4 className="text-sm sm:text-base font-semibold text-gray-100 truncate">
-                              @{friend.username}
-                            </h4>
-                            <div className="flex items-center justify-center gap-1 mt-1">
-                              <span className="text-yellow-400 text-xs">🏆</span>
-                              <span className="text-xs text-gray-400">{friend.trophies.toLocaleString()}</span>
-                            </div>
-                          </div>
 
-                          {/* Streak */}
-                          <div className="text-center">
-                            <div className="text-xs text-gray-500">Streak</div>
-                            <div className="text-sm font-semibold text-primary-400">
-                              {friend.current_streak} days
+                            {/* Streak */}
+                            <div className="text-center">
+                              <div className="text-xs text-gray-500">Streak</div>
+                              <div className="text-sm font-semibold text-primary-400">
+                                {friend.current_streak} days
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </Link>
-                      
-                      {/* Action Buttons - Show on hover */}
-                      <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-gray-900 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-b-lg flex gap-1">
-                        <button
-                          onClick={async (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            if (friend.nudged_today) return;
-                            try {
-                              const response = await fetch('/api/friends/nudge', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ friend_id: friend.id }),
-                              });
-                              if (response.ok) {
-                                showToast(`Nudged @${friend.username}!`, 'success');
-                                fetchFriends();
-                              } else {
-                                const data = await response.json();
-                                if (response.status === 429) {
+                        </Link>
+                        
+                        {/* Action Buttons - Below card */}
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            onClick={async (e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              if (friend.nudged_today) return;
+                              try {
+                                const response = await fetch('/api/friends/nudge', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ friend_id: friend.id }),
+                                });
+                                if (response.ok) {
+                                  showToast(`Nudged @${friend.username}!`, 'success');
                                   fetchFriends();
                                 } else {
-                                  showToast(data.error || 'Failed to nudge friend', 'error');
+                                  const data = await response.json();
+                                  if (response.status === 429) {
+                                    fetchFriends();
+                                  } else {
+                                    showToast(data.error || 'Failed to nudge friend', 'error');
+                                  }
                                 }
+                              } catch (err) {
+                                showToast('An error occurred while nudging friend', 'error');
                               }
-                            } catch (err) {
-                              showToast('An error occurred while nudging friend', 'error');
-                            }
-                          }}
-                          disabled={friend.nudged_today}
-                          className={`flex-1 px-2 py-1 border rounded text-xs transition-colors ${
-                            friend.nudged_today
-                              ? 'bg-gray-700/50 border-gray-600 text-gray-500 cursor-not-allowed'
-                              : 'bg-primary-600/50 border-primary-700 text-primary-300 hover:bg-primary-600/70'
-                          }`}
-                          title="Nudge friend"
-                        >
-                          👋
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleRemoveFriend(friend.id);
-                          }}
-                          className="px-2 py-1 bg-red-900/50 border border-red-700 text-red-300 rounded hover:bg-red-900/70 transition-colors text-xs"
-                          title="Remove friend"
-                        >
-                          ✕
-                        </button>
+                            }}
+                            disabled={friend.nudged_today}
+                            className={`flex-1 px-3 py-2 border rounded-md text-sm transition-colors ${
+                              friend.nudged_today
+                                ? 'bg-gray-700/50 border-gray-600 text-gray-500 cursor-not-allowed'
+                                : 'bg-primary-600/50 border-primary-700 text-primary-300 hover:bg-primary-600/70'
+                            }`}
+                          >
+                            👋 {friend.nudged_today ? 'Nudged' : 'Nudge'}
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleRemoveFriend(friend.id);
+                            }}
+                            className="px-3 py-2 bg-red-900/50 border border-red-700 text-red-300 rounded-md hover:bg-red-900/70 transition-colors text-sm"
+                            title="Remove friend"
+                          >
+                            ✕
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>
