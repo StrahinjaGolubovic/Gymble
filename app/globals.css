@@ -15,26 +15,26 @@
   
   .rank-shine {
     background: linear-gradient(
-      90deg,
+      45deg,
       currentColor 0%,
       currentColor 40%,
       #ffffff 50%,
       currentColor 60%,
       currentColor 100%
     );
-    background-size: 200% 100%;
+    background-size: 200% 200%;
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    animation: shine 3s linear infinite;
+    animation: shine 6s linear infinite;
   }
   
   @keyframes shine {
     0% {
-      background-position: 200% center;
+      background-position: 200% 200%;
     }
     100% {
-      background-position: -200% center;
+      background-position: -200% -200%;
     }
   }
 }
