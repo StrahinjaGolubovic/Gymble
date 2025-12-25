@@ -149,35 +149,18 @@ export function Notifications({ userId }: NotificationsProps) {
       </button>
 
       {isOpen && (
-        <>
-          {/* Mobile: Full screen overlay */}
-          <div 
-            className="fixed inset-0 bg-black/50 z-40 sm:hidden"
-            onClick={() => setIsOpen(false)}
-          />
-          <div className="fixed inset-0 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 w-full sm:w-96 bg-gray-800 border border-gray-700 sm:rounded-lg shadow-xl z-50 sm:z-50 flex flex-col sm:max-h-[500px]">
-            <div className="p-4 border-b border-gray-700 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-100 text-right flex-1">Notifications</h3>
-              <div className="flex items-center gap-2">
-                {unreadCount > 0 && (
-                  <button
-                    onClick={markAllAsRead}
-                    className="text-xs text-primary-400 hover:text-primary-300"
-                  >
-                    Mark all as read
-                  </button>
-                )}
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="sm:hidden text-gray-400 hover:text-gray-100 ml-2"
-                  aria-label="Close"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
+        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 max-h-[500px] flex flex-col">
+          <div className="p-4 border-b border-gray-700 flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-100 text-right flex-1">Notifications</h3>
+            {unreadCount > 0 && (
+              <button
+                onClick={markAllAsRead}
+                className="text-xs text-primary-400 hover:text-primary-300 ml-2"
+              >
+                Mark all as read
+              </button>
+            )}
+          </div>
 
             <div className="overflow-y-auto flex-1">
               {loading ? (
@@ -228,8 +211,7 @@ export function Notifications({ userId }: NotificationsProps) {
                 </div>
               )}
             </div>
-          </div>
-        </>
+        </div>
       )}
     </div>
   );
