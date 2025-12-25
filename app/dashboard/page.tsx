@@ -1114,9 +1114,43 @@ export default function DashboardPage() {
 
           {/* Friends List */}
           <div>
-            <h3 className="text-base sm:text-lg font-semibold text-gray-100 mb-3 sm:mb-4">
-              Your Friends ({friends.length})
-            </h3>
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-100">
+                Your Friends ({friends.length})
+              </h3>
+              {!friendsLoading && friends.length > 0 && (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      const container = document.getElementById('friends-scroll-container');
+                      if (container) {
+                        container.scrollBy({ left: -300, behavior: 'smooth' });
+                      }
+                    }}
+                    className="p-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-lg transition-colors"
+                    aria-label="Scroll left"
+                  >
+                    <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => {
+                      const container = document.getElementById('friends-scroll-container');
+                      if (container) {
+                        container.scrollBy({ left: 300, behavior: 'smooth' });
+                      }
+                    }}
+                    className="p-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-lg transition-colors"
+                    aria-label="Scroll right"
+                  >
+                    <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+            </div>
             {friendsLoading ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-400 mx-auto"></div>
@@ -1126,59 +1160,54 @@ export default function DashboardPage() {
                 <p className="text-sm sm:text-base">No friends yet. Share your invite code to get started!</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+              <div 
+                id="friends-scroll-container"
+                className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scroll-smooth"
+                style={{ scrollbarWidth: 'thin' }}
+              >
                 {friends.map((friend) => {
                   return (
                     <div
                       key={friend.id}
-                      className="relative group"
+                      className="relative group flex-shrink-0"
                     >
                       <Link
                         href={`/profile/${encodeURIComponent(friend.username)}`}
-                        className="block bg-gray-700/50 border border-gray-600 rounded-lg p-3 sm:p-4 hover:bg-gray-700 hover:border-gray-500 transition-all"
+                        className="block bg-gray-700/50 border border-gray-600 rounded-lg p-3 sm:p-4 hover:bg-gray-700 hover:border-gray-500 transition-all w-32 sm:w-40"
                       >
                         <div className="flex flex-col items-center gap-2 sm:gap-3">
                           {/* Profile Picture */}
-                          <div className="relative">
-                            {friend.profile_picture ? (
-                              !brokenFriendPics.has(friend.id) ? (
-                                <Image
-                                  src={getImageUrl(friend.profile_picture) || ''}
-                                  alt={friend.username}
-                                  width={80}
-                                  height={80}
-                                  unoptimized
-                                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-gray-600 object-cover"
-                                  onError={() =>
-                                    setBrokenFriendPics((prev) => {
-                                      const next = new Set(prev);
-                                      next.add(friend.id);
-                                      return next;
-                                    })
-                                  }
-                                />
-                              ) : (
-                                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-700 border-2 border-gray-600 flex items-center justify-center">
-                                  <span className="text-gray-400 text-xl sm:text-2xl font-semibold">
-                                    {friend.username.charAt(0).toUpperCase()}
-                                  </span>
-                                </div>
-                              )
+                          {friend.profile_picture ? (
+                            !brokenFriendPics.has(friend.id) ? (
+                              <Image
+                                src={getImageUrl(friend.profile_picture) || ''}
+                                alt={friend.username}
+                                width={80}
+                                height={80}
+                                unoptimized
+                                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-gray-600 object-cover"
+                                onError={() =>
+                                  setBrokenFriendPics((prev) => {
+                                    const next = new Set(prev);
+                                    next.add(friend.id);
+                                    return next;
+                                  })
+                                }
+                              />
                             ) : (
                               <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-700 border-2 border-gray-600 flex items-center justify-center">
                                 <span className="text-gray-400 text-xl sm:text-2xl font-semibold">
                                   {friend.username.charAt(0).toUpperCase()}
                                 </span>
                               </div>
-                            )}
-                            {/* Rank Badge */}
-                            <div 
-                              className="absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded text-xs font-bold border-2 border-gray-800"
-                              style={getRankColorStyle(friend.trophies)}
-                            >
-                              {getTrophyRank(friend.trophies).slice(0, 3)}
+                            )
+                          ) : (
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-700 border-2 border-gray-600 flex items-center justify-center">
+                              <span className="text-gray-400 text-xl sm:text-2xl font-semibold">
+                                {friend.username.charAt(0).toUpperCase()}
+                              </span>
                             </div>
-                          </div>
+                          )}
                           
                           {/* Username */}
                           <div className="text-center w-full">
