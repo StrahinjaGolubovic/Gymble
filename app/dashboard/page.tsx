@@ -87,6 +87,7 @@ export default function DashboardPage() {
   const [croppingImage, setCroppingImage] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [friendsScrollPosition, setFriendsScrollPosition] = useState({ atStart: true, atEnd: false });
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -1126,50 +1127,59 @@ export default function DashboardPage() {
                 <p className="text-sm sm:text-base">No friends yet. Share your invite code to get started!</p>
               </div>
             ) : (
-              <div className="relative">
+              <div className="relative flex justify-center">
                 {/* Left Arrow */}
-                <button
-                  onClick={() => {
-                    const container = document.getElementById('friends-scroll-container');
-                    if (container) {
-                      container.scrollBy({ left: -300, behavior: 'smooth' });
-                    }
-                  }}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-3 bg-gray-800/90 hover:bg-gray-700 border border-gray-600 rounded-full transition-colors shadow-lg"
-                  aria-label="Scroll left"
-                >
-                  <svg className="w-6 h-6 text-gray-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
+                {!friendsScrollPosition.atStart && (
+                  <button
+                    onClick={() => {
+                      const container = document.getElementById('friends-scroll-container');
+                      if (container) {
+                        container.scrollBy({ left: -300, behavior: 'smooth' });
+                      }
+                    }}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-3 bg-gray-800/90 hover:bg-gray-700 border border-gray-600 rounded-full transition-colors shadow-lg"
+                    aria-label="Scroll left"
+                  >
+                    <svg className="w-6 h-6 text-gray-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                )}
 
                 {/* Right Arrow */}
-                <button
-                  onClick={() => {
-                    const container = document.getElementById('friends-scroll-container');
-                    if (container) {
-                      container.scrollBy({ left: 300, behavior: 'smooth' });
-                    }
-                  }}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 p-3 bg-gray-800/90 hover:bg-gray-700 border border-gray-600 rounded-full transition-colors shadow-lg"
-                  aria-label="Scroll right"
-                >
-                  <svg className="w-6 h-6 text-gray-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
+                {!friendsScrollPosition.atEnd && (
+                  <button
+                    onClick={() => {
+                      const container = document.getElementById('friends-scroll-container');
+                      if (container) {
+                        container.scrollBy({ left: 300, behavior: 'smooth' });
+                      }
+                    }}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 p-3 bg-gray-800/90 hover:bg-gray-700 border border-gray-600 rounded-full transition-colors shadow-lg"
+                    aria-label="Scroll right"
+                  >
+                    <svg className="w-6 h-6 text-gray-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                )}
 
                 {/* Scrollable Container */}
                 <div 
                   id="friends-scroll-container"
-                  className="flex gap-3 sm:gap-4 overflow-x-auto py-2 scroll-smooth scrollbar-hide snap-x snap-mandatory"
-                  style={{ paddingLeft: '3.5rem', paddingRight: '3.5rem' }}
+                  className="flex gap-3 sm:gap-4 overflow-x-auto py-2 scroll-smooth scrollbar-hide max-w-full"
+                  onScroll={(e) => {
+                    const container = e.currentTarget;
+                    const atStart = container.scrollLeft <= 0;
+                    const atEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - 1;
+                    setFriendsScrollPosition({ atStart, atEnd });
+                  }}
                 >
                   {friends.map((friend) => {
                     return (
                       <div
                         key={friend.id}
-                        className="flex-shrink-0 w-40 sm:w-48 snap-center"
+                        className="flex-shrink-0 w-40 sm:w-48"
                       >
                         <Link
                           href={`/profile/${encodeURIComponent(friend.username)}`}
