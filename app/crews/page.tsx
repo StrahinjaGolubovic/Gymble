@@ -320,7 +320,7 @@ export default function CrewsPage() {
             </Link>
             <Link
               href="/dashboard"
-              className="text-gray-200 hover:text-gray-100 p-2 rounded-md hover:bg-gray-700 transition-colors"
+              className="p-2 text-gray-400 hover:text-gray-100 transition-colors"
               aria-label="Dashboard"
               title="Dashboard"
             >
