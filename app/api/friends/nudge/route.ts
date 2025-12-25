@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken, getUserById } from '@/lib/auth';
 import { sendNudgeNotification } from '@/lib/notifications';
+import { formatDateSerbia } from '@/lib/timezone';
 import db from '@/lib/db';
 import { cookies } from 'next/headers';
 
@@ -46,6 +47,45 @@ export async function POST(request: NextRequest) {
     const friend = getUserById(friend_id);
     if (!friend) {
       return NextResponse.json({ error: 'Friend not found' }, { status: 404 });
+    }
+
+    // Check if user has already nudged this friend today
+    const today = formatDateSerbia(new Date()).split(' ')[0]; // Get just the date part (YYYY-MM-DD)
+    const existingNudge = db
+      .prepare(
+        'SELECT id FROM nudges WHERE from_user_id = ? AND to_user_id = ? AND nudge_date = ?'
+      )
+      .get(userId, friend_id, today) as { id: number } | undefined;
+
+    if (existingNudge) {
+      return NextResponse.json(
+        { error: 'You can only nudge this friend once per day' },
+        { status: 429 }
+      );
+    }
+
+    // Record the nudge
+    try {
+      db.prepare(
+        'INSERT INTO nudges (from_user_id, to_user_id, nudge_date) VALUES (?, ?, ?)'
+      ).run(userId, friend_id, today);
+    } catch (insertError: any) {
+      // If it's a unique constraint error, someone else inserted it (race condition)
+      // Check again to be sure
+      const checkAgain = db
+        .prepare(
+          'SELECT id FROM nudges WHERE from_user_id = ? AND to_user_id = ? AND nudge_date = ?'
+        )
+        .get(userId, friend_id, today) as { id: number } | undefined;
+      
+      if (checkAgain) {
+        return NextResponse.json(
+          { error: 'You can only nudge this friend once per day' },
+          { status: 429 }
+        );
+      }
+      // If it's a different error, rethrow
+      throw insertError;
     }
 
     // Send nudge notification

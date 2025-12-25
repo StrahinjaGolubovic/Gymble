@@ -83,6 +83,7 @@ export default function DashboardPage() {
   const [myCrew, setMyCrew] = useState<Crew | null>(null);
   const [profilePictureUploading, setProfilePictureUploading] = useState(false);
   const [croppingImage, setCroppingImage] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
@@ -522,93 +523,112 @@ export default function DashboardPage() {
       )}
       {/* Header */}
       <header className="bg-gray-800 border-b border-gray-700 shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-2.5 sm:py-3 md:py-4 flex justify-between items-center">
-          <div className="flex items-center">
-            <Image
-              src="/streakd_logo.png"
-              alt="STREAKD."
-              width={140}
-              height={36}
-              priority
-              unoptimized
-              className="h-8 sm:h-9 md:h-10 w-auto"
-            />
-          </div>
-          <div className="flex items-center gap-2 sm:gap-3">
-            {data?.userId && <Notifications userId={data.userId} />}
-            {/* Profile Picture */}
-            <div className="relative" ref={profileMenuRef}>
-              <input
-                ref={profileFileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleProfilePictureUpload}
-                disabled={profilePictureUploading}
-                className="hidden"
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-2.5 sm:py-3 md:py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center">
+              <Image
+                src="/streakd_logo.png"
+                alt="STREAKD."
+                width={140}
+                height={36}
+                priority
+                unoptimized
+                className="h-8 sm:h-9 md:h-10 w-auto"
               />
-
-              <button
-                type="button"
-                onClick={() => setProfileMenuOpen((v) => !v)}
-                aria-haspopup="menu"
-                aria-expanded={profileMenuOpen}
-                className="relative"
+            </div>
+            
+            {/* Desktop Navigation */}
+            <div className="hidden sm:flex items-center gap-2 sm:gap-3">
+              {/* Buttons */}
+              <Link
+                href="/crews"
+                className="text-primary-400 hover:text-primary-300 px-3 sm:px-4 py-1.5 sm:py-2 rounded-md hover:bg-gray-700 transition-colors text-sm sm:text-base"
               >
-                {data?.profilePicture && !profilePicBroken ? (
-                  <Image
-                    key={`profile-img-${data.profilePicture}`}
-                    src={getImageUrl(data.profilePicture) || ''}
-                    alt="Profile picture"
-                    width={48}
-                    height={48}
-                    unoptimized
-                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-gray-600 object-cover hover:border-primary-400 transition-colors"
-                    onError={() => setProfilePicBroken(true)}
-                  />
-                ) : (
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-700 border-2 border-gray-600 flex items-center justify-center hover:border-primary-400 transition-colors">
-                    <span className="text-gray-400 text-lg font-semibold">
-                      {data?.username?.charAt(0).toUpperCase() || 'U'}
-                    </span>
-                  </div>
-                )}
-                {profilePictureUploading && (
-                  <div className="absolute inset-0 bg-gray-900/50 rounded-full flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-400"></div>
-                  </div>
-                )}
-              </button>
-
-              {profileMenuOpen && (
-                <div
-                  role="menu"
-                  className="absolute right-0 mt-2 w-56 rounded-lg border border-gray-700 bg-gray-800 shadow-xl overflow-hidden z-50"
+                Crews
+              </Link>
+              {data && (data.username === 'admin' || data.username === 'seuq' || data.username === 'jakow' || data.username === 'nikola') && (
+                <Link
+                  href="/admin/dashboard"
+                  className="text-primary-400 hover:text-primary-300 px-3 sm:px-4 py-1.5 sm:py-2 rounded-md hover:bg-gray-700 transition-colors text-sm sm:text-base"
                 >
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className="w-full text-left px-4 py-2.5 text-sm text-gray-100 hover:bg-gray-700 transition-colors"
-                    onClick={() => {
-                      setProfileMenuOpen(false);
-                      profileFileInputRef.current?.click();
-                    }}
+                  Admin Panel
+                </Link>
+              )}
+              {/* Notifications */}
+              {data?.userId && <Notifications userId={data.userId} />}
+              {/* Profile Picture */}
+              <div className="relative" ref={profileMenuRef}>
+                <input
+                  ref={profileFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleProfilePictureUpload}
+                  disabled={profilePictureUploading}
+                  className="hidden"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setProfileMenuOpen((v) => !v)}
+                  aria-haspopup="menu"
+                  aria-expanded={profileMenuOpen}
+                  className="relative"
+                >
+                  {data?.profilePicture && !profilePicBroken ? (
+                    <Image
+                      key={`profile-img-${data.profilePicture}`}
+                      src={getImageUrl(data.profilePicture) || ''}
+                      alt="Profile picture"
+                      width={48}
+                      height={48}
+                      unoptimized
+                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-gray-600 object-cover hover:border-primary-400 transition-colors"
+                      onError={() => setProfilePicBroken(true)}
+                    />
+                  ) : (
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-700 border-2 border-gray-600 flex items-center justify-center hover:border-primary-400 transition-colors">
+                      <span className="text-gray-400 text-lg font-semibold">
+                        {data?.username?.charAt(0).toUpperCase() || 'U'}
+                      </span>
+                    </div>
+                  )}
+                  {profilePictureUploading && (
+                    <div className="absolute inset-0 bg-gray-900/50 rounded-full flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-400"></div>
+                    </div>
+                  )}
+                </button>
+
+                {profileMenuOpen && (
+                  <div
+                    role="menu"
+                    className="absolute right-0 mt-2 w-56 rounded-lg border border-gray-700 bg-gray-800 shadow-xl overflow-hidden z-50"
                   >
-                    Change profile picture
-                  </button>
-                  {data?.profilePicture && (
                     <button
                       type="button"
                       role="menuitem"
-                      className="w-full text-left px-4 py-2.5 text-sm text-red-300 hover:bg-gray-700 transition-colors"
+                      className="w-full text-left px-4 py-2.5 text-sm text-gray-100 hover:bg-gray-700 transition-colors"
                       onClick={() => {
                         setProfileMenuOpen(false);
-                        handleRemoveProfilePicture();
+                        profileFileInputRef.current?.click();
                       }}
                     >
-                      Remove profile picture
+                      Change profile picture
                     </button>
-                  )}
-                  <div className="h-px bg-gray-700" />
+                    {data?.profilePicture && (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="w-full text-left px-4 py-2.5 text-sm text-red-300 hover:bg-gray-700 transition-colors"
+                        onClick={() => {
+                          setProfileMenuOpen(false);
+                          handleRemoveProfilePicture();
+                        }}
+                      >
+                        Remove profile picture
+                      </button>
+                    )}
+                    <div className="h-px bg-gray-700" />
                     <Link
                       href={`/profile/${encodeURIComponent(data.username || '')}`}
                       className="block w-full text-left px-4 py-2.5 text-sm text-gray-100 hover:bg-gray-700 transition-colors"
@@ -631,21 +651,166 @@ export default function DashboardPage() {
                   </div>
                 )}
               </div>
-            <Link
-              href="/crews"
-              className="text-primary-400 hover:text-primary-300 px-3 sm:px-4 py-1.5 sm:py-2 rounded-md hover:bg-gray-700 transition-colors text-sm sm:text-base"
-            >
-              Crews
-            </Link>
-            {data && (data.username === 'admin' || data.username === 'seuq' || data.username === 'jakow' || data.username === 'nikola') && (
-              <Link
-                href="/admin/dashboard"
-                className="text-primary-400 hover:text-primary-300 px-3 sm:px-4 py-1.5 sm:py-2 rounded-md hover:bg-gray-700 transition-colors text-sm sm:text-base"
+            </div>
+
+            {/* Mobile: Hamburger Menu + Profile Picture */}
+            <div className="flex sm:hidden items-center gap-2">
+              {/* Notifications on mobile */}
+              {data?.userId && <Notifications userId={data.userId} />}
+              
+              {/* Profile Picture on mobile */}
+              <div className="relative" ref={profileMenuRef}>
+                <input
+                  ref={profileFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleProfilePictureUpload}
+                  disabled={profilePictureUploading}
+                  className="hidden"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setProfileMenuOpen((v) => !v)}
+                  aria-haspopup="menu"
+                  aria-expanded={profileMenuOpen}
+                  className="relative"
+                >
+                  {data?.profilePicture && !profilePicBroken ? (
+                    <Image
+                      key={`profile-img-${data.profilePicture}`}
+                      src={getImageUrl(data.profilePicture) || ''}
+                      alt="Profile picture"
+                      width={40}
+                      height={40}
+                      unoptimized
+                      className="w-10 h-10 rounded-full border-2 border-gray-600 object-cover hover:border-primary-400 transition-colors"
+                      onError={() => setProfilePicBroken(true)}
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gray-700 border-2 border-gray-600 flex items-center justify-center hover:border-primary-400 transition-colors">
+                      <span className="text-gray-400 text-base font-semibold">
+                        {data?.username?.charAt(0).toUpperCase() || 'U'}
+                      </span>
+                    </div>
+                  )}
+                  {profilePictureUploading && (
+                    <div className="absolute inset-0 bg-gray-900/50 rounded-full flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-400"></div>
+                    </div>
+                  )}
+                </button>
+
+                {profileMenuOpen && (
+                  <div
+                    role="menu"
+                    className="absolute right-0 mt-2 w-56 rounded-lg border border-gray-700 bg-gray-800 shadow-xl overflow-hidden z-50"
+                  >
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="w-full text-left px-4 py-2.5 text-sm text-gray-100 hover:bg-gray-700 transition-colors"
+                      onClick={() => {
+                        setProfileMenuOpen(false);
+                        profileFileInputRef.current?.click();
+                      }}
+                    >
+                      Change profile picture
+                    </button>
+                    {data?.profilePicture && (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className="w-full text-left px-4 py-2.5 text-sm text-red-300 hover:bg-gray-700 transition-colors"
+                        onClick={() => {
+                          setProfileMenuOpen(false);
+                          handleRemoveProfilePicture();
+                        }}
+                      >
+                        Remove profile picture
+                      </button>
+                    )}
+                    <div className="h-px bg-gray-700" />
+                    <Link
+                      href={`/profile/${encodeURIComponent(data.username || '')}`}
+                      className="block w-full text-left px-4 py-2.5 text-sm text-gray-100 hover:bg-gray-700 transition-colors"
+                      onClick={() => setProfileMenuOpen(false)}
+                    >
+                      View Profile
+                    </Link>
+                    <div className="h-px bg-gray-700" />
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="w-full text-left px-4 py-2.5 text-sm text-gray-100 hover:bg-gray-700 transition-colors"
+                      onClick={() => {
+                        setProfileMenuOpen(false);
+                        handleLogout();
+                      }}
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Hamburger Menu Button */}
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen((v) => !v)}
+                className="p-2 text-gray-400 hover:text-gray-100 hover:bg-gray-700 rounded-md transition-colors"
+                aria-label="Toggle menu"
               >
-                Admin Panel
-              </Link>
-            )}
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  {mobileMenuOpen ? (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  ) : (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
+                  )}
+                </svg>
+              </button>
+            </div>
           </div>
+
+          {/* Mobile Menu Dropdown */}
+          {mobileMenuOpen && (
+            <div className="sm:hidden mt-3 pt-3 border-t border-gray-700">
+              <div className="flex flex-col gap-2">
+                <Link
+                  href="/crews"
+                  className="text-primary-400 hover:text-primary-300 px-3 py-2 rounded-md hover:bg-gray-700 transition-colors text-base"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Crews
+                </Link>
+                {data && (data.username === 'admin' || data.username === 'seuq' || data.username === 'jakow' || data.username === 'nikola') && (
+                  <Link
+                    href="/admin/dashboard"
+                    className="text-primary-400 hover:text-primary-300 px-3 py-2 rounded-md hover:bg-gray-700 transition-colors text-base"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Admin Panel
+                  </Link>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </header>
 

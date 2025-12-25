@@ -278,6 +278,20 @@ function initDatabase(database: Database) {
     )
   `);
 
+  // Nudges table - tracks when users nudge friends (once per day limit)
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS nudges (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      from_user_id INTEGER NOT NULL,
+      to_user_id INTEGER NOT NULL,
+      nudge_date DATE NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (from_user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (to_user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE(from_user_id, to_user_id, nudge_date)
+    )
+  `);
+
   // Create indexes for better performance
   database.exec(`
     CREATE INDEX IF NOT EXISTS idx_challenges_user ON weekly_challenges(user_id);
@@ -305,6 +319,9 @@ function initDatabase(database: Database) {
     CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
     CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(read);
     CREATE INDEX IF NOT EXISTS idx_notifications_created ON notifications(created_at);
+    CREATE INDEX IF NOT EXISTS idx_nudges_from_user ON nudges(from_user_id);
+    CREATE INDEX IF NOT EXISTS idx_nudges_to_user ON nudges(to_user_id);
+    CREATE INDEX IF NOT EXISTS idx_nudges_date ON nudges(nudge_date);
   `);
 }
 
