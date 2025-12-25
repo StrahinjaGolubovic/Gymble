@@ -1162,13 +1162,14 @@ export default function DashboardPage() {
                 {/* Scrollable Container */}
                 <div 
                   id="friends-scroll-container"
-                  className="flex gap-3 sm:gap-4 overflow-x-auto px-12 py-2 scroll-smooth scrollbar-hide"
+                  className="flex gap-3 sm:gap-4 overflow-x-auto py-2 scroll-smooth scrollbar-hide snap-x snap-mandatory"
+                  style={{ paddingLeft: '3.5rem', paddingRight: '3.5rem' }}
                 >
                   {friends.map((friend) => {
                     return (
                       <div
                         key={friend.id}
-                        className="flex-shrink-0 w-40 sm:w-48"
+                        className="flex-shrink-0 w-40 sm:w-48 snap-center"
                       >
                         <Link
                           href={`/profile/${encodeURIComponent(friend.username)}`}
