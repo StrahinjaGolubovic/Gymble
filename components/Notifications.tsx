@@ -149,7 +149,7 @@ export function Notifications({ userId }: NotificationsProps) {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 max-h-[500px] flex flex-col">
+        <div className="absolute right-0 mt-2 w-72 sm:w-96 max-w-[calc(100vw-1rem)] bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 max-h-[500px] flex flex-col">
           <div className="p-4 border-b border-gray-700 flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-100 text-right flex-1">Notifications</h3>
             {unreadCount > 0 && (
