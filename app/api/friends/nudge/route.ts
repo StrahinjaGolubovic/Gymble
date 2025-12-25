@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
     // Send nudge notification
     const notification = sendNudgeNotification(userId, user.username, friend_id);
 
-    return NextResponse.json({ success: true, notification });
+    return NextResponse.json({ success: true, notification, nudged_today: true });
   } catch (error: any) {
     console.error('Nudge friend error:', error);
     return NextResponse.json(

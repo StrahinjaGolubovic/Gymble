@@ -23,6 +23,7 @@ export interface FriendInfo {
   longest_streak: number;
   profile_picture: string | null;
   created_at: string;
+  nudged_today?: boolean;
 }
 
 // Generate a unique invite code
@@ -100,7 +101,7 @@ export function acceptInviteCode(userId: number, code: string): { success: boole
 }
 
 // Get all friends for a user
-export function getUserFriends(userId: number): FriendInfo[] {
+export function getUserFriends(userId: number, todayDate?: string): FriendInfo[] {
   const friends = db
     .prepare(
       `
@@ -121,6 +122,19 @@ export function getUserFriends(userId: number): FriendInfo[] {
     )
     .all(userId) as Array<FriendInfo & { trophies: number; current_streak: number; longest_streak: number; profile_picture: string | null }>;
 
+  // Get today's date if not provided
+  const today = todayDate || new Date().toISOString().split('T')[0];
+  
+  // Check which friends have been nudged today
+  const nudgedFriendIds = new Set(
+    db
+      .prepare(
+        'SELECT DISTINCT to_user_id FROM nudges WHERE from_user_id = ? AND nudge_date = ?'
+      )
+      .all(userId, today)
+      .map((n: any) => n.to_user_id)
+  );
+
   return friends.map((f) => ({
     id: f.id,
     username: f.username,
@@ -129,6 +143,7 @@ export function getUserFriends(userId: number): FriendInfo[] {
     longest_streak: f.longest_streak,
     profile_picture: f.profile_picture,
     created_at: f.created_at,
+    nudged_today: nudgedFriendIds.has(f.id),
   }));
 }
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import { getUserFriends } from '@/lib/friends';
+import { formatDateSerbia } from '@/lib/timezone';
 import { cookies } from 'next/headers';
 
 export async function GET(request: NextRequest) {
@@ -17,7 +18,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    const friends = getUserFriends(decoded.userId);
+    const today = formatDateSerbia(new Date());
+    const friends = getUserFriends(decoded.userId, today);
 
     return NextResponse.json({ friends });
   } catch (error) {

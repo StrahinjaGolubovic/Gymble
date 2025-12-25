@@ -50,6 +50,7 @@ interface Friend {
   longest_streak: number;
   profile_picture: string | null;
   created_at: string;
+  nudged_today?: boolean;
 }
 
 interface Crew {
@@ -72,6 +73,7 @@ export default function DashboardPage() {
   const [brokenFriendPics, setBrokenFriendPics] = useState<Set<number>>(() => new Set());
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+  const profileMenuMobileRef = useRef<HTMLDivElement>(null);
   const profileFileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
@@ -194,11 +196,15 @@ export default function DashboardPage() {
     if (!profileMenuOpen) return;
 
     const onMouseDown = (e: MouseEvent) => {
-      const el = profileMenuRef.current;
-      if (!el) return;
-      if (!el.contains(e.target as Node)) {
-        setProfileMenuOpen(false);
+      const desktopEl = profileMenuRef.current;
+      const mobileEl = profileMenuMobileRef.current;
+      const target = e.target as Node;
+      
+      if (desktopEl?.contains(target) || mobileEl?.contains(target)) {
+        return;
       }
+      
+      setProfileMenuOpen(false);
     };
 
     const onKeyDown = (e: KeyboardEvent) => {
@@ -602,7 +608,8 @@ export default function DashboardPage() {
                 {profileMenuOpen && (
                   <div
                     role="menu"
-                    className="absolute right-0 mt-2 w-56 rounded-lg border border-gray-700 bg-gray-800 shadow-xl overflow-hidden z-50"
+                    className="absolute right-0 mt-2 w-56 rounded-lg border border-gray-700 bg-gray-800 shadow-xl overflow-hidden z-[60]"
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <button
                       type="button"
@@ -659,7 +666,7 @@ export default function DashboardPage() {
               {data?.userId && <Notifications userId={data.userId} />}
               
               {/* Profile Picture on mobile */}
-              <div className="relative" ref={profileMenuRef}>
+              <div className="relative" ref={profileMenuMobileRef}>
                 <input
                   ref={profileFileInputRef}
                   type="file"
@@ -704,7 +711,8 @@ export default function DashboardPage() {
                 {profileMenuOpen && (
                   <div
                     role="menu"
-                    className="absolute right-0 mt-2 w-56 rounded-lg border border-gray-700 bg-gray-800 shadow-xl overflow-hidden z-50"
+                    className="absolute right-0 mt-2 w-56 rounded-lg border border-gray-700 bg-gray-800 shadow-xl overflow-hidden z-[60]"
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <button
                       type="button"
@@ -1200,6 +1208,7 @@ export default function DashboardPage() {
                           onClick={async (e) => {
                             e.preventDefault();
                             e.stopPropagation();
+                            if (friend.nudged_today) return;
                             try {
                               const response = await fetch('/api/friends/nudge', {
                                 method: 'POST',
@@ -1208,16 +1217,29 @@ export default function DashboardPage() {
                               });
                               if (response.ok) {
                                 showToast(`Nudged @${friend.username}!`, 'success');
+                                // Refresh friends list to update nudge status
+                                fetchFriends();
                               } else {
-                                showToast('Failed to nudge friend', 'error');
+                                const data = await response.json();
+                                if (response.status === 429) {
+                                  // Already nudged today - refresh friends list
+                                  fetchFriends();
+                                } else {
+                                  showToast(data.error || 'Failed to nudge friend', 'error');
+                                }
                               }
                             } catch (err) {
                               showToast('An error occurred while nudging friend', 'error');
                             }
                           }}
-                          className="self-start sm:self-auto px-3 sm:px-4 py-2 bg-primary-600/50 border border-primary-700 text-primary-300 rounded-md hover:bg-primary-600/70 transition-colors text-xs sm:text-sm whitespace-nowrap"
+                          disabled={friend.nudged_today}
+                          className={`self-start sm:self-auto px-3 sm:px-4 py-2 border rounded-md transition-colors text-xs sm:text-sm whitespace-nowrap ${
+                            friend.nudged_today
+                              ? 'bg-gray-700/50 border-gray-600 text-gray-500 cursor-not-allowed'
+                              : 'bg-primary-600/50 border-primary-700 text-primary-300 hover:bg-primary-600/70'
+                          }`}
                         >
-                          👋 Nudge
+                          👋 Nudge{friend.nudged_today ? 'd' : ''}
                         </button>
                         <button
                           onClick={(e) => {

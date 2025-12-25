@@ -149,69 +149,87 @@ export function Notifications({ userId }: NotificationsProps) {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-96 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 max-h-[calc(100vh-8rem)] sm:max-h-[500px] flex flex-col">
-          <div className="p-4 border-b border-gray-700 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-100 text-right flex-1">Notifications</h3>
-            {unreadCount > 0 && (
-              <button
-                onClick={markAllAsRead}
-                className="text-xs text-primary-400 hover:text-primary-300 ml-2"
-              >
-                Mark all as read
-              </button>
-            )}
-          </div>
-
-          <div className="overflow-y-auto flex-1">
-            {loading ? (
-              <div className="p-4 text-center text-gray-400">Loading...</div>
-            ) : notifications.length === 0 ? (
-              <div className="p-4 text-center text-gray-400">No notifications</div>
-            ) : (
-              <div className="divide-y divide-gray-700">
-                {notifications.map((notification) => {
-                  const link = getNotificationLink(notification);
-                  const content = (
-                    <div
-                      className={`p-4 hover:bg-gray-700 transition-colors cursor-pointer ${
-                        !notification.read ? 'bg-gray-750' : ''
-                      }`}
-                      onClick={() => {
-                        if (!notification.read) {
-                          markAsRead(notification.id);
-                        }
-                        if (link) {
-                          window.location.href = link;
-                        }
-                      }}
-                    >
-                      <div className="flex items-start gap-3 justify-end">
-                        <div className="flex-1 min-w-0 text-right">
-                          <div className="font-semibold text-gray-100 text-sm">{notification.title}</div>
-                          <div className="text-gray-300 text-sm mt-1">{notification.message}</div>
-                          <div className="text-xs text-gray-500 mt-2">
-                            {formatDateTimeDisplay(notification.created_at)}
-                          </div>
-                        </div>
-                        {!notification.read && (
-                          <div className="w-2 h-2 bg-primary-400 rounded-full mt-2 flex-shrink-0" />
-                        )}
-                      </div>
-                    </div>
-                  );
-
-                  return link ? (
-                    <Link key={notification.id} href={link}>
-                      {content}
-                    </Link>
-                  ) : (
-                    <div key={notification.id}>{content}</div>
-                  );
-                })}
+        <>
+          {/* Mobile: Full screen overlay */}
+          <div 
+            className="fixed inset-0 bg-black/50 z-40 sm:hidden"
+            onClick={() => setIsOpen(false)}
+          />
+          <div className="fixed inset-0 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 w-full sm:w-96 bg-gray-800 border border-gray-700 sm:rounded-lg shadow-xl z-50 sm:z-50 flex flex-col sm:max-h-[500px]">
+            <div className="p-4 border-b border-gray-700 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-100 text-right flex-1">Notifications</h3>
+              <div className="flex items-center gap-2">
+                {unreadCount > 0 && (
+                  <button
+                    onClick={markAllAsRead}
+                    className="text-xs text-primary-400 hover:text-primary-300"
+                  >
+                    Mark all as read
+                  </button>
+                )}
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="sm:hidden text-gray-400 hover:text-gray-100 ml-2"
+                  aria-label="Close"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
-            )}
+            </div>
+
+            <div className="overflow-y-auto flex-1">
+              {loading ? (
+                <div className="p-4 text-center text-gray-400">Loading...</div>
+              ) : notifications.length === 0 ? (
+                <div className="p-4 text-center text-gray-400">No notifications</div>
+              ) : (
+                <div className="divide-y divide-gray-700">
+                  {notifications.map((notification) => {
+                    const link = getNotificationLink(notification);
+                    const content = (
+                      <div
+                        className={`p-4 hover:bg-gray-700 transition-colors cursor-pointer ${
+                          !notification.read ? 'bg-gray-750' : ''
+                        }`}
+                        onClick={() => {
+                          if (!notification.read) {
+                            markAsRead(notification.id);
+                          }
+                          if (link) {
+                            window.location.href = link;
+                          }
+                        }}
+                      >
+                        <div className="flex items-start gap-3 justify-end">
+                          <div className="flex-1 min-w-0 text-right">
+                            <div className="font-semibold text-gray-100 text-sm">{notification.title}</div>
+                            <div className="text-gray-300 text-sm mt-1">{notification.message}</div>
+                            <div className="text-xs text-gray-500 mt-2">
+                              {formatDateTimeDisplay(notification.created_at)}
+                            </div>
+                          </div>
+                          {!notification.read && (
+                            <div className="w-2 h-2 bg-primary-400 rounded-full mt-2 flex-shrink-0" />
+                          )}
+                        </div>
+                      </div>
+                    );
+
+                    return link ? (
+                      <Link key={notification.id} href={link}>
+                        {content}
+                      </Link>
+                    ) : (
+                      <div key={notification.id}>{content}</div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );
