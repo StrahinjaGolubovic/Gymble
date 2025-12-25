@@ -172,30 +172,39 @@ export default function ProfilePage() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-8">
-        {/* Profile Header */}
-        <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-6 sm:p-8 mb-6">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-            {/* Profile Picture */}
-            <div className="relative">
-              {user.profile_picture && !profilePicBroken ? (
-                <Image
-                  src={getImageUrl(user.profile_picture) || ''}
-                  alt={user.username}
-                  width={120}
-                  height={120}
-                  unoptimized
-                  className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-gray-700 object-cover"
-                  onError={() => setProfilePicBroken(true)}
-                />
-              ) : (
-                <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-gray-700 border-4 border-gray-600 flex items-center justify-center">
-                  <span className="text-gray-400 text-4xl sm:text-5xl font-bold">
-                    {user.username[0].toUpperCase()}
+      <main className="max-w-5xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-8">
+        {/* Profile Header - Enhanced */}
+        <div className={`${getRankGradient(user.trophies)} border rounded-xl shadow-2xl p-1 mb-6`} style={getRankBorderStyle(user.trophies)}>
+          <div className="bg-gray-800/95 rounded-lg p-6 sm:p-8">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+              {/* Profile Picture - Enhanced */}
+              <div className="relative">
+                {user.profile_picture && !profilePicBroken ? (
+                  <Image
+                    src={getImageUrl(user.profile_picture) || ''}
+                    alt={user.username}
+                    width={160}
+                    height={160}
+                    unoptimized
+                    className="w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 object-cover shadow-xl ring-4 ring-gray-700/50"
+                    style={getRankBorderStyle(user.trophies)}
+                    onError={() => setProfilePicBroken(true)}
+                  />
+                ) : (
+                  <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 border-4 flex items-center justify-center shadow-xl ring-4 ring-gray-700/50" style={getRankBorderStyle(user.trophies)}>
+                    <span className="text-gray-300 text-5xl sm:text-6xl font-bold">
+                      {user.username[0].toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                
+                {/* Rank Badge */}
+                <div className={`absolute -bottom-2 left-1/2 -translate-x-1/2 ${getRankGradient(user.trophies)} px-4 py-1.5 rounded-full border-2 shadow-lg`} style={getRankBorderStyle(user.trophies)}>
+                  <span className="text-sm font-bold rank-shine" style={{ ...getRankColorStyle(user.trophies), fontFamily: 'var(--font-orbitron), sans-serif' }}>
+                    {getTrophyRank(user.trophies)}
                   </span>
                 </div>
-              )}
-            </div>
+              </div>
 
             {/* Profile Info */}
             <div className="flex-1 text-center sm:text-left">
@@ -256,68 +265,72 @@ export default function ProfilePage() {
                 Member since {formatDateDisplay(user.created_at)}
               </p>
 
-              {/* Quick Stats */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="bg-gray-700/50 rounded-lg p-3 text-center">
-                  <div className="text-2xl font-bold text-primary-400">{streak.current_streak}</div>
-                  <div className="text-xs text-gray-400 mt-1">Current Streak</div>
+              {/* Quick Stats - Enhanced */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6">
+                <div className="bg-gradient-to-br from-primary-900/30 to-primary-800/20 border border-primary-700/50 rounded-xl p-4 text-center hover:scale-105 transition-transform duration-200 shadow-lg">
+                  <div className="text-xs text-primary-300 mb-1">🔥 Current Streak</div>
+                  <div className="text-3xl font-bold text-primary-400">{streak.current_streak}</div>
+                  <div className="text-xs text-gray-400 mt-1">days</div>
                 </div>
-                <div className="bg-gray-700/50 rounded-lg p-3 text-center">
-                  <div className="text-2xl font-bold text-gray-100">{streak.longest_streak}</div>
-                  <div className="text-xs text-gray-400 mt-1">Longest Streak</div>
+                <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 border border-purple-700/50 rounded-xl p-4 text-center hover:scale-105 transition-transform duration-200 shadow-lg">
+                  <div className="text-xs text-purple-300 mb-1">⭐ Longest Streak</div>
+                  <div className="text-3xl font-bold text-purple-400">{streak.longest_streak}</div>
+                  <div className="text-xs text-gray-400 mt-1">days</div>
                 </div>
-                <div className="bg-gray-700/50 rounded-lg p-3 text-center">
-                  <div className="text-2xl font-bold text-yellow-400">{user.trophies.toLocaleString()}</div>
-                  <div className="text-xs text-gray-400 mt-1">Trophies</div>
-                </div>
-                <div className={`${getRankGradient(user.trophies)} rounded-lg p-3 text-center border`} style={getRankBorderStyle(user.trophies)}>
-                  <div className="text-lg font-bold" style={{ ...getRankColorStyle(user.trophies), fontFamily: 'var(--font-orbitron), sans-serif' }}>
-                    {getTrophyRank(user.trophies)}
-                  </div>
-                  <div className="text-xs mt-1" style={getRankColorStyle(user.trophies)}>Rank</div>
+                <div className="col-span-2 sm:col-span-1 bg-gradient-to-br from-yellow-900/40 to-yellow-800/30 border-2 border-yellow-500/50 rounded-xl p-4 text-center hover:scale-105 transition-transform duration-200 shadow-xl">
+                  <div className="text-xs text-yellow-300 mb-2">🏆 Trophies</div>
+                  <div className="text-4xl font-bold text-yellow-400">{user.trophies.toLocaleString()}</div>
+                  <div className="text-xs text-yellow-500/70 mt-1">Total earned</div>
                 </div>
               </div>
             </div>
           </div>
         </div>
+        </div>
 
-        {/* Stats Grid */}
+        {/* Stats Grid - Enhanced */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-          <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-gray-100">{stats.total_uploads}</div>
-            <div className="text-sm text-gray-400 mt-1">Total Uploads</div>
+          <div className="bg-gray-800 border border-gray-700 rounded-xl p-5 text-center hover:border-gray-600 transition-all duration-200 hover:shadow-lg group">
+            <div className="text-3xl font-bold text-gray-100 group-hover:scale-110 transition-transform duration-200">{stats.total_uploads}</div>
+            <div className="text-sm text-gray-400 mt-2">Total Uploads</div>
           </div>
-          <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-green-400">{stats.approved_uploads}</div>
-            <div className="text-sm text-gray-400 mt-1">Approved</div>
+          <div className="bg-gradient-to-br from-green-900/30 to-green-800/20 border border-green-700/50 rounded-xl p-5 text-center hover:border-green-600 transition-all duration-200 hover:shadow-lg group">
+            <div className="text-3xl font-bold text-green-400 group-hover:scale-110 transition-transform duration-200">{stats.approved_uploads}</div>
+            <div className="text-sm text-green-300/70 mt-2">✓ Approved</div>
           </div>
-          <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-yellow-400">{stats.pending_uploads}</div>
-            <div className="text-sm text-gray-400 mt-1">Pending</div>
+          <div className="bg-gradient-to-br from-yellow-900/30 to-yellow-800/20 border border-yellow-700/50 rounded-xl p-5 text-center hover:border-yellow-600 transition-all duration-200 hover:shadow-lg group">
+            <div className="text-3xl font-bold text-yellow-400 group-hover:scale-110 transition-transform duration-200">{stats.pending_uploads}</div>
+            <div className="text-sm text-yellow-300/70 mt-2">⏳ Pending</div>
           </div>
-          <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold text-red-400">{stats.rejected_uploads}</div>
-            <div className="text-sm text-gray-400 mt-1">Rejected</div>
+          <div className="bg-gradient-to-br from-red-900/30 to-red-800/20 border border-red-700/50 rounded-xl p-5 text-center hover:border-red-600 transition-all duration-200 hover:shadow-lg group">
+            <div className="text-3xl font-bold text-red-400 group-hover:scale-110 transition-transform duration-200">{stats.rejected_uploads}</div>
+            <div className="text-sm text-red-300/70 mt-2">✗ Rejected</div>
           </div>
         </div>
 
-        {/* Recent Uploads */}
+        {/* Recent Uploads - Enhanced */}
         {recent_uploads.length > 0 && (
-          <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-bold text-gray-100 mb-4">Recent Uploads</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
+          <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl p-6 sm:p-8">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-1 h-8 bg-gradient-to-b from-primary-400 to-primary-600 rounded-full"></div>
+              <h2 className="text-2xl font-bold text-gray-100">Recent Uploads</h2>
+              <div className="ml-auto text-sm text-gray-400">{recent_uploads.length} photo{recent_uploads.length !== 1 ? 's' : ''}</div>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-5">
               {recent_uploads.map((upload) => (
-                <div key={upload.id} className="relative aspect-square rounded-lg overflow-hidden border-2 border-green-500 bg-green-900/20">
+                <div key={upload.id} className="group relative aspect-square rounded-xl overflow-hidden border-2 border-green-500 bg-green-900/20 shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300">
                   <Image
                     src={getImageUrl(upload.photo_path) || ''}
                     alt={`Upload from ${formatDateDisplay(upload.upload_date)}`}
                     fill
                     unoptimized
-                    className="object-cover"
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 14vw"
+                    className="object-cover group-hover:scale-110 transition-transform duration-300"
+                    sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
                   />
-                  <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-1 text-center">
-                    {formatDateDisplay(upload.upload_date, { month: 'short', day: 'numeric' })}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent text-white p-2 sm:p-3">
+                    <div className="text-xs sm:text-sm font-semibold text-center">{formatDateDisplay(upload.upload_date, { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                    <div className="text-[10px] sm:text-xs text-green-400 text-center mt-0.5">✓ Approved</div>
                   </div>
                 </div>
               ))}
@@ -326,8 +339,10 @@ export default function ProfilePage() {
         )}
 
         {recent_uploads.length === 0 && (
-          <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-6 text-center">
-            <p className="text-gray-400">No uploads yet</p>
+          <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl p-12 text-center">
+            <div className="text-6xl mb-4">📸</div>
+            <p className="text-xl text-gray-400 mb-2">No uploads yet</p>
+            <p className="text-sm text-gray-500">Start your fitness journey by uploading your first workout photo!</p>
           </div>
         )}
       </main>
