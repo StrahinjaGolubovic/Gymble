@@ -43,6 +43,43 @@ function getDb(): Database {
       initialized = true;
     }
   }
+  // Always check and run migrations for rest_days_available column
+  // This ensures migrations run even if database was created before the feature
+  try {
+    const challengesInfo = databaseInstance.prepare("PRAGMA table_info(weekly_challenges)").all() as Array<{ name: string }>;
+    const challengesCols = challengesInfo.map((c) => c.name);
+    if (!challengesCols.includes('rest_days_available')) {
+      databaseInstance.exec(`ALTER TABLE weekly_challenges ADD COLUMN rest_days_available INTEGER DEFAULT 3;`);
+      databaseInstance.exec(`UPDATE weekly_challenges SET rest_days_available = 3 WHERE rest_days_available IS NULL;`);
+    }
+  } catch (error) {
+    console.log('Rest days migration check note:', error);
+  }
+  
+  // Check if rest_days table exists
+  try {
+    databaseInstance.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='rest_days'").get();
+  } catch (error) {
+    // Table doesn't exist, create it
+    databaseInstance.exec(`
+      CREATE TABLE IF NOT EXISTS rest_days (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        challenge_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        rest_date DATE NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (challenge_id) REFERENCES weekly_challenges(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        UNIQUE(challenge_id, rest_date)
+      )
+    `);
+    databaseInstance.exec(`
+      CREATE INDEX IF NOT EXISTS idx_rest_days_challenge ON rest_days(challenge_id);
+      CREATE INDEX IF NOT EXISTS idx_rest_days_user ON rest_days(user_id);
+      CREATE INDEX IF NOT EXISTS idx_rest_days_date ON rest_days(rest_date);
+    `);
+  }
+  
   return databaseInstance;
 }
 

@@ -212,11 +212,26 @@ export function getOrCreateActiveChallenge(userId: number): WeeklyChallenge {
   const weekEnd = formatDate(weekEndDate);
 
   // Check if active challenge exists
-  let challenge = db
-    .prepare(
-      'SELECT * FROM weekly_challenges WHERE user_id = ? AND start_date = ? AND status = ?'
-    )
-    .get(userId, weekStart, 'active') as WeeklyChallenge | undefined;
+  // Try to get challenge with rest_days_available, fallback if column doesn't exist
+  let challenge: WeeklyChallenge | undefined;
+  try {
+    challenge = db
+      .prepare(
+        'SELECT *, COALESCE(rest_days_available, 3) as rest_days_available FROM weekly_challenges WHERE user_id = ? AND start_date = ? AND status = ?'
+      )
+      .get(userId, weekStart, 'active') as WeeklyChallenge | undefined;
+  } catch (error) {
+    // If rest_days_available column doesn't exist yet, select without it and add default
+    const challengeRow = db
+      .prepare(
+        'SELECT * FROM weekly_challenges WHERE user_id = ? AND start_date = ? AND status = ?'
+      )
+      .get(userId, weekStart, 'active') as any;
+    
+    if (challengeRow) {
+      challenge = { ...challengeRow, rest_days_available: 3 } as WeeklyChallenge;
+    }
+  }
 
   if (!challenge) {
     // Check if there's a previous active challenge that needs to be closed
@@ -230,9 +245,15 @@ export function getOrCreateActiveChallenge(userId: number): WeeklyChallenge {
         .prepare('SELECT COUNT(*) as count FROM daily_uploads WHERE challenge_id = ? AND verification_status != "rejected"')
         .get(previousChallenge.id) as { count: number };
 
-      const restDayCount = db
-        .prepare('SELECT COUNT(*) as count FROM rest_days WHERE challenge_id = ?')
-        .get(previousChallenge.id) as { count: number };
+      let restDayCount = { count: 0 };
+      try {
+        restDayCount = db
+          .prepare('SELECT COUNT(*) as count FROM rest_days WHERE challenge_id = ?')
+          .get(previousChallenge.id) as { count: number };
+      } catch (error) {
+        // rest_days table might not exist yet, use 0
+        restDayCount = { count: 0 };
+      }
 
       const completedDays = (uploadCount.count || 0) + (restDayCount.count || 0);
       const status = completedDays >= 5 ? 'completed' : 'failed';
@@ -291,9 +312,15 @@ export function getChallengeProgress(challengeId: number): {
   const uploadMap = new Map(uploads.map((u) => [u.upload_date, { path: u.photo_path, status: u.verification_status }]));
 
   // Get all rest days for this challenge
-  const restDays = db
-    .prepare('SELECT rest_date FROM rest_days WHERE challenge_id = ?')
-    .all(challengeId) as Array<{ rest_date: string }>;
+  let restDays: Array<{ rest_date: string }> = [];
+  try {
+    restDays = db
+      .prepare('SELECT rest_date FROM rest_days WHERE challenge_id = ?')
+      .all(challengeId) as Array<{ rest_date: string }>;
+  } catch (error) {
+    // rest_days table might not exist yet
+    restDays = [];
+  }
 
   const restDaySet = new Set(restDays.map((r) => r.rest_date));
 
@@ -407,9 +434,16 @@ export function getUserStreak(userId: number): Streak {
       .prepare('SELECT 1 FROM daily_uploads WHERE user_id = ? AND upload_date = ? AND verification_status != "rejected"')
       .get(userId, yesterday);
     
-    const hasYesterdayRestDay = db
-      .prepare('SELECT 1 FROM rest_days WHERE user_id = ? AND rest_date = ?')
-      .get(userId, yesterday);
+    let hasYesterdayRestDay = false;
+    try {
+      const restDayResult = db
+        .prepare('SELECT 1 FROM rest_days WHERE user_id = ? AND rest_date = ?')
+        .get(userId, yesterday);
+      hasYesterdayRestDay = !!restDayResult;
+    } catch (error) {
+      // rest_days table might not exist yet
+      hasYesterdayRestDay = false;
+    }
     
     const hasYesterdayActivity = hasYesterdayUpload || hasYesterdayRestDay;
 
@@ -502,25 +536,43 @@ export function updateStreakOnUpload(userId: number, uploadDate: string): void {
 
 // Check if user used a rest day on a specific date
 export function hasRestDay(challengeId: number, date: string): boolean {
-  const restDay = db
-    .prepare('SELECT * FROM rest_days WHERE challenge_id = ? AND rest_date = ?')
-    .get(challengeId, date) as RestDay | undefined;
-  return !!restDay;
+  try {
+    const restDay = db
+      .prepare('SELECT * FROM rest_days WHERE challenge_id = ? AND rest_date = ?')
+      .get(challengeId, date) as RestDay | undefined;
+    return !!restDay;
+  } catch (error) {
+    // rest_days table might not exist yet
+    return false;
+  }
 }
 
 // Use a rest day for today
 export function useRestDay(userId: number, challengeId: number, restDate: string): { success: boolean; message: string } {
   // Get challenge
-  const challenge = db
-    .prepare('SELECT * FROM weekly_challenges WHERE id = ? AND user_id = ? AND status = ?')
-    .get(challengeId, userId, 'active') as WeeklyChallenge | undefined;
+  let challenge: WeeklyChallenge | undefined;
+  try {
+    challenge = db
+      .prepare('SELECT *, COALESCE(rest_days_available, 3) as rest_days_available FROM weekly_challenges WHERE id = ? AND user_id = ? AND status = ?')
+      .get(challengeId, userId, 'active') as WeeklyChallenge | undefined;
+  } catch (error) {
+    // If column doesn't exist, get without it
+    const challengeRow = db
+      .prepare('SELECT * FROM weekly_challenges WHERE id = ? AND user_id = ? AND status = ?')
+      .get(challengeId, userId, 'active') as any;
+    
+    if (challengeRow) {
+      challenge = { ...challengeRow, rest_days_available: 3 } as WeeklyChallenge;
+    }
+  }
 
   if (!challenge) {
     return { success: false, message: 'Challenge not found or not active' };
   }
 
-  // Check if rest days available
-  if (challenge.rest_days_available <= 0) {
+  // Check if rest days available (default to 3 if column doesn't exist)
+  const restDaysAvailable = challenge.rest_days_available ?? 3;
+  if (restDaysAvailable <= 0) {
     return { success: false, message: 'No rest days available this week' };
   }
 
@@ -539,13 +591,24 @@ export function useRestDay(userId: number, challengeId: number, restDate: string
   }
 
   try {
-    // Insert rest day
-    db.prepare('INSERT INTO rest_days (challenge_id, user_id, rest_date) VALUES (?, ?, ?)')
-      .run(challengeId, userId, restDate);
+    // Insert rest day (wrap in try-catch in case table doesn't exist)
+    try {
+      db.prepare('INSERT INTO rest_days (challenge_id, user_id, rest_date) VALUES (?, ?, ?)')
+        .run(challengeId, userId, restDate);
+    } catch (error) {
+      // If rest_days table doesn't exist, the migration should have created it
+      // But if it still fails, throw error
+      throw new Error('Rest days feature not available - database migration may be needed');
+    }
 
-    // Decrement rest days available
-    db.prepare('UPDATE weekly_challenges SET rest_days_available = rest_days_available - 1 WHERE id = ?')
-      .run(challengeId);
+    // Decrement rest days available (handle if column doesn't exist)
+    try {
+      db.prepare('UPDATE weekly_challenges SET rest_days_available = rest_days_available - 1 WHERE id = ?')
+        .run(challengeId);
+    } catch (error) {
+      // Column might not exist yet, that's okay - we'll just track in rest_days table
+      // The migration will add the column on next init
+    }
 
     // Update streak (rest day counts as activity)
     updateStreakOnRestDay(userId, restDate);
