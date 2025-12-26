@@ -111,6 +111,10 @@ export default function DashboardPage() {
       const response = await fetch('/api/dashboard');
       if (response.ok) {
         const dashboardData = await response.json();
+        // Ensure rest_days_available is always present
+        if (dashboardData.challenge) {
+          dashboardData.challenge.rest_days_available = dashboardData.challenge.rest_days_available ?? 3;
+        }
         setData(dashboardData);
       } else if (response.status === 401) {
         router.push('/login');
@@ -118,6 +122,7 @@ export default function DashboardPage() {
         setError('Failed to load dashboard');
       }
     } catch (err) {
+      console.error('Dashboard fetch error:', err);
       setError('An error occurred');
     } finally {
       setLoading(false);
@@ -574,12 +579,12 @@ export default function DashboardPage() {
             
             {/* Desktop Navigation */}
             <div className="hidden sm:flex items-center gap-2 sm:gap-3">
-              {/* Rest Days Counter */}
-              {data && (
+              {/* Rest Days Counter - Always visible */}
+              {data?.challenge && (
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-900/40 border border-blue-700/50 rounded-md">
                   <span className="text-xl">💤</span>
                   <span className="text-sm font-semibold text-blue-300">
-                    {data.challenge.rest_days_available ?? 3}/3
+                    {(data.challenge.rest_days_available ?? 3)}/3
                   </span>
                   <span className="text-xs text-blue-400 hidden md:inline">Rest Days</span>
                 </div>
@@ -706,7 +711,7 @@ export default function DashboardPage() {
             {/* Mobile: Hamburger Menu + Profile Picture */}
             <div className="flex sm:hidden items-center gap-2">
               {/* Rest Days Counter - Mobile */}
-              {data && (
+              {data && data.challenge && (
                 <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-900/40 border border-blue-700/50 rounded-md">
                   <span className="text-lg">💤</span>
                   <span className="text-sm font-semibold text-blue-300">
@@ -972,7 +977,7 @@ export default function DashboardPage() {
           <div className="border-t border-gray-700 pt-4 sm:pt-5 md:pt-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4 gap-2">
               <h3 className="text-base sm:text-lg font-semibold text-gray-100">Upload Today's Photo</h3>
-              {data && (
+              {data && data.challenge && (
                 <div className="text-sm">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-900/40 border border-blue-700/50 rounded-md">
                     <span>💤</span>

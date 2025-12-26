@@ -25,8 +25,15 @@ export async function GET(request: NextRequest) {
     // Get user username and profile picture for admin check and display
     const user = db.prepare('SELECT username, profile_picture, COALESCE(trophies, 0) as trophies FROM users WHERE id = ?').get(userId) as { username: string; profile_picture: string | null; trophies: number } | undefined;
     
+    // Ensure rest_days_available is always present (default to 3 if missing)
+    const challenge = {
+      ...dashboard.challenge,
+      rest_days_available: dashboard.challenge.rest_days_available ?? 3,
+    };
+    
     return NextResponse.json({
       ...dashboard,
+      challenge,
       userId,
       username: user?.username,
       profilePicture: user?.profile_picture || null,
