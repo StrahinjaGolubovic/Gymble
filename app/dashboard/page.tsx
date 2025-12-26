@@ -542,18 +542,8 @@ export default function DashboardPage() {
     );
   }
 
-  // Debug: Log challenge data
-  if (data.challenge) {
-    console.log('Rendering dashboard - Challenge data:', {
-      id: data.challenge.id,
-      rest_days_available: data.challenge.rest_days_available,
-      hasRestDays: 'rest_days_available' in data.challenge,
-      challengeKeys: Object.keys(data.challenge)
-    });
-  }
-
   const progressPercentage = data.progress.totalDays > 0 ? (data.progress.completedDays / data.progress.totalDays) * 100 : 0;
-  const restDaysAvailable = data?.challenge?.rest_days_available ?? 3;
+  const restDaysAvailable = data.challenge?.rest_days_available ?? 3;
 
   return (
     <div className="bg-gray-900">
@@ -591,15 +581,13 @@ export default function DashboardPage() {
             {/* Desktop Navigation */}
             <div className="hidden sm:flex items-center gap-2 sm:gap-3">
               {/* Rest Days Counter - Desktop */}
-              {data && (
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-900/40 border border-blue-700/50 rounded-md">
-                  <span className="text-xl">💤</span>
-                  <span className="text-sm font-semibold text-blue-300">
-                    {restDaysAvailable}/3
-                  </span>
-                  <span className="text-xs text-blue-400">Rest Days</span>
-                </div>
-              )}
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-900/50 border border-blue-600/60 rounded-md shadow-sm">
+                <span className="text-xl" role="img" aria-label="rest">💤</span>
+                <span className="text-sm font-bold text-blue-200">
+                  {restDaysAvailable}/3
+                </span>
+                <span className="text-xs text-blue-300 font-medium hidden md:inline">Rest Days</span>
+              </div>
               {/* Buttons */}
               <Link
                 href="/crews"
