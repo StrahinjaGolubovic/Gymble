@@ -82,10 +82,23 @@ function initDatabase(database: Database) {
       end_date DATE NOT NULL,
       status TEXT DEFAULT 'active',
       completed_days INTEGER DEFAULT 0,
+      rest_days_available INTEGER DEFAULT 3,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )
   `);
+
+  // Migrate existing weekly_challenges table to add rest_days_available column if missing
+  try {
+    const challengesInfo = database.prepare("PRAGMA table_info(weekly_challenges)").all() as Array<{ name: string }>;
+    const challengesCols = challengesInfo.map((c) => c.name);
+    if (!challengesCols.includes('rest_days_available')) {
+      database.exec(`ALTER TABLE weekly_challenges ADD COLUMN rest_days_available INTEGER DEFAULT 3;`);
+      database.exec(`UPDATE weekly_challenges SET rest_days_available = 3 WHERE rest_days_available IS NULL;`);
+    }
+  } catch (error) {
+    console.log('Weekly challenges migration note:', error);
+  }
 
   // Daily uploads table
   database.exec(`
@@ -292,6 +305,20 @@ function initDatabase(database: Database) {
     )
   `);
 
+  // Rest days table - tracks when users use rest day credits
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS rest_days (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      challenge_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      rest_date DATE NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (challenge_id) REFERENCES weekly_challenges(id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE(challenge_id, rest_date)
+    )
+  `);
+
   // Create indexes for better performance
   database.exec(`
     CREATE INDEX IF NOT EXISTS idx_challenges_user ON weekly_challenges(user_id);
@@ -322,6 +349,9 @@ function initDatabase(database: Database) {
     CREATE INDEX IF NOT EXISTS idx_nudges_from_user ON nudges(from_user_id);
     CREATE INDEX IF NOT EXISTS idx_nudges_to_user ON nudges(to_user_id);
     CREATE INDEX IF NOT EXISTS idx_nudges_date ON nudges(nudge_date);
+    CREATE INDEX IF NOT EXISTS idx_rest_days_challenge ON rest_days(challenge_id);
+    CREATE INDEX IF NOT EXISTS idx_rest_days_user ON rest_days(user_id);
+    CREATE INDEX IF NOT EXISTS idx_rest_days_date ON rest_days(rest_date);
   `);
 }
 

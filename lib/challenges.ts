@@ -32,6 +32,7 @@ export interface WeeklyChallenge {
   end_date: string;
   status: 'active' | 'completed' | 'failed';
   completed_days: number;
+  rest_days_available: number;
   created_at: string;
 }
 
@@ -45,6 +46,14 @@ export interface DailyUpload {
   metadata: string | null;
   verified_at: string | null;
   verified_by: number | null;
+  created_at: string;
+}
+
+export interface RestDay {
+  id: number;
+  challenge_id: number;
+  user_id: number;
+  rest_date: string;
   created_at: string;
 }
 
@@ -75,7 +84,8 @@ export function recomputeUserStreakFromUploads(userId: number): Streak {
     streak = db.prepare('SELECT * FROM streaks WHERE user_id = ?').get(userId) as Streak;
   }
 
-  const rows = db
+  // Get all valid activity dates (approved uploads + rest days)
+  const uploadRows = db
     .prepare(
       `SELECT upload_date
        FROM daily_uploads
@@ -85,7 +95,18 @@ export function recomputeUserStreakFromUploads(userId: number): Streak {
     )
     .all(userId) as Array<{ upload_date: string }>;
 
-  const dates = rows.map((r) => r.upload_date);
+  const restDayRows = db
+    .prepare(
+      `SELECT rest_date as upload_date
+       FROM rest_days
+       WHERE user_id = ?
+       ORDER BY rest_date ASC`
+    )
+    .all(userId) as Array<{ upload_date: string }>;
+
+  // Combine and deduplicate dates
+  const allDates = [...uploadRows.map((r) => r.upload_date), ...restDayRows.map((r) => r.upload_date)];
+  const dates = [...new Set(allDates)].sort();
 
   let longest = 0;
   let currentRun = 0;
@@ -204,17 +225,22 @@ export function getOrCreateActiveChallenge(userId: number): WeeklyChallenge {
       .get(userId, 'active') as WeeklyChallenge | undefined;
 
     if (previousChallenge) {
-      // Evaluate previous challenge
-      const completedDays = db
-        .prepare('SELECT COUNT(*) as count FROM daily_uploads WHERE challenge_id = ?')
+      // Evaluate previous challenge (count uploads + rest days)
+      const uploadCount = db
+        .prepare('SELECT COUNT(*) as count FROM daily_uploads WHERE challenge_id = ? AND verification_status != "rejected"')
         .get(previousChallenge.id) as { count: number };
 
-      const status = completedDays.count >= 5 ? 'completed' : 'failed';
+      const restDayCount = db
+        .prepare('SELECT COUNT(*) as count FROM rest_days WHERE challenge_id = ?')
+        .get(previousChallenge.id) as { count: number };
+
+      const completedDays = (uploadCount.count || 0) + (restDayCount.count || 0);
+      const status = completedDays >= 5 ? 'completed' : 'failed';
       
       // Update previous challenge
       db.prepare('UPDATE weekly_challenges SET status = ?, completed_days = ? WHERE id = ?').run(
         status,
-        completedDays.count,
+        completedDays,
         previousChallenge.id
       );
 
@@ -230,12 +256,12 @@ export function getOrCreateActiveChallenge(userId: number): WeeklyChallenge {
       updateStreak(userId, status === 'completed');
     }
 
-    // Create new challenge
+    // Create new challenge (reset rest days to 3 for new week)
     const result = db
       .prepare(
-        'INSERT INTO weekly_challenges (user_id, start_date, end_date, status) VALUES (?, ?, ?, ?)'
+        'INSERT INTO weekly_challenges (user_id, start_date, end_date, status, rest_days_available) VALUES (?, ?, ?, ?, ?)'
       )
-      .run(userId, weekStart, weekEnd, 'active');
+      .run(userId, weekStart, weekEnd, 'active', 3);
 
     challenge = db
       .prepare('SELECT * FROM weekly_challenges WHERE id = ?')
@@ -249,13 +275,13 @@ export function getOrCreateActiveChallenge(userId: number): WeeklyChallenge {
 export function getChallengeProgress(challengeId: number): {
   totalDays: number;
   completedDays: number;
-  days: Array<{ date: string; uploaded: boolean; photo_path?: string; verification_status?: string }>;
+  days: Array<{ date: string; uploaded: boolean; photo_path?: string; verification_status?: string; is_rest_day?: boolean }>;
 } {
   const challenge = db
     .prepare('SELECT * FROM weekly_challenges WHERE id = ?')
     .get(challengeId) as WeeklyChallenge;
 
-  const days: Array<{ date: string; uploaded: boolean; photo_path?: string; verification_status?: string }> = [];
+  const days: Array<{ date: string; uploaded: boolean; photo_path?: string; verification_status?: string; is_rest_day?: boolean }> = [];
 
   // Get all uploads for this challenge (only approved ones count)
   const uploads = db
@@ -263,6 +289,13 @@ export function getChallengeProgress(challengeId: number): {
     .all(challengeId) as Array<{ upload_date: string; photo_path: string; verification_status: string }>;
 
   const uploadMap = new Map(uploads.map((u) => [u.upload_date, { path: u.photo_path, status: u.verification_status }]));
+
+  // Get all rest days for this challenge
+  const restDays = db
+    .prepare('SELECT rest_date FROM rest_days WHERE challenge_id = ?')
+    .all(challengeId) as Array<{ rest_date: string }>;
+
+  const restDaySet = new Set(restDays.map((r) => r.rest_date));
 
   // Get user registration date - this is where we start counting the 7 days
   const user = db.prepare('SELECT created_at FROM users WHERE id = ?').get(challenge.user_id) as { created_at: string } | undefined;
@@ -289,6 +322,7 @@ export function getChallengeProgress(challengeId: number): {
     
     const dateStr = formatDate(date);
     const upload = uploadMap.get(dateStr);
+    const isRestDay = restDaySet.has(dateStr);
     // uploaded is true if there's any upload (pending, approved, or rejected)
     // We check verification_status separately in the UI
     days.push({
@@ -296,11 +330,14 @@ export function getChallengeProgress(challengeId: number): {
       uploaded: !!upload, // true if upload exists, regardless of status
       photo_path: upload?.path,
       verification_status: upload?.status,
+      is_rest_day: isRestDay,
     });
   }
 
-  // Rejected uploads should not count as completed.
-  const completedDays = days.filter((d) => d.uploaded && d.verification_status !== 'rejected').length;
+  // Rejected uploads should not count as completed. Rest days count as completed.
+  const completedDays = days.filter((d) => 
+    (d.uploaded && d.verification_status !== 'rejected') || d.is_rest_day
+  ).length;
 
   return {
     totalDays: 7,
@@ -323,6 +360,11 @@ export function addDailyUpload(
 
   if (existing) {
     throw new Error('Upload already exists for this date');
+  }
+
+  // Check if rest day was already used for this date
+  if (hasRestDay(challengeId, uploadDate)) {
+    throw new Error('Rest day already used for this date');
   }
 
   const result = db
@@ -360,8 +402,19 @@ export function getUserStreak(userId: number): Streak {
     const today = formatDateSerbia();
     const yesterday = addDaysYMD(today, -1);
 
-    // If last activity is before yesterday, there was a gap day with no upload -> streak is broken.
-    if (streak.last_activity_date < yesterday && streak.current_streak !== 0) {
+    // Check if there's any activity (upload or rest day) for yesterday
+    const hasYesterdayUpload = db
+      .prepare('SELECT 1 FROM daily_uploads WHERE user_id = ? AND upload_date = ? AND verification_status != "rejected"')
+      .get(userId, yesterday);
+    
+    const hasYesterdayRestDay = db
+      .prepare('SELECT 1 FROM rest_days WHERE user_id = ? AND rest_date = ?')
+      .get(userId, yesterday);
+    
+    const hasYesterdayActivity = hasYesterdayUpload || hasYesterdayRestDay;
+
+    // If last activity is before yesterday AND no activity yesterday, streak is broken
+    if (streak.last_activity_date < yesterday && !hasYesterdayActivity && streak.current_streak !== 0) {
       db.prepare('UPDATE streaks SET current_streak = 0 WHERE user_id = ?').run(userId);
       streak.current_streak = 0;
     }
@@ -444,6 +497,98 @@ export function updateStreakOnUpload(userId: number, uploadDate: string): void {
     } else {
       // Upload is older than last_activity_date (e.g., admin verifies an old upload) — ignore.
     }
+  }
+}
+
+// Check if user used a rest day on a specific date
+export function hasRestDay(challengeId: number, date: string): boolean {
+  const restDay = db
+    .prepare('SELECT * FROM rest_days WHERE challenge_id = ? AND rest_date = ?')
+    .get(challengeId, date) as RestDay | undefined;
+  return !!restDay;
+}
+
+// Use a rest day for today
+export function useRestDay(userId: number, challengeId: number, restDate: string): { success: boolean; message: string } {
+  // Get challenge
+  const challenge = db
+    .prepare('SELECT * FROM weekly_challenges WHERE id = ? AND user_id = ? AND status = ?')
+    .get(challengeId, userId, 'active') as WeeklyChallenge | undefined;
+
+  if (!challenge) {
+    return { success: false, message: 'Challenge not found or not active' };
+  }
+
+  // Check if rest days available
+  if (challenge.rest_days_available <= 0) {
+    return { success: false, message: 'No rest days available this week' };
+  }
+
+  // Check if already used rest day for this date
+  if (hasRestDay(challengeId, restDate)) {
+    return { success: false, message: 'Rest day already used for this date' };
+  }
+
+  // Check if already uploaded photo for this date
+  const existingUpload = db
+    .prepare('SELECT * FROM daily_uploads WHERE challenge_id = ? AND upload_date = ?')
+    .get(challengeId, restDate) as DailyUpload | undefined;
+
+  if (existingUpload) {
+    return { success: false, message: 'Photo already uploaded for this date' };
+  }
+
+  try {
+    // Insert rest day
+    db.prepare('INSERT INTO rest_days (challenge_id, user_id, rest_date) VALUES (?, ?, ?)')
+      .run(challengeId, userId, restDate);
+
+    // Decrement rest days available
+    db.prepare('UPDATE weekly_challenges SET rest_days_available = rest_days_available - 1 WHERE id = ?')
+      .run(challengeId);
+
+    // Update streak (rest day counts as activity)
+    updateStreakOnRestDay(userId, restDate);
+
+    return { success: true, message: 'Rest day used successfully' };
+  } catch (error) {
+    console.error('Error using rest day:', error);
+    return { success: false, message: 'Failed to use rest day' };
+  }
+}
+
+// Update streak when rest day is used (similar to upload)
+export function updateStreakOnRestDay(userId: number, restDate: string): void {
+  const streak = getUserStreak(userId);
+  const restDateStr = restDate;
+
+  if (!streak.last_activity_date) {
+    // First activity
+    db.prepare('UPDATE streaks SET current_streak = 1, longest_streak = 1, last_activity_date = ? WHERE user_id = ?').run(
+      restDateStr,
+      userId
+    );
+  } else {
+    const daysDiff = diffDaysYMD(restDateStr, streak.last_activity_date);
+
+    if (daysDiff === 1) {
+      // Consecutive day
+      const newStreak = streak.current_streak + 1;
+      const newLongest = Math.max(newStreak, streak.longest_streak);
+      db.prepare(
+        'UPDATE streaks SET current_streak = ?, longest_streak = ?, last_activity_date = ? WHERE user_id = ?'
+      ).run(newStreak, newLongest, restDateStr, userId);
+    } else if (daysDiff === 0) {
+      // Same day, don't increment
+      // Do nothing
+    } else if (daysDiff > 1) {
+      // Gap in streak, reset to 1
+      db.prepare('UPDATE streaks SET current_streak = 1, last_activity_date = ? WHERE user_id = ?').run(
+        restDateStr,
+        userId
+      );
+    }
+    // If restDate is before last_activity_date, ignore (shouldn't happen)
   }
 }
 

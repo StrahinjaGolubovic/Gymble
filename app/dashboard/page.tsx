@@ -22,6 +22,7 @@ interface DashboardData {
     end_date: string;
     status: string;
     completed_days: number;
+    rest_days_available: number;
   };
   progress: {
     totalDays: number;
@@ -31,6 +32,7 @@ interface DashboardData {
       uploaded: boolean;
       photo_path?: string;
       verification_status?: string;
+      is_rest_day?: boolean;
     }>;
   };
   streak: {
@@ -949,7 +951,17 @@ export default function DashboardPage() {
 
           {/* Upload Section */}
           <div className="border-t border-gray-700 pt-4 sm:pt-5 md:pt-6">
-            <h3 className="text-base sm:text-lg font-semibold text-gray-100 mb-3 sm:mb-4">Upload Today's Photo</h3>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4 gap-2">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-100">Upload Today's Photo</h3>
+              {data && data.challenge.rest_days_available > 0 && (
+                <div className="text-sm text-gray-400">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-900/30 border border-blue-700/50 rounded-md">
+                    <span>💤</span>
+                    <span>{data.challenge.rest_days_available} rest day{data.challenge.rest_days_available !== 1 ? 's' : ''} available</span>
+                  </span>
+                </div>
+              )}
+            </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
               <label className="flex-1">
                 <input
@@ -963,10 +975,55 @@ export default function DashboardPage() {
                   {uploading ? 'Uploading...' : 'Choose Photo'}
                 </div>
               </label>
+              {data && data.challenge.rest_days_available > 0 && (
+                <button
+                  onClick={async () => {
+                    const today = formatDateSerbia();
+                    const todayProgress = data.progress.days.find(d => d.date === today);
+                    
+                    // Check if already uploaded or used rest day today
+                    if (todayProgress?.uploaded || todayProgress?.is_rest_day) {
+                      showToast('You have already logged activity for today', 'error');
+                      return;
+                    }
+
+                    showConfirm(
+                      'Use Rest Day',
+                      `Are you sure you want to use a rest day? You have ${data.challenge.rest_days_available} rest day${data.challenge.rest_days_available !== 1 ? 's' : ''} remaining this week.`,
+                      async () => {
+                        try {
+                          const response = await fetch('/api/rest-day', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ date: today }),
+                          });
+
+                          const result = await response.json();
+
+                          if (response.ok) {
+                            showToast('Rest day used successfully! Your streak is maintained. 💤', 'success');
+                            await fetchDashboard();
+                          } else {
+                            showToast(result.error || 'Failed to use rest day', 'error');
+                          }
+                        } catch (err) {
+                          showToast('An error occurred while using rest day', 'error');
+                        }
+                      },
+                      'default'
+                    );
+                  }}
+                  disabled={uploading}
+                  className="px-5 sm:px-6 py-3 sm:py-3.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-base sm:text-base font-medium touch-manipulation min-h-[44px] flex items-center justify-center gap-2 whitespace-nowrap"
+                >
+                  <span>💤</span>
+                  <span>Use Rest Day</span>
+                </button>
+              )}
               {error && <div className="text-red-400 text-sm sm:text-base">{error}</div>}
             </div>
             <p className="text-xs sm:text-sm text-gray-400 mt-2 sm:mt-3">
-              Upload one photo per day as proof of your gym visit
+              Upload one photo per day as proof of your gym visit, or use a rest day to maintain your streak
             </p>
           </div>
         </div>
@@ -987,7 +1044,9 @@ export default function DashboardPage() {
                   <div
                     key={day.date}
                     className={`border-2 rounded-lg p-3 text-center flex-shrink-0 w-[85px] ${
-                      day.uploaded
+                      day.is_rest_day
+                        ? 'border-blue-500 bg-blue-900/20'
+                        : day.uploaded
                         ? day.verification_status === 'pending'
                           ? 'border-yellow-500 bg-yellow-900/20'
                           : day.verification_status === 'rejected'
@@ -1002,7 +1061,11 @@ export default function DashboardPage() {
                   >
                     <div className="text-xs font-medium text-gray-400">{dayName}</div>
                     <div className="text-xl font-bold text-gray-100 mt-1">{dayNumber}</div>
-                    {day.uploaded ? (
+                    {day.is_rest_day ? (
+                      <div className="mt-2">
+                        <div className="text-blue-400 text-[10px] font-medium">💤 Rest Day</div>
+                      </div>
+                    ) : day.uploaded ? (
                       <div className="mt-2">
                         {day.verification_status === 'pending' ? (
                           <div className="text-yellow-400 text-[10px] font-medium bg-yellow-900/30 px-1.5 py-0.5 rounded">Verifying</div>
@@ -1036,7 +1099,9 @@ export default function DashboardPage() {
                 <div
                   key={day.date}
                   className={`border-2 rounded-lg p-2 sm:p-3 md:p-4 text-center ${
-                    day.uploaded
+                    day.is_rest_day
+                      ? 'border-blue-500 bg-blue-900/20'
+                      : day.uploaded
                       ? day.verification_status === 'pending'
                         ? 'border-yellow-500 bg-yellow-900/20'
                         : day.verification_status === 'rejected'
@@ -1051,7 +1116,12 @@ export default function DashboardPage() {
                 >
                   <div className="text-xs sm:text-sm font-medium text-gray-400">{dayName}</div>
                   <div className="text-lg sm:text-xl md:text-2xl font-bold text-gray-100 mt-1">{dayNumber}</div>
-                  {day.uploaded ? (
+                  {day.is_rest_day ? (
+                    <div className="mt-2">
+                      <div className="text-blue-400 text-xs font-medium mb-2">💤 Rest Day</div>
+                      <div className="text-xs text-blue-300/70">Streak maintained</div>
+                    </div>
+                  ) : day.uploaded ? (
                     <div className="mt-2">
                       {day.verification_status === 'pending' ? (
                         <div className="text-yellow-400 text-xs font-medium bg-yellow-900/30 px-2 py-1 rounded mb-2">Verifying</div>
