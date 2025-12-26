@@ -241,30 +241,9 @@ export default function DashboardPage() {
     const formData = new FormData();
 
     try {
-      const mod: any = await import('exifr');
-      const exifr = mod?.default || mod;
-      const exifData = await exifr.parse(file, {
-        pick: [
-          'DateTimeOriginal',
-          'CreateDate',
-          'ModifyDate',
-          'GPSLatitude',
-          'GPSLongitude',
-          'Make',
-          'Model',
-          'Software',
-        ],
-      });
-      if (exifData) {
-        formData.append('metadata', JSON.stringify(exifData));
-      }
-    } catch (err) {
-      console.error('EXIF extraction failed:', err);
-    }
-
-    try {
       let uploadFile = file;
 
+      // Step 1: Convert HEIC → JPEG if needed (iPhones use HEIC by default)
       if (file.type === 'image/heic' || file.type === 'image/heif' || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
         const heic2any = (await import('heic2any')).default;
         const converted = await heic2any({
@@ -276,6 +255,31 @@ export default function DashboardPage() {
         uploadFile = new File([blob], file.name.replace(/\.(heic|heif)$/i, '.jpg'), { type: 'image/jpeg' });
       }
 
+      // Step 2: Extract metadata from the converted file (AFTER HEIC conversion)
+      // This is more reliable for iPhones because we're extracting from JPEG, not HEIC
+      try {
+        const mod: any = await import('exifr');
+        const exifr = mod?.default || mod;
+        const exifData = await exifr.parse(uploadFile, {
+          pick: [
+            'DateTimeOriginal',
+            'CreateDate',
+            'ModifyDate',
+            'GPSLatitude',
+            'GPSLongitude',
+            'Make',
+            'Model',
+            'Software',
+          ],
+        });
+        if (exifData) {
+          formData.append('metadata', JSON.stringify(exifData));
+        }
+      } catch (err) {
+        console.error('EXIF extraction failed:', err);
+      }
+
+      // Step 3: Compress the image
       try {
         uploadFile = await compressImageToJpeg(uploadFile, {
           maxBytes: 1.8 * 1024 * 1024,
