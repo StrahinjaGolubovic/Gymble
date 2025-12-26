@@ -299,12 +299,29 @@ export function getOrCreateActiveChallenge(userId: number): WeeklyChallenge {
         .run(userId, weekStart, weekEnd, 'active');
     }
 
-    const challengeRow = db
-      .prepare('SELECT * FROM weekly_challenges WHERE id = ?')
-      .get(result.lastInsertRowid) as any;
+    // Ensure rest_days_available is always in the returned challenge
+    let challengeRow: any;
+    try {
+      challengeRow = db
+        .prepare('SELECT *, COALESCE(rest_days_available, 3) as rest_days_available FROM weekly_challenges WHERE id = ?')
+        .get(result.lastInsertRowid);
+    } catch (error) {
+      // Column doesn't exist, select without it
+      challengeRow = db
+        .prepare('SELECT * FROM weekly_challenges WHERE id = ?')
+        .get(result.lastInsertRowid);
+    }
     
-    // Ensure rest_days_available exists in the result
-    challenge = { ...challengeRow, rest_days_available: challengeRow.rest_days_available ?? 3 } as WeeklyChallenge;
+    // Ensure rest_days_available always exists in the result
+    challenge = { 
+      ...challengeRow, 
+      rest_days_available: challengeRow?.rest_days_available ?? 3 
+    } as WeeklyChallenge;
+  }
+
+  // Final safety check - ensure rest_days_available is always present
+  if (challenge && typeof challenge.rest_days_available !== 'number') {
+    challenge.rest_days_available = 3;
   }
 
   return challenge;
@@ -316,12 +333,23 @@ export function getChallengeProgress(challengeId: number): {
   completedDays: number;
   days: Array<{ date: string; uploaded: boolean; photo_path?: string; verification_status?: string; is_rest_day?: boolean }>;
 } {
-  const challengeRow = db
-    .prepare('SELECT * FROM weekly_challenges WHERE id = ?')
-    .get(challengeId) as any;
+  let challengeRow: any;
+  try {
+    challengeRow = db
+      .prepare('SELECT *, COALESCE(rest_days_available, 3) as rest_days_available FROM weekly_challenges WHERE id = ?')
+      .get(challengeId);
+  } catch (error) {
+    // Column doesn't exist, select without it
+    challengeRow = db
+      .prepare('SELECT * FROM weekly_challenges WHERE id = ?')
+      .get(challengeId);
+  }
   
-  // Ensure rest_days_available exists
-  const challenge = { ...challengeRow, rest_days_available: challengeRow.rest_days_available ?? 3 } as WeeklyChallenge;
+  // Ensure rest_days_available always exists
+  const challenge = { 
+    ...challengeRow, 
+    rest_days_available: challengeRow?.rest_days_available ?? 3 
+  } as WeeklyChallenge;
 
   const days: Array<{ date: string; uploaded: boolean; photo_path?: string; verification_status?: string; is_rest_day?: boolean }> = [];
 
