@@ -574,6 +574,16 @@ export default function DashboardPage() {
             
             {/* Desktop Navigation */}
             <div className="hidden sm:flex items-center gap-2 sm:gap-3">
+              {/* Rest Days Counter */}
+              {data && (
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-900/40 border border-blue-700/50 rounded-md">
+                  <span className="text-xl">💤</span>
+                  <span className="text-sm font-semibold text-blue-300">
+                    {data.challenge.rest_days_available ?? 3}/3
+                  </span>
+                  <span className="text-xs text-blue-400 hidden md:inline">Rest Days</span>
+                </div>
+              )}
               {/* Buttons */}
               <Link
                 href="/crews"
@@ -695,6 +705,15 @@ export default function DashboardPage() {
 
             {/* Mobile: Hamburger Menu + Profile Picture */}
             <div className="flex sm:hidden items-center gap-2">
+              {/* Rest Days Counter - Mobile */}
+              {data && (
+                <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-blue-900/40 border border-blue-700/50 rounded-md">
+                  <span className="text-lg">💤</span>
+                  <span className="text-sm font-semibold text-blue-300">
+                    {data.challenge.rest_days_available ?? 3}/3
+                  </span>
+                </div>
+              )}
               {/* Notifications on mobile */}
               {data?.userId && <Notifications userId={data.userId} />}
               
@@ -953,11 +972,12 @@ export default function DashboardPage() {
           <div className="border-t border-gray-700 pt-4 sm:pt-5 md:pt-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4 gap-2">
               <h3 className="text-base sm:text-lg font-semibold text-gray-100">Upload Today's Photo</h3>
-              {data && data.challenge.rest_days_available > 0 && (
-                <div className="text-sm text-gray-400">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-900/30 border border-blue-700/50 rounded-md">
+              {data && (
+                <div className="text-sm">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-900/40 border border-blue-700/50 rounded-md">
                     <span>💤</span>
-                    <span>{data.challenge.rest_days_available} rest day{data.challenge.rest_days_available !== 1 ? 's' : ''} available</span>
+                    <span className="font-semibold text-blue-300">{data.challenge.rest_days_available ?? 3}/3</span>
+                    <span className="text-blue-400">Rest Days</span>
                   </span>
                 </div>
               )}
@@ -975,7 +995,7 @@ export default function DashboardPage() {
                   {uploading ? 'Uploading...' : 'Choose Photo'}
                 </div>
               </label>
-              {data && data.challenge.rest_days_available > 0 && (
+              {data && (data.challenge.rest_days_available ?? 3) > 0 && (
                 <button
                   onClick={async () => {
                     const today = formatDateSerbia();
