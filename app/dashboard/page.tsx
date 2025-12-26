@@ -576,7 +576,7 @@ export default function DashboardPage() {
                 <input
                   ref={profileFileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/jpg,image/png,image/heic,image/heif"
                   onChange={handleProfilePictureUpload}
                   disabled={profilePictureUploading}
                   className="hidden"
@@ -679,7 +679,7 @@ export default function DashboardPage() {
                 <input
                   ref={profileFileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/jpg,image/png,image/heic,image/heif"
                   onChange={handleProfilePictureUpload}
                   disabled={profilePictureUploading}
                   className="hidden"
@@ -911,13 +911,13 @@ export default function DashboardPage() {
               <label className="flex-1">
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/jpg,image/png,image/heic,image/heif"
                   onChange={handleFileUpload}
                   disabled={uploading}
                   className="hidden"
                 />
                 <div className="cursor-pointer bg-primary-600 text-white px-5 sm:px-6 py-3 sm:py-3.5 rounded-md hover:bg-primary-700 active:bg-primary-800 text-center text-base sm:text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors touch-manipulation min-h-[44px] flex items-center justify-center">
-                  {uploading ? 'Uploading...' : 'Choose Photo'}
+                  {uploading ? 'Uploading...' : 'Choose from Gallery'}
                 </div>
               </label>
               {error && <div className="text-red-400 text-sm sm:text-base">{error}</div>}
