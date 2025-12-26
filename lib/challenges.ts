@@ -246,7 +246,7 @@ export function getOrCreateActiveChallenge(userId: number): WeeklyChallenge {
     if (previousChallenge) {
       // Evaluate previous challenge (count uploads + rest days)
       const uploadCount = db
-        .prepare('SELECT COUNT(*) as count FROM daily_uploads WHERE challenge_id = ? AND verification_status != "rejected"')
+        .prepare("SELECT COUNT(*) as count FROM daily_uploads WHERE challenge_id = ? AND verification_status != 'rejected'")
         .get(previousChallenge.id) as { count: number };
 
       let restDayCount = { count: 0 };
@@ -452,7 +452,7 @@ export function getUserStreak(userId: number): Streak {
 
     // Check if there's any activity (upload or rest day) for yesterday
     const hasYesterdayUpload = db
-      .prepare('SELECT 1 FROM daily_uploads WHERE user_id = ? AND upload_date = ? AND verification_status != "rejected"')
+      .prepare("SELECT 1 FROM daily_uploads WHERE user_id = ? AND upload_date = ? AND verification_status != 'rejected'")
       .get(userId, yesterday);
     
     let hasYesterdayRestDay = false;
