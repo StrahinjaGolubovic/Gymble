@@ -837,10 +837,7 @@ export default function CrewsPage() {
                         <div className="flex items-center gap-2 mb-1">
                           <span className="font-semibold text-gray-100 truncate">@{member.username}</span>
                           {member.is_leader && (
-                            <span className="h-6 px-2 bg-yellow-600/20 border border-yellow-600/50 text-yellow-400 text-xs font-semibold rounded-full flex-shrink-0 inline-flex items-center justify-center gap-1.5 leading-none">
-                              <span className="w-4 h-4 inline-flex items-center justify-center">
-                                <span className="text-base leading-none translate-y-[1px]">👑</span>
-                              </span>
+                            <span className="h-6 px-2 bg-yellow-600/20 border border-yellow-600/50 text-yellow-400 text-xs font-semibold rounded-full flex-shrink-0 inline-flex items-center justify-center leading-none">
                               <span className="leading-none">Leader</span>
                             </span>
                           )}
