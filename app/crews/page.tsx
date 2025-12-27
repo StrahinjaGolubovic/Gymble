@@ -388,7 +388,9 @@ export default function CrewsPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-3 flex-wrap">
-                  <span className="text-2xl">⚓</span>
+                  <svg className="w-6 h-6 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
                   <h2 className="text-xl sm:text-2xl font-bold text-gray-100">{myCrew.name}</h2>
                   {myCrew.tag && (
                     <span
@@ -489,7 +491,11 @@ export default function CrewsPage() {
 
             {!searching && searchQuery && searchResults.length === 0 && (
               <div className="text-center py-8">
-                <div className="text-4xl mb-4">🔍</div>
+                <div className="mb-4 flex justify-center">
+                  <svg className="w-12 h-12 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
                 <h3 className="text-lg font-semibold text-gray-100 mb-2">No crews found</h3>
                 <p className="text-sm text-gray-400 mb-4">
                   No crews match "{searchQuery}". Try a different search term or create your own crew!
@@ -624,7 +630,9 @@ export default function CrewsPage() {
             <div className="bg-gray-800 border border-gray-700 rounded-xl p-4 sm:p-6 max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
               <div className="flex justify-between items-center mb-4 sm:mb-6">
                 <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                  <span className="text-2xl sm:text-3xl">⚓</span>
+                  <svg className="w-6 h-6 sm:w-8 sm:h-8 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
                   <h3 className="text-xl sm:text-2xl font-bold text-gray-100">{crewDetails.crew.name}</h3>
                   {crewDetails.crew.tag && (
                     <span
@@ -758,8 +766,18 @@ export default function CrewsPage() {
                         <div className="flex-1">
                           <div className="font-semibold text-gray-100 mb-1">@{request.username}</div>
                           <div className="text-xs sm:text-sm text-gray-400 flex items-center gap-3">
-                            <span>🏆 {request.trophies} trophies</span>
-                            <span>🔥 {request.current_streak} day streak</span>
+                            <span className="flex items-center gap-1">
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                              </svg>
+                              {request.trophies} trophies
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                              </svg>
+                              {request.current_streak} day streak
+                            </span>
                           </div>
                         </div>
                         <div className="flex gap-2">
@@ -785,7 +803,9 @@ export default function CrewsPage() {
               {/* Members List */}
               <div>
                 <h4 className="text-base sm:text-lg font-semibold text-gray-100 mb-3 flex items-center gap-2">
-                  <span>👥</span>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
                   <span>Members ({crewDetails.members.length})</span>
                 </h4>
                 <div className="space-y-2 sm:space-y-3">
@@ -819,11 +839,15 @@ export default function CrewsPage() {
                         </div>
                         <div className="text-xs sm:text-sm text-gray-400 flex items-center gap-3 flex-wrap">
                           <span className="flex items-center gap-1">
-                            <span>🏆</span>
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                            </svg>
                             <span>{member.trophies.toLocaleString()}</span>
                           </span>
                           <span className="flex items-center gap-1">
-                            <span>🔥</span>
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
                             <span>{member.current_streak} day streak</span>
                           </span>
                         </div>

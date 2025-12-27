@@ -172,11 +172,12 @@ export default function ProfilePage() {
           <Link
             href="/dashboard"
             className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
+            aria-label="Back to Dashboard"
+            title="Back to Dashboard"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
-            Back to Dashboard
           </Link>
         </div>
       </div>
@@ -204,8 +205,8 @@ export default function ProfilePage() {
           <Link
             href="/dashboard"
             className="p-2 text-gray-400 hover:text-gray-100 transition-colors"
-            aria-label="Dashboard"
-            title="Dashboard"
+            aria-label="Back to Dashboard"
+            title="Back to Dashboard"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -296,7 +297,7 @@ export default function ProfilePage() {
                         user.crew.tag ? (
                           <Link
                             href="/crews"
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-sm font-bold border-2 hover:opacity-80 transition-opacity"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-sm font-bold border-2 hover:opacity-80 transition-opacity max-w-fit sm:max-w-none"
                             style={{
                               backgroundColor: `${user.crew.tag_color}20`,
                               borderColor: user.crew.tag_color,
@@ -308,10 +309,12 @@ export default function ProfilePage() {
                         ) : (
                           <Link
                             href="/crews"
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary-600/20 border border-primary-500/50 rounded-md text-primary-300 text-sm font-medium hover:bg-primary-600/30 transition-colors"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary-600/20 border border-primary-500/50 rounded-md text-primary-300 text-sm font-medium hover:bg-primary-600/30 transition-colors max-w-fit sm:max-w-none"
                           >
-                            <span>👥</span>
-                            <span>{user.crew.name}</span>
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            <span className="truncate">{user.crew.name}</span>
                           </Link>
                         )
                       )}
@@ -329,11 +332,23 @@ export default function ProfilePage() {
                           disabled={privacyUpdating}
                           className="px-3 py-1.5 text-sm bg-gray-700 text-gray-300 rounded-md hover:bg-gray-600 transition-colors disabled:opacity-50"
                         >
-                          {privacyUpdating 
-                            ? 'Updating...' 
-                            : user.profile_private 
-                              ? '🔒 Make Public' 
-                              : '🔓 Make Private'}
+                          {privacyUpdating ? (
+                            'Updating...'
+                          ) : user.profile_private ? (
+                            <>
+                              <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                              </svg>
+                              Make Public
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                              </svg>
+                              Make Private
+                            </>
+                          )}
                         </button>
                       </div>
                     )}
@@ -347,17 +362,32 @@ export default function ProfilePage() {
               {/* Quick Stats - Enhanced */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6">
                 <div className="bg-gradient-to-br from-primary-900/30 to-primary-800/20 border border-primary-700/50 rounded-xl p-4 text-center hover:scale-105 transition-transform duration-200 shadow-lg">
-                  <div className="text-xs text-primary-300 mb-1">🔥 Current Streak</div>
+                  <div className="text-xs text-primary-300 mb-1 flex items-center justify-center gap-1">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Current Streak
+                  </div>
                   <div className="text-3xl font-bold text-primary-400">{streak.current_streak}</div>
                   <div className="text-xs text-gray-400 mt-1">days</div>
                 </div>
                 <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 border border-purple-700/50 rounded-xl p-4 text-center hover:scale-105 transition-transform duration-200 shadow-lg">
-                  <div className="text-xs text-purple-300 mb-1">⭐ Longest Streak</div>
+                  <div className="text-xs text-purple-300 mb-1 flex items-center justify-center gap-1">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                    </svg>
+                    Longest Streak
+                  </div>
                   <div className="text-3xl font-bold text-purple-400">{streak.longest_streak}</div>
                   <div className="text-xs text-gray-400 mt-1">days</div>
                 </div>
                 <div className="col-span-2 sm:col-span-1 bg-gradient-to-br from-yellow-900/40 to-yellow-800/30 border-2 border-yellow-500/50 rounded-xl p-4 text-center hover:scale-105 transition-transform duration-200 shadow-xl">
-                  <div className="text-xs text-yellow-300 mb-2">🏆 Trophies</div>
+                  <div className="text-xs text-yellow-300 mb-2 flex items-center justify-center gap-1">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                    </svg>
+                    Trophies
+                  </div>
                   <div className="text-4xl font-bold text-yellow-400">{user.trophies.toLocaleString()}</div>
                   <div className="text-xs text-yellow-500/70 mt-1">Total earned</div>
                 </div>
@@ -378,7 +408,12 @@ export default function ProfilePage() {
           </div>
           <div className="bg-gradient-to-br from-yellow-900/30 to-yellow-800/20 border border-yellow-700/50 rounded-xl p-5 text-center hover:border-yellow-600 transition-all duration-200 hover:shadow-lg group">
             <div className="text-3xl font-bold text-yellow-400 group-hover:scale-110 transition-transform duration-200">{stats.pending_uploads}</div>
-            <div className="text-sm text-yellow-300/70 mt-2">⏳ Pending</div>
+            <div className="text-sm text-yellow-300/70 mt-2 flex items-center justify-center gap-1">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Pending
+            </div>
           </div>
           <div className="bg-gradient-to-br from-red-900/30 to-red-800/20 border border-red-700/50 rounded-xl p-5 text-center hover:border-red-600 transition-all duration-200 hover:shadow-lg group">
             <div className="text-3xl font-bold text-red-400 group-hover:scale-110 transition-transform duration-200">{stats.rejected_uploads}</div>
@@ -418,7 +453,12 @@ export default function ProfilePage() {
 
         {recent_uploads.length === 0 && (
           <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl p-12 text-center">
-            <div className="text-6xl mb-4">📸</div>
+            <div className="mb-4 flex justify-center">
+              <svg className="w-16 h-16 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
             <p className="text-xl text-gray-400 mb-2">No uploads yet</p>
             <p className="text-sm text-gray-500">Start your fitness journey by uploading your first workout photo!</p>
           </div>

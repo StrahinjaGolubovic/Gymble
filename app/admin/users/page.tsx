@@ -283,12 +283,16 @@ export default function AdminUsers() {
             >
               Dashboard
             </Link>
-            <button
-              onClick={() => router.push('/dashboard')}
-              className="text-gray-200 hover:text-gray-100 px-4 py-2.5 rounded-md hover:bg-gray-700 active:bg-gray-600 transition-colors text-sm sm:text-base touch-manipulation min-h-[44px]"
+            <Link
+              href="/dashboard"
+              className="p-2 text-gray-400 hover:text-gray-100 transition-colors"
+              aria-label="Back to Dashboard"
+              title="Back to Dashboard"
             >
-              Back to Dashboard
-            </button>
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+            </Link>
           </div>
         </div>
       </header>
@@ -410,7 +414,12 @@ export default function AdminUsers() {
                     </td>
                     <td className="px-4 py-3">
                       <span className="text-sm sm:text-base font-semibold text-yellow-400">
-                        🏆 {user.trophies.toLocaleString()}
+                        <span className="flex items-center gap-1">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                          </svg>
+                          {user.trophies.toLocaleString()}
+                        </span>
                       </span>
                     </td>
                     <td className="px-4 py-3">
@@ -530,7 +539,7 @@ export default function AdminUsers() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <label className="text-sm text-gray-200">
-                Trophies 🏆
+                Trophies
                 <input
                   type="number"
                   min={0}

@@ -584,7 +584,9 @@ export default function DashboardPage() {
             <div className="hidden sm:flex items-center gap-2 sm:gap-3">
               {/* Rest Days Counter - Desktop */}
               <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-900/50 border border-blue-600/60 rounded-md shadow-sm">
-                <span className="text-xl" role="img" aria-label="rest">💤</span>
+                <svg className="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
                 <span className="text-sm font-bold text-blue-200">
                   {restDaysAvailable}/3
                 </span>
@@ -873,7 +875,9 @@ export default function DashboardPage() {
                 {data && (
                   <div className="px-3 py-2.5 flex items-center justify-between bg-blue-900/20 border border-blue-700/30 rounded-md">
                     <div className="flex items-center gap-2">
-                      <span className="text-xl">💤</span>
+                      <svg className="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                      </svg>
                       <span className="text-base font-medium text-blue-300">Rest Days</span>
                     </div>
                     <span className="text-base font-semibold text-blue-200">
@@ -952,7 +956,9 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
           <div className="bg-gradient-to-br from-yellow-900/40 to-yellow-800/20 border-2 border-yellow-600/50 rounded-lg shadow-lg p-4 sm:p-5 md:p-6">
             <div className="text-xs sm:text-sm font-medium text-yellow-300 mb-1 flex items-center gap-1.5">
-              <span>🏆</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+              </svg>
               <span>Trophies</span>
             </div>
             <div className="text-xl sm:text-2xl md:text-3xl font-bold text-yellow-400">
@@ -1061,7 +1067,7 @@ export default function DashboardPage() {
                           const result = await response.json();
 
                           if (response.ok) {
-                            showToast('Rest day used successfully! Your streak is maintained. 💤', 'success');
+                            showToast('Rest day used successfully! Your streak is maintained.', 'success');
                             await fetchDashboard();
                           } else {
                             showToast(result.error || 'Failed to use rest day', 'error');
@@ -1122,7 +1128,12 @@ export default function DashboardPage() {
                     <div className="text-xl font-bold text-gray-100 mt-1">{dayNumber}</div>
                     {day.is_rest_day ? (
                       <div className="mt-2">
-                        <div className="text-blue-400 text-[10px] font-medium">💤 Rest Day</div>
+                        <div className="text-blue-400 text-[10px] font-medium flex items-center gap-1">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                          </svg>
+                          Rest Day
+                        </div>
                       </div>
                     ) : day.uploaded ? (
                       <div className="mt-2">
@@ -1177,7 +1188,12 @@ export default function DashboardPage() {
                   <div className="text-lg sm:text-xl md:text-2xl font-bold text-gray-100 mt-1">{dayNumber}</div>
                   {day.is_rest_day ? (
                     <div className="mt-2">
-                      <div className="text-blue-400 text-xs font-medium mb-2">💤 Rest Day</div>
+                      <div className="text-blue-400 text-xs font-medium mb-2 flex items-center gap-1">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                        Rest Day
+                      </div>
                       <div className="text-xs text-blue-300/70">Streak maintained</div>
                     </div>
                   ) : day.uploaded ? (
@@ -1424,7 +1440,9 @@ export default function DashboardPage() {
                               
                               {/* Trophy Count - Special Display */}
                               <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-yellow-500/20 via-yellow-400/20 to-yellow-500/20 border border-yellow-500/40 rounded-full">
-                                <span className="text-lg">🏆</span>
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                                </svg>
                                 <span className="text-sm font-bold text-yellow-400">{friend.trophies.toLocaleString()}</span>
                               </div>
                             </div>
