@@ -5,6 +5,8 @@ export interface Crew {
   id: number;
   name: string;
   leader_id: number;
+  tag: string | null;
+  tag_color: string;
   created_at: string;
 }
 
@@ -28,6 +30,8 @@ export interface CrewInfo {
   name: string;
   leader_id: number;
   leader_username: string;
+  tag: string | null;
+  tag_color: string;
   created_at: string;
   member_count: number;
   average_streak: number;
@@ -120,6 +124,8 @@ export function searchCrews(query: string, userId: number): CrewInfo[] {
         c.id,
         c.name,
         c.leader_id,
+        c.tag,
+        COALESCE(c.tag_color, '#0ea5e9') as tag_color,
         c.created_at,
         u.username as leader_username,
         COUNT(DISTINCT cm.user_id) as member_count
@@ -135,6 +141,8 @@ export function searchCrews(query: string, userId: number): CrewInfo[] {
       id: number;
       name: string;
       leader_id: number;
+      tag: string | null;
+      tag_color: string;
       created_at: string;
       leader_username: string;
       member_count: number;
@@ -159,6 +167,8 @@ export function searchCrews(query: string, userId: number): CrewInfo[] {
       name: crew.name,
       leader_id: crew.leader_id,
       leader_username: crew.leader_username,
+      tag: crew.tag,
+      tag_color: crew.tag_color || '#0ea5e9',
       created_at: crew.created_at,
       member_count: crew.member_count,
       average_streak: stats.average_streak,
@@ -206,6 +216,8 @@ export function getUserCrew(userId: number): CrewInfo | null {
         c.id,
         c.name,
         c.leader_id,
+        c.tag,
+        COALESCE(c.tag_color, '#0ea5e9') as tag_color,
         c.created_at,
         u.username as leader_username,
         COUNT(DISTINCT cm.user_id) as member_count
@@ -219,6 +231,8 @@ export function getUserCrew(userId: number): CrewInfo | null {
       id: number;
       name: string;
       leader_id: number;
+      tag: string | null;
+      tag_color: string;
       created_at: string;
       leader_username: string;
       member_count: number;
@@ -235,6 +249,8 @@ export function getUserCrew(userId: number): CrewInfo | null {
     name: crew.name,
     leader_id: crew.leader_id,
     leader_username: crew.leader_username,
+    tag: crew.tag,
+    tag_color: crew.tag_color || '#0ea5e9',
     created_at: crew.created_at,
     member_count: crew.member_count,
     average_streak: stats.average_streak,
@@ -499,6 +515,8 @@ export function getCrewDetails(crewId: number, userId?: number): CrewInfo | null
         c.id,
         c.name,
         c.leader_id,
+        c.tag,
+        COALESCE(c.tag_color, '#0ea5e9') as tag_color,
         c.created_at,
         u.username as leader_username,
         COUNT(DISTINCT cm.user_id) as member_count
@@ -512,6 +530,8 @@ export function getCrewDetails(crewId: number, userId?: number): CrewInfo | null
       id: number;
       name: string;
       leader_id: number;
+      tag: string | null;
+      tag_color: string;
       created_at: string;
       leader_username: string;
       member_count: number;
@@ -543,6 +563,8 @@ export function getCrewDetails(crewId: number, userId?: number): CrewInfo | null
     name: crew.name,
     leader_id: crew.leader_id,
     leader_username: crew.leader_username,
+    tag: crew.tag,
+    tag_color: crew.tag_color || '#0ea5e9',
     created_at: crew.created_at,
     member_count: crew.member_count,
     average_streak: stats.average_streak,
@@ -551,5 +573,51 @@ export function getCrewDetails(crewId: number, userId?: number): CrewInfo | null
     is_leader: userId ? crew.leader_id === userId : false,
     has_pending_request,
   };
+}
+
+// Update crew tag (leader only)
+export function updateCrewTag(leaderId: number, crewId: number, tag: string | null, tagColor: string): { success: boolean; message: string } {
+  // Verify leader
+  const crew = db.prepare('SELECT * FROM crews WHERE id = ? AND leader_id = ?').get(crewId, leaderId) as Crew | undefined;
+  if (!crew) {
+    return { success: false, message: 'Unauthorized or crew not found' };
+  }
+
+  // Validate tag if provided
+  if (tag !== null) {
+    const trimmedTag = tag.trim().toUpperCase();
+    if (trimmedTag.length < 3 || trimmedTag.length > 4) {
+      return { success: false, message: 'Tag must be between 3 and 4 characters' };
+    }
+    if (!/^[A-Z0-9]+$/.test(trimmedTag)) {
+      return { success: false, message: 'Tag can only contain uppercase letters and numbers' };
+    }
+
+    // Check if tag is already taken by another crew
+    const existingCrew = db.prepare('SELECT id FROM crews WHERE tag = ? AND id != ?').get(trimmedTag, crewId) as { id: number } | undefined;
+    if (existingCrew) {
+      return { success: false, message: 'This tag is already taken by another crew' };
+    }
+
+    // Validate color (hex color)
+    if (!/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(tagColor)) {
+      return { success: false, message: 'Invalid color format' };
+    }
+
+    try {
+      db.prepare('UPDATE crews SET tag = ?, tag_color = ? WHERE id = ?').run(trimmedTag, tagColor, crewId);
+      return { success: true, message: 'Crew tag updated successfully' };
+    } catch (error) {
+      return { success: false, message: 'Failed to update crew tag' };
+    }
+  } else {
+    // Remove tag
+    try {
+      db.prepare('UPDATE crews SET tag = NULL, tag_color = ? WHERE id = ?').run(tagColor, crewId);
+      return { success: true, message: 'Crew tag removed successfully' };
+    } catch (error) {
+      return { success: false, message: 'Failed to remove crew tag' };
+    }
+  }
 }
 

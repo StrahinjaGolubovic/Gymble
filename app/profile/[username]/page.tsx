@@ -16,7 +16,7 @@ interface ProfileData {
     trophies: number;
     profile_picture: string | null;
     profile_private: boolean;
-    crew: { id: number; name: string } | null;
+    crew: { id: number; name: string; tag: string | null; tag_color: string } | null;
     created_at: string;
   };
   streak: {
@@ -290,13 +290,27 @@ export default function ProfilePage() {
                         @{user.username}
                       </h1>
                       {user.crew && (
-                        <Link
-                          href="/crews"
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary-600/20 border border-primary-500/50 rounded-md text-primary-300 text-sm font-medium hover:bg-primary-600/30 transition-colors"
-                        >
-                          <span>👥</span>
-                          <span>{user.crew.name}</span>
-                        </Link>
+                        user.crew.tag ? (
+                          <Link
+                            href="/crews"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-sm font-bold border-2 hover:opacity-80 transition-opacity"
+                            style={{
+                              backgroundColor: `${user.crew.tag_color}20`,
+                              borderColor: user.crew.tag_color,
+                              color: user.crew.tag_color,
+                            }}
+                          >
+                            <span>{user.crew.tag}</span>
+                          </Link>
+                        ) : (
+                          <Link
+                            href="/crews"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary-600/20 border border-primary-500/50 rounded-md text-primary-300 text-sm font-medium hover:bg-primary-600/30 transition-colors"
+                          >
+                            <span>👥</span>
+                            <span>{user.crew.name}</span>
+                          </Link>
+                        )
                       )}
                     </div>
                     {is_own_profile && (

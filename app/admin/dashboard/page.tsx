@@ -91,6 +91,12 @@ export default function AdminDashboard() {
               Chat Moderation
             </Link>
             <Link
+              href="/admin/feedback"
+              className="px-4 py-2 bg-gray-700 text-gray-200 rounded-md hover:bg-gray-600 transition-colors text-sm sm:text-base"
+            >
+              Feedback
+            </Link>
+            <Link
               href="/admin/system"
               className="px-4 py-2 bg-gray-700 text-gray-200 rounded-md hover:bg-gray-600 transition-colors text-sm sm:text-base"
             >
@@ -153,6 +159,13 @@ export default function AdminDashboard() {
             >
               <div className="text-base sm:text-lg font-semibold text-gray-100 mb-1">Moderate Chat</div>
               <div className="text-xs sm:text-sm text-gray-400">View and manage chat messages</div>
+            </Link>
+            <Link
+              href="/admin/feedback"
+              className="p-4 bg-gray-700/50 border border-gray-600 rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              <div className="text-base sm:text-lg font-semibold text-gray-100 mb-1">User Feedback</div>
+              <div className="text-xs sm:text-sm text-gray-400">View and manage user feedback</div>
             </Link>
           </div>
         </div>

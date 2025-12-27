@@ -279,10 +279,26 @@ function initDatabase(database: Database) {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT UNIQUE NOT NULL,
       leader_id INTEGER NOT NULL,
+      tag TEXT,
+      tag_color TEXT DEFAULT '#0ea5e9',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (leader_id) REFERENCES users(id) ON DELETE CASCADE
     )
   `);
+
+  // Migrate existing crews table to add tag columns if missing
+  try {
+    const crewsInfo = database.prepare("PRAGMA table_info(crews)").all() as Array<{ name: string }>;
+    const crewsCols = crewsInfo.map((c) => c.name);
+    if (!crewsCols.includes('tag')) {
+      database.exec(`ALTER TABLE crews ADD COLUMN tag TEXT;`);
+    }
+    if (!crewsCols.includes('tag_color')) {
+      database.exec(`ALTER TABLE crews ADD COLUMN tag_color TEXT DEFAULT '#0ea5e9';`);
+    }
+  } catch (error) {
+    console.log('Crews migration note:', error);
+  }
 
   // Crew members table
   database.exec(`

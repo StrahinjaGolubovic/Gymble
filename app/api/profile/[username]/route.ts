@@ -20,6 +20,8 @@ export async function GET(
         u.profile_private,
         u.crew_id,
         c.name as crew_name,
+        c.tag as crew_tag,
+        COALESCE(c.tag_color, '#0ea5e9') as crew_tag_color,
         u.created_at
       FROM users u
       LEFT JOIN crews c ON u.crew_id = c.id
@@ -32,6 +34,8 @@ export async function GET(
       profile_private: number | null;
       crew_id: number | null;
       crew_name: string | null;
+      crew_tag: string | null;
+      crew_tag_color: string;
       created_at: string;
     } | undefined;
 
@@ -118,7 +122,12 @@ export async function GET(
         trophies: user.trophies,
         profile_picture: user.profile_picture,
         profile_private: user.profile_private ? true : false,
-        crew: user.crew_name ? { id: user.crew_id, name: user.crew_name } : null,
+        crew: user.crew_name ? { 
+          id: user.crew_id, 
+          name: user.crew_name,
+          tag: user.crew_tag,
+          tag_color: user.crew_tag_color || '#0ea5e9',
+        } : null,
         created_at: user.created_at,
       },
       streak: {

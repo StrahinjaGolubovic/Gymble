@@ -13,6 +13,8 @@ interface CrewInfo {
   id: number;
   name: string;
   leader_username: string;
+  tag: string | null;
+  tag_color: string;
   member_count: number;
   average_streak: number;
   average_trophies: number;
@@ -65,6 +67,10 @@ export default function CrewsPage() {
   const [currentUsername, setCurrentUsername] = useState<string>('');
   const [currentUserProfilePicture, setCurrentUserProfilePicture] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [showTagSettings, setShowTagSettings] = useState(false);
+  const [crewTag, setCrewTag] = useState('');
+  const [crewTagColor, setCrewTagColor] = useState('#0ea5e9');
+  const [updatingTag, setUpdatingTag] = useState(false);
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -287,10 +293,46 @@ export default function CrewsPage() {
       if (response.ok) {
         const data = await response.json();
         setCrewDetails(data);
+        setCrewTag(data.crew.tag || '');
+        setCrewTagColor(data.crew.tag_color || '#0ea5e9');
         setShowDetailsModal(true);
       }
     } catch (err) {
       console.error('Error fetching crew details:', err);
+    }
+  }
+
+  async function handleUpdateTag() {
+    if (crewTag.trim() && (crewTag.trim().length < 3 || crewTag.trim().length > 4)) {
+      showToast('Tag must be between 3 and 4 characters', 'error');
+      return;
+    }
+
+    setUpdatingTag(true);
+    try {
+      const response = await fetch('/api/crews/update-tag', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          crewId: crewDetails!.crew.id,
+          tag: crewTag.trim() || null,
+          tagColor: crewTagColor,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        showToast(data.message || 'Tag updated successfully', 'success');
+        setShowTagSettings(false);
+        await fetchCrewDetails(crewDetails!.crew.id);
+      } else {
+        showToast(data.error || 'Failed to update tag', 'error');
+      }
+    } catch (err) {
+      showToast('An error occurred', 'error');
+    } finally {
+      setUpdatingTag(false);
     }
   }
 
@@ -343,9 +385,21 @@ export default function CrewsPage() {
           <div className="bg-gradient-to-br from-gray-800 to-gray-800/90 border-2 border-primary-500/30 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 shadow-lg">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex-1">
-                <div className="flex items-center gap-2 mb-3">
+                <div className="flex items-center gap-2 mb-3 flex-wrap">
                   <span className="text-2xl">⚓</span>
                   <h2 className="text-xl sm:text-2xl font-bold text-gray-100">{myCrew.name}</h2>
+                  {myCrew.tag && (
+                    <span
+                      className="px-2.5 py-1 rounded-md text-sm font-bold border-2"
+                      style={{
+                        backgroundColor: `${myCrew.tag_color}20`,
+                        borderColor: myCrew.tag_color,
+                        color: myCrew.tag_color,
+                      }}
+                    >
+                      {myCrew.tag}
+                    </span>
+                  )}
                   {myCrew.is_leader && (
                     <span className="px-2 py-1 bg-yellow-600/20 border border-yellow-600/50 text-yellow-400 text-xs font-semibold rounded-full">
                       Leader
@@ -456,8 +510,20 @@ export default function CrewsPage() {
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                        <div className="flex items-center gap-2 mb-2 sm:mb-3 flex-wrap">
                           <h3 className="text-lg sm:text-xl font-bold text-gray-100">{crew.name}</h3>
+                          {crew.tag && (
+                            <span
+                              className="px-2.5 py-1 rounded-md text-sm font-bold border-2"
+                              style={{
+                                backgroundColor: `${crew.tag_color}20`,
+                                borderColor: crew.tag_color,
+                                color: crew.tag_color,
+                              }}
+                            >
+                              {crew.tag}
+                            </span>
+                          )}
                           <span className="text-xs text-gray-400">by @{crew.leader_username}</span>
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
@@ -555,9 +621,21 @@ export default function CrewsPage() {
           <div className="fixed inset-0 bg-gray-900/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 z-50" onClick={() => setShowDetailsModal(false)}>
             <div className="bg-gray-800 border border-gray-700 rounded-xl p-4 sm:p-6 max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
               <div className="flex justify-between items-center mb-4 sm:mb-6">
-                <div className="flex items-center gap-2 sm:gap-3">
+                <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                   <span className="text-2xl sm:text-3xl">⚓</span>
                   <h3 className="text-xl sm:text-2xl font-bold text-gray-100">{crewDetails.crew.name}</h3>
+                  {crewDetails.crew.tag && (
+                    <span
+                      className="px-2.5 py-1 rounded-md text-sm font-bold border-2"
+                      style={{
+                        backgroundColor: `${crewDetails.crew.tag_color}20`,
+                        borderColor: crewDetails.crew.tag_color,
+                        color: crewDetails.crew.tag_color,
+                      }}
+                    >
+                      {crewDetails.crew.tag}
+                    </span>
+                  )}
                 </div>
                 <button
                   onClick={() => setShowDetailsModal(false)}
@@ -566,6 +644,84 @@ export default function CrewsPage() {
                   ×
                 </button>
               </div>
+
+              {/* Crew Tag Settings (Leader Only) */}
+              {crewDetails.crew.is_leader && (
+                <div className="mb-4 sm:mb-6 p-4 bg-gray-700/50 border border-gray-600 rounded-xl">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-base sm:text-lg font-semibold text-gray-100 flex items-center gap-2">
+                      <span>⚙️</span>
+                      <span>Crew Tag Settings</span>
+                    </h4>
+                    <button
+                      onClick={() => setShowTagSettings(!showTagSettings)}
+                      className="px-3 py-1.5 text-sm bg-gray-600 text-gray-100 rounded-md hover:bg-gray-500 transition-colors"
+                    >
+                      {showTagSettings ? 'Hide' : 'Edit'}
+                    </button>
+                  </div>
+                  {showTagSettings && (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                          Crew Tag (3-4 characters, uppercase letters and numbers only)
+                        </label>
+                        <input
+                          type="text"
+                          value={crewTag}
+                          onChange={(e) => setCrewTag(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
+                          placeholder="e.g., GYMB"
+                          maxLength={4}
+                          className="w-full px-4 py-2 bg-gray-800 border border-gray-600 text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-lg font-bold"
+                        />
+                        <p className="mt-1 text-xs text-gray-400">Leave empty to remove tag</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                          Tag Color
+                        </label>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={crewTagColor}
+                            onChange={(e) => setCrewTagColor(e.target.value)}
+                            className="w-16 h-10 rounded cursor-pointer"
+                          />
+                          <input
+                            type="text"
+                            value={crewTagColor}
+                            onChange={(e) => setCrewTagColor(e.target.value)}
+                            placeholder="#0ea5e9"
+                            className="flex-1 px-4 py-2 bg-gray-800 border border-gray-600 text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 font-mono text-sm"
+                          />
+                        </div>
+                        {crewTag && (
+                          <div className="mt-3 flex items-center gap-2">
+                            <span className="text-sm text-gray-400">Preview:</span>
+                            <span
+                              className="px-2.5 py-1 rounded-md text-sm font-bold border-2"
+                              style={{
+                                backgroundColor: `${crewTagColor}20`,
+                                borderColor: crewTagColor,
+                                color: crewTagColor,
+                              }}
+                            >
+                              {crewTag}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        onClick={handleUpdateTag}
+                        disabled={updatingTag}
+                        className="w-full px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                      >
+                        {updatingTag ? 'Updating...' : 'Save Tag'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Crew Stats */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">

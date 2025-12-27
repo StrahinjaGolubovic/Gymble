@@ -18,6 +18,8 @@ export async function GET(request: NextRequest) {
           u.profile_private,
           u.crew_id,
           c.name as crew_name,
+          c.tag as crew_tag,
+          COALESCE(c.tag_color, '#0ea5e9') as crew_tag_color,
           s.current_streak,
           s.longest_streak
         FROM users u
@@ -35,6 +37,8 @@ export async function GET(request: NextRequest) {
         profile_private: number | null;
         crew_id: number | null;
         crew_name: string | null;
+        crew_tag: string | null;
+        crew_tag_color: string;
         current_streak: number | null;
         longest_streak: number | null;
       }>;
@@ -55,7 +59,12 @@ export async function GET(request: NextRequest) {
         username: user.username,
         trophies: user.trophies || 0,
         profile_picture: user.profile_picture,
-        crew: user.crew_name ? { id: user.crew_id, name: user.crew_name } : null,
+        crew: user.crew_name ? { 
+          id: user.crew_id, 
+          name: user.crew_name,
+          tag: user.crew_tag,
+          tag_color: user.crew_tag_color || '#0ea5e9',
+        } : null,
         current_streak: user.current_streak || 0,
         longest_streak: user.longest_streak || 0,
       })),
