@@ -6,11 +6,10 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(request.nextUrl.searchParams.get('limit') || '100');
     const offset = parseInt(request.nextUrl.searchParams.get('offset') || '0');
 
-    // Get top users by trophies, excluding private profiles and admin users
+    // Get top users by trophies, excluding private profiles and the "admin" username
     // Join with crews to get crew name for badge display
     // Also check crew_members table in case crew_id is NULL (for old crews)
-    const ADMIN_USERNAMES = ['admin', 'seuq', 'jakow', 'nikola'];
-    const placeholders = ADMIN_USERNAMES.map(() => '?').join(',');
+    const EXCLUDED_USERNAME = 'admin';
     const leaderboard = db
       .prepare(`
         SELECT 
@@ -30,11 +29,11 @@ export async function GET(request: NextRequest) {
         LEFT JOIN crews c ON COALESCE(u.crew_id, cm.crew_id) = c.id
         LEFT JOIN streaks s ON u.id = s.user_id
         WHERE (u.profile_private = 0 OR u.profile_private IS NULL)
-          AND u.username NOT IN (${placeholders})
+          AND u.username != ?
         ORDER BY u.trophies DESC, u.id ASC
         LIMIT ? OFFSET ?
       `)
-      .all(...ADMIN_USERNAMES, limit, offset) as Array<{
+      .all(EXCLUDED_USERNAME, limit, offset) as Array<{
         id: number;
         username: string;
         trophies: number;
@@ -48,15 +47,15 @@ export async function GET(request: NextRequest) {
         longest_streak: number | null;
       }>;
 
-    // Get total count for pagination (excluding admin users)
+    // Get total count for pagination (excluding "admin")
     const totalCount = db
       .prepare(`
         SELECT COUNT(*) as count
         FROM users
         WHERE (profile_private = 0 OR profile_private IS NULL)
-          AND username NOT IN (${placeholders})
+          AND username != ?
       `)
-      .get(...ADMIN_USERNAMES) as { count: number };
+      .get(EXCLUDED_USERNAME) as { count: number };
 
     return NextResponse.json({
       leaderboard: leaderboard.map((user, index) => ({

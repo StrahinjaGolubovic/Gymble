@@ -91,6 +91,12 @@ export default function AdminFeedbackPage() {
               Users
             </Link>
             <Link
+              href="/admin/crews"
+              className="px-4 py-2 bg-gray-700 text-gray-200 rounded-md hover:bg-gray-600 transition-colors text-sm sm:text-base"
+            >
+              Crews
+            </Link>
+            <Link
               href="/admin/verification"
               className="px-4 py-2 bg-gray-700 text-gray-200 rounded-md hover:bg-gray-600 transition-colors text-sm sm:text-base"
             >
@@ -101,12 +107,6 @@ export default function AdminFeedbackPage() {
               className="px-4 py-2 bg-gray-700 text-gray-200 rounded-md hover:bg-gray-600 transition-colors text-sm sm:text-base"
             >
               Chat Moderation
-            </Link>
-            <Link
-              href="/admin/crews"
-              className="px-4 py-2 bg-gray-700 text-gray-200 rounded-md hover:bg-gray-600 transition-colors text-sm sm:text-base"
-            >
-              Crews
             </Link>
             <Link
               href="/admin/feedback"

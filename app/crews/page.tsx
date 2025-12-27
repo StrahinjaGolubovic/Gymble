@@ -838,15 +838,8 @@ export default function CrewsPage() {
                           <span className="font-semibold text-gray-100 truncate">@{member.username}</span>
                           {member.is_leader && (
                             <span className="px-2 py-0.5 bg-yellow-600/20 border border-yellow-600/50 text-yellow-400 text-xs font-semibold rounded-full flex-shrink-0 flex items-center gap-1">
-                              <Image
-                                src="/streakd_dumbbells.png"
-                                alt="Dumbbells"
-                                width={28}
-                                height={16}
-                                className="h-4 w-auto"
-                                unoptimized
-                              />
-                              Leader
+                              <span className="text-base leading-none">👑</span>
+                              <span>Leader</span>
                             </span>
                           )}
                         </div>

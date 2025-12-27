@@ -123,7 +123,14 @@ export function Notifications({ userId }: NotificationsProps) {
   return (
     <div className="relative" ref={notificationsRef}>
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          const nextOpen = !isOpen;
+          setIsOpen(nextOpen);
+          // Auto-mark as read when opening the dropdown
+          if (nextOpen && unreadCount > 0) {
+            markAllAsRead();
+          }
+        }}
         className="relative p-2 text-gray-400 hover:text-gray-100 transition-colors"
         aria-label="Notifications"
       >

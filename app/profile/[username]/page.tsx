@@ -365,16 +365,16 @@ export default function ProfilePage() {
 
               {/* Quick Stats - Enhanced */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6">
-                <div className="bg-gradient-to-br from-primary-900/30 to-primary-800/20 border border-primary-700/50 rounded-xl p-4 text-center hover:scale-105 transition-transform duration-200 shadow-lg">
-                  <div className="text-xs text-primary-300 mb-1 flex items-center justify-center gap-1">
+                <div className="bg-gradient-to-br from-primary-900/30 to-primary-800/20 border border-primary-700/50 rounded-xl p-4 flex flex-col items-center justify-center text-center hover:scale-105 transition-transform duration-200 shadow-lg">
+                  <div className="text-xs text-primary-300 mb-1 flex items-center justify-center gap-1 w-full">
                     <span className="text-orange-500">🔥</span>
                     Current Streak
                   </div>
                   <div className="text-3xl font-bold text-orange-400">{streak.current_streak}</div>
                   <div className="text-xs text-gray-400 mt-1">days</div>
                 </div>
-                <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 border border-purple-700/50 rounded-xl p-4 text-center hover:scale-105 transition-transform duration-200 shadow-lg">
-                  <div className="text-xs text-purple-300 mb-1 flex items-center justify-center gap-1">
+                <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 border border-purple-700/50 rounded-xl p-4 flex flex-col items-center justify-center text-center hover:scale-105 transition-transform duration-200 shadow-lg">
+                  <div className="text-xs text-purple-300 mb-1 flex items-center justify-center gap-1 w-full">
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                     </svg>

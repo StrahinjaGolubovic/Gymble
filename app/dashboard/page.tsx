@@ -131,8 +131,9 @@ export default function DashboardPage() {
     }
   }, [router]);
 
-  const fetchFriends = useCallback(async () => {
-    setFriendsLoading(true);
+  const fetchFriends = useCallback(async (opts?: { silent?: boolean }) => {
+    const silent = !!opts?.silent;
+    if (!silent) setFriendsLoading(true);
     try {
       const response = await fetch('/api/friends/list');
       if (response.ok) {
@@ -142,7 +143,7 @@ export default function DashboardPage() {
     } catch (err) {
       console.error('Failed to fetch friends:', err);
     } finally {
-      setFriendsLoading(false);
+      if (!silent) setFriendsLoading(false);
     }
   }, []);
 
@@ -1491,12 +1492,12 @@ export default function DashboardPage() {
                                 });
                                 if (response.ok) {
                                   showToast(`Nudged @${friend.username}!`, 'success');
-                                  // Silently refresh in background without re-render flicker
-                                  setTimeout(() => fetchFriends(), 100);
+                                  // Silent refresh (no loading UI)
+                                  fetchFriends({ silent: true });
                                 } else {
                                   const data = await response.json();
                                   if (response.status === 429) {
-                                    // Already nudged - keep the optimistic update
+                                    // Already nudged - keep the optimistic update and don't refetch
                                   } else {
                                     // Revert optimistic update on error
                                     setFriends((prevFriends) =>
