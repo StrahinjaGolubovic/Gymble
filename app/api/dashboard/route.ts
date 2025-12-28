@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import { getUserDashboard } from '@/lib/challenges';
+import { formatDateSerbia } from '@/lib/timezone';
 import { cookies } from 'next/headers';
 import db from '@/lib/db';
 
@@ -56,6 +57,7 @@ export async function GET(request: NextRequest) {
       ...dashboard,
       challenge,
       userId,
+      server_serbia_today: formatDateSerbia(),
       username: user?.username,
       profilePicture: user?.profile_picture || null,
       trophies: user?.trophies ?? 0,

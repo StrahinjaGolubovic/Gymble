@@ -43,6 +43,7 @@ interface DashboardData {
   userId?: number;
   username?: string;
   profilePicture?: string | null;
+  server_serbia_today?: string;
 }
 
 interface Friend {
@@ -1108,8 +1109,9 @@ export default function DashboardPage() {
               {data.progress.days.map((day, index) => {
                 const dayName = formatDateDisplay(day.date, { weekday: 'short' });
                 const dayNumber = parseInt(day.date.split('-')[2], 10);
-                const isToday = isTodaySerbia(day.date);
-                const isPast = isPastSerbia(day.date);
+                const serverToday = data.server_serbia_today;
+                const isToday = serverToday ? day.date === serverToday : isTodaySerbia(day.date);
+                const isPast = serverToday ? day.date < serverToday : isPastSerbia(day.date);
 
                 return (
                   <div
@@ -1168,8 +1170,9 @@ export default function DashboardPage() {
             {data.progress.days.map((day, index) => {
               const dayName = formatDateDisplay(day.date, { weekday: 'short' });
               const dayNumber = parseInt(day.date.split('-')[2], 10);
-              const isToday = isTodaySerbia(day.date);
-              const isPast = isPastSerbia(day.date);
+              const serverToday = data.server_serbia_today;
+              const isToday = serverToday ? day.date === serverToday : isTodaySerbia(day.date);
+              const isPast = serverToday ? day.date < serverToday : isPastSerbia(day.date);
 
               return (
                 <div

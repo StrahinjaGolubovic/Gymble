@@ -374,29 +374,9 @@ export function getChallengeProgress(challengeId: number): {
   const restDaySet = new Set(restDays.map((r) => r.rest_date));
 
   // Get user registration date - this is where we start counting the 7 days
-  const user = db.prepare('SELECT created_at FROM users WHERE id = ?').get(challenge.user_id) as { created_at: string } | undefined;
-  if (!user) {
-    // Fallback if user not found
-    return { totalDays: 7, completedDays: 0, days: [] };
-  }
-
-  // Parse the registration date string and extract just the date part (YYYY-MM-DD)
-  // SQLite stores DATETIME as strings, we need to extract just the date portion
-  const createdAtStr = user.created_at;
-  // Extract date part (before space or T, whichever comes first)
-  const datePart = createdAtStr.split(' ')[0].split('T')[0];
-  // Parse as YYYY-MM-DD to avoid timezone issues
-  const [year, month, day] = datePart.split('-').map(Number);
-  const registrationDate = new Date(year, month - 1, day); // month is 0-indexed in JS
-  registrationDate.setHours(0, 0, 0, 0);
-
-  // Generate exactly 7 days starting from registration date
+  // Generate exactly 7 days for the challenge week (start_date .. start_date + 6)
   for (let i = 0; i < 7; i++) {
-    const date = new Date(registrationDate);
-    date.setDate(date.getDate() + i);
-    date.setHours(0, 0, 0, 0);
-    
-    const dateStr = formatDate(date);
+    const dateStr = addDaysYMD(challenge.start_date, i);
     const upload = uploadMap.get(dateStr);
     const isRestDay = restDaySet.has(dateStr);
     // uploaded is true if there's any upload (pending, approved, or rejected)
