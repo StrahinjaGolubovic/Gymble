@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { formatDateTimeDisplay } from '@/lib/timezone';
@@ -19,11 +19,7 @@ export default function AdminFeedbackPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchFeedback();
-  }, []);
-
-  async function fetchFeedback() {
+  const fetchFeedback = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch('/api/admin/feedback');
@@ -40,7 +36,11 @@ export default function AdminFeedbackPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [router]);
+
+  useEffect(() => {
+    fetchFeedback();
+  }, [fetchFeedback]);
 
   if (loading) {
     return (

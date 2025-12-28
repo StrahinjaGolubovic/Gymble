@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
-import { useRestDay as useRestDayFunction, getOrCreateActiveChallenge } from '@/lib/challenges';
+import { useRestDay as applyRestDay, getOrCreateActiveChallenge } from '@/lib/challenges';
 import { formatDateSerbia } from '@/lib/timezone';
 import { cookies } from 'next/headers';
 
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     const challenge = getOrCreateActiveChallenge(userId);
 
     // Use rest day
-    const result = useRestDayFunction(userId, challenge.id, restDate);
+    const result = applyRestDay(userId, challenge.id, restDate);
 
     if (!result.success) {
       return NextResponse.json({ error: result.message }, { status: 400 });

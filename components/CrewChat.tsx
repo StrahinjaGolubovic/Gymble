@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 import { getImageUrl } from '@/lib/image-utils';
 
@@ -32,7 +32,7 @@ export function CrewChat({ crewId, currentUserId, currentUsername, currentUserPr
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   // Fetch messages
-  const fetchMessages = async () => {
+  const fetchMessages = useCallback(async () => {
     try {
       const response = await fetch(`/api/crew-chat/messages?crew_id=${crewId}`);
       if (response.ok) {
@@ -47,7 +47,7 @@ export function CrewChat({ crewId, currentUserId, currentUsername, currentUserPr
     } finally {
       setLoading(false);
     }
-  };
+  }, [crewId]);
 
   // Send message
   const sendMessage = async (e: React.FormEvent) => {
@@ -143,7 +143,7 @@ export function CrewChat({ crewId, currentUserId, currentUsername, currentUserPr
     fetchMessages();
     const interval = setInterval(fetchMessages, 3000); // Poll every 3 seconds
     return () => clearInterval(interval);
-  }, [crewId]);
+  }, [crewId, fetchMessages]);
 
   const formatTime = (dateString: string) => {
     // SQLite returns datetime as 'YYYY-MM-DD HH:MM:SS' in Serbia timezone

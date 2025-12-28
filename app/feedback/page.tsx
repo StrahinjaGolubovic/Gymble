@@ -87,7 +87,7 @@ export default function FeedbackPage() {
         <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-6 sm:p-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-100 mb-2">Feedback</h1>
           <p className="text-gray-400 mb-6">
-            We'd love to hear your thoughts! Share your feedback, suggestions, or report any issues.
+            {`We'd love to hear your thoughts!`} Share your feedback, suggestions, or report any issues.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">

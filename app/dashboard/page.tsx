@@ -987,7 +987,6 @@ export default function DashboardPage() {
           </div>
           <div className={`${getRankGradient(data.trophies)} rounded-lg shadow-lg p-4 sm:p-5 md:p-6`} style={getRankBorderStyle(data.trophies)}>
             <div className="text-xs sm:text-sm font-medium mb-1 flex items-center gap-1.5" style={getRankColorStyle(data.trophies)}>
-              <span>⭐</span>
               <span>Rank</span>
             </div>
             <div className="text-xl sm:text-2xl md:text-3xl font-bold rank-shine" style={{ ...getRankColorStyle(data.trophies), fontFamily: 'var(--font-orbitron), sans-serif' }}>
@@ -1033,7 +1032,7 @@ export default function DashboardPage() {
           {/* Upload Section */}
           <div className="border-t border-gray-700 pt-4 sm:pt-5 md:pt-6">
             <div className="mb-3 sm:mb-4">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-100">Upload Today's Photo</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-100">{`Upload Today's Photo`}</h3>
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
               <label className="flex-1">
@@ -1102,7 +1101,7 @@ export default function DashboardPage() {
 
         {/* Days Grid */}
         <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-3 sm:p-4 md:p-6 mb-4 sm:mb-6 md:mb-8">
-          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-100 mb-3 sm:mb-4 md:mb-6">This Week's Progress</h2>
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-100 mb-3 sm:mb-4 md:mb-6">{`This Week's Progress`}</h2>
           {/* Mobile: Horizontal scroll, Desktop: Grid */}
           <div className="block sm:hidden">
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-3 sm:mx-0 px-3 sm:px-0 scrollbar-hide">
@@ -1609,8 +1608,8 @@ export default function DashboardPage() {
                     </svg>
                     Share
                   </span> button at the bottom</li>
-                  <li>Scroll down and tap <span className="font-semibold text-primary-400">"Add to Home Screen"</span></li>
-                  <li>Tap <span className="font-semibold text-primary-400">"Add"</span> in the top right corner</li>
+                  <li>Scroll down and tap <span className="font-semibold text-primary-400">&ldquo;Add to Home Screen&rdquo;</span></li>
+                  <li>Tap <span className="font-semibold text-primary-400">&ldquo;Add&rdquo;</span> in the top right corner</li>
                 </ol>
               </div>
               <div className="pt-3 border-t border-gray-700">
@@ -1622,8 +1621,8 @@ export default function DashboardPage() {
                     </svg>
                     Menu
                   </span> button (three dots)</li>
-                  <li>Tap <span className="font-semibold text-primary-400">"Add to Home Screen"</span></li>
-                  <li>Tap <span className="font-semibold text-primary-400">"Add"</span> to confirm</li>
+                  <li>Tap <span className="font-semibold text-primary-400">&ldquo;Add to Home Screen&rdquo;</span></li>
+                  <li>Tap <span className="font-semibold text-primary-400">&ldquo;Add&rdquo;</span> to confirm</li>
                 </ol>
               </div>
             </div>

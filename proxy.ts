@@ -10,7 +10,8 @@ function isPublicAsset(pathname: string): boolean {
   return false;
 }
 
-export async function middleware(request: NextRequest) {
+// Proxy (previously called Middleware) — runs on Node.js runtime
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (isPublicAsset(pathname)) return NextResponse.next();
@@ -40,10 +41,7 @@ export async function middleware(request: NextRequest) {
 
     if (maintenance && !isAdmin) {
       if (pathname.startsWith('/api/')) {
-        return NextResponse.json(
-          { error: 'Maintenance break. Please check again later.' },
-          { status: 503 }
-        );
+        return NextResponse.json({ error: 'Maintenance break. Please check again later.' }, { status: 503 });
       }
       const url = request.nextUrl.clone();
       url.pathname = '/maintenance';

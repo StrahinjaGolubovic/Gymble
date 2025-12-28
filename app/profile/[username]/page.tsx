@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -53,13 +53,7 @@ export default function ProfilePage() {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [privacyUpdating, setPrivacyUpdating] = useState(false);
 
-  useEffect(() => {
-    if (username) {
-      fetchProfile();
-    }
-  }, [username]);
-
-  async function fetchProfile() {
+  const fetchProfile = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/profile/${encodeURIComponent(username)}`);
@@ -80,7 +74,13 @@ export default function ProfilePage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [username]);
+
+  useEffect(() => {
+    if (username) {
+      fetchProfile();
+    }
+  }, [username, fetchProfile]);
 
   async function handleUpdatePrivacy(isPrivate: boolean) {
     setPrivacyUpdating(true);

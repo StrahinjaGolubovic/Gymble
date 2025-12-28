@@ -37,7 +37,7 @@ export default function TermsOfServicePage() {
 
           <div className="prose prose-invert max-w-none space-y-6 text-gray-300">
             <p className="text-base leading-relaxed">
-              By creating an account, accessing, or using STREAKD ("the App"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, you may not access or use the App.
+              By creating an account, accessing, or using STREAKD (&quot;the App&quot;), you agree to be bound by these Terms of Service (&quot;Terms&quot;). If you do not agree to these Terms, you may not access or use the App.
             </p>
 
             <section>
@@ -120,7 +120,7 @@ export default function TermsOfServicePage() {
             <section>
               <h2 className="text-xl sm:text-2xl font-semibold text-gray-100 mt-8 mb-4">12. Service Availability and Modifications</h2>
               <p className="text-base leading-relaxed">
-                STREAKD is provided on an "as is" and "as available" basis. We may modify, suspend, or discontinue features at any time without notice.
+                STREAKD is provided on an &quot;as is&quot; and &quot;as available&quot; basis. We may modify, suspend, or discontinue features at any time without notice.
               </p>
             </section>
 

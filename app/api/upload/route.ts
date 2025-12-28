@@ -113,8 +113,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: any) {
     console.error('Upload error:', error);
-    if (error.message === 'Upload already exists for this date') {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+    const msg = error?.message;
+    if (msg === 'Upload already exists for this date' || msg === 'Rest day already used for this date') {
+      return NextResponse.json({ error: msg }, { status: 400 });
     }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

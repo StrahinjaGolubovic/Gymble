@@ -37,6 +37,19 @@ export default function AdminCrewsPage() {
     onConfirm: () => {},
   });
 
+  const removeToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  const showToast = useCallback(
+    (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+      const id = Date.now().toString();
+      setToasts((prev) => [...prev, { id, message, type }]);
+      setTimeout(() => removeToast(id), 5000);
+    },
+    [removeToast]
+  );
+
   const fetchCrews = useCallback(async () => {
     try {
       setLoading(true);
@@ -53,21 +66,11 @@ export default function AdminCrewsPage() {
     } finally {
       setLoading(false);
     }
-  }, [router]);
+  }, [router, showToast]);
 
   useEffect(() => {
     fetchCrews();
   }, [fetchCrews]);
-
-  function showToast(message: string, type: 'success' | 'error' | 'info' = 'info') {
-    const id = Date.now().toString();
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => removeToast(id), 5000);
-  }
-
-  function removeToast(id: string) {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  }
 
   function showConfirm(
     title: string,

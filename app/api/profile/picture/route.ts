@@ -70,10 +70,13 @@ export async function POST(request: NextRequest) {
       await mkdir(profilesDir, { recursive: true });
     }
 
-    // Generate unique filename
+    // Generate unique filename.
+    // Important: profile pictures must NOT use a fixed filename because:
+    // 1) The file route uses long-lived immutable caching
+    // 2) Deleting the "old" file would delete the newly written file if paths match
     const timestamp = Date.now();
     const extension = (file.name.split('.').pop() || 'jpg').toLowerCase();
-    const filename = `profile.${extension}`;
+    const filename = `profile_${timestamp}.${extension}`;
     const filepath = join(profilesDir, filename);
     // Use API route to serve the file
     const relativePath = `/api/files/profiles/${userId}/${filename}`;

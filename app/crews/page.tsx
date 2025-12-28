@@ -498,7 +498,7 @@ export default function CrewsPage() {
                 </div>
                 <h3 className="text-lg font-semibold text-gray-100 mb-2">No crews found</h3>
                 <p className="text-sm text-gray-400 mb-4">
-                  No crews match "{searchQuery}". Try a different search term or create your own crew!
+                  No crews match &ldquo;{searchQuery}&rdquo;. Try a different search term or create your own crew!
                 </p>
                 <button
                   onClick={() => setShowCreateModal(true)}
@@ -586,7 +586,6 @@ export default function CrewsPage() {
           <div className="fixed inset-0 bg-gray-900/80 backdrop-blur-sm flex items-center justify-center p-4 z-50" onClick={() => setShowCreateModal(false)}>
             <div className="bg-gray-800 border border-gray-700 rounded-xl p-5 sm:p-6 max-w-md w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center gap-2 mb-4 sm:mb-5">
-                <span className="text-2xl">⚓</span>
                 <h3 className="text-xl sm:text-2xl font-bold text-gray-100">Create New Crew</h3>
               </div>
               <div className="mb-5 sm:mb-6">
