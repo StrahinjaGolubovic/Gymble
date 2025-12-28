@@ -398,6 +398,15 @@ function initDatabase(database: Database) {
     )
   `);
 
+  // App settings (key/value)
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS app_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // Add profile privacy and crew_id to users table
   try {
     const usersInfo = database.prepare("PRAGMA table_info(users)").all() as Array<{ name: string }>;

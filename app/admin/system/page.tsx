@@ -18,6 +18,8 @@ export default function AdminSystem() {
   const router = useRouter();
   const [stats, setStats] = useState<SystemStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [maintenanceEnabled, setMaintenanceEnabled] = useState(false);
+  const [maintenanceLoading, setMaintenanceLoading] = useState(true);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
@@ -48,9 +50,27 @@ export default function AdminSystem() {
     }
   }, [router]);
 
+  const fetchMaintenance = useCallback(async () => {
+    try {
+      setMaintenanceLoading(true);
+      const response = await fetch('/api/admin/maintenance');
+      if (response.ok) {
+        const data = await response.json();
+        setMaintenanceEnabled(!!data.maintenance);
+      } else if (response.status === 403) {
+        router.push('/dashboard');
+      }
+    } catch (err) {
+      console.error('Error fetching maintenance status:', err);
+    } finally {
+      setMaintenanceLoading(false);
+    }
+  }, [router]);
+
   useEffect(() => {
     fetchStats();
-  }, [fetchStats]);
+    fetchMaintenance();
+  }, [fetchStats, fetchMaintenance]);
 
   function showToast(message: string, type: 'success' | 'error' | 'info' = 'info') {
     const id = Date.now().toString();
@@ -88,6 +108,33 @@ export default function AdminSystem() {
     } catch (err) {
       showToast('An error occurred', 'error');
     }
+  }
+
+  async function toggleMaintenance(nextEnabled: boolean) {
+    showConfirm(
+      nextEnabled ? 'Enable Maintenance Mode' : 'Disable Maintenance Mode',
+      nextEnabled
+        ? 'Turn ON maintenance mode? Only admins will be able to access the website.'
+        : 'Turn OFF maintenance mode and allow everyone to access the website?',
+      async () => {
+        try {
+          const response = await fetch('/api/admin/maintenance', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ enabled: nextEnabled }),
+          });
+          if (response.ok) {
+            setMaintenanceEnabled(nextEnabled);
+            showToast(nextEnabled ? 'Maintenance mode enabled' : 'Maintenance mode disabled', 'success');
+          } else {
+            showToast('Failed to update maintenance mode', 'error');
+          }
+        } catch {
+          showToast('An error occurred', 'error');
+        }
+      },
+      'danger'
+    );
   }
 
   if (loading) {
@@ -203,6 +250,27 @@ export default function AdminSystem() {
         <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 sm:p-5 md:p-6">
           <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-100 mb-4 sm:mb-6">System Actions</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            <div className="p-4 bg-gray-700/50 border border-gray-600 rounded-lg text-left">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-base sm:text-lg font-semibold text-gray-100 mb-1">Maintenance Mode</div>
+                  <div className="text-xs sm:text-sm text-gray-400">
+                    When enabled, only admins can access the website.
+                  </div>
+                </div>
+                <button
+                  disabled={maintenanceLoading}
+                  onClick={() => toggleMaintenance(!maintenanceEnabled)}
+                  className={`px-3 py-2 rounded-md text-sm font-semibold transition-colors ${
+                    maintenanceEnabled
+                      ? 'bg-red-600 text-white hover:bg-red-700'
+                      : 'bg-green-600 text-white hover:bg-green-700'
+                  } ${maintenanceLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {maintenanceLoading ? 'Loading…' : maintenanceEnabled ? 'ON' : 'OFF'}
+                </button>
+              </div>
+            </div>
             <button
               onClick={() =>
                 showConfirm(
