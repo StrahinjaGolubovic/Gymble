@@ -163,6 +163,18 @@ async function main() {
     });
     assert(res.ok, `verify-upload ${status} failed: ${res.status} ${text}`);
     console.log(`[smoke] verify-upload ${status} OK`);
+
+    // Validate streak behavior (requested rule):
+    // - After approval, streak should be 1 (fresh user with only today's upload)
+    // - After rejection, streak should be 0 immediately
+    const dash = await apiFetch('/api/dashboard', { token: uploadUserToken });
+    assert(dash.res.ok, `dashboard after verify ${status} failed: ${dash.res.status} ${dash.text}`);
+    const s = Number(dash.json?.streak?.current_streak ?? -1);
+    if (status === 'approved') {
+      assert(s === 1, `expected current_streak=1 after approve, got ${s}`);
+    } else if (status === 'rejected') {
+      assert(s === 0, `expected current_streak=0 after reject, got ${s}`);
+    }
   }
 
   // Maintenance toggle should 503 user API calls when ON

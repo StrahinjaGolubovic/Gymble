@@ -74,6 +74,8 @@ export interface Streak {
  *   (pending counts until rejected; approved counts).
  * - current_streak is the length of the most recent consecutive-day run ending on the latest valid day,
  *   but is 0 if that latest valid day is before yesterday (Serbia day).
+ * - If the user has a rejected upload for Serbia-today, current_streak is forced to 0
+ *   (a rejected day is treated as a failed streak day).
  * - longest_streak is the maximum consecutive-day run across all valid days.
  */
 export function recomputeUserStreakFromUploads(userId: number): Streak {
@@ -138,6 +140,12 @@ export function recomputeUserStreakFromUploads(userId: number): Streak {
   const today = formatDateSerbia();
   const yesterday = addDaysYMD(today, -1);
 
+  // Product rule: if today's upload is rejected, streak should drop to 0 immediately.
+  // This is different from the "carry yesterday's streak until you miss a full day" model.
+  const rejectedToday = !!db
+    .prepare("SELECT 1 FROM daily_uploads WHERE user_id = ? AND upload_date = ? AND verification_status = 'rejected'")
+    .get(userId, today);
+
   let current = 0;
   if (lastDate) {
     // Determine the run length ending at lastDate by walking backwards through the sequence
@@ -185,6 +193,10 @@ export function recomputeUserStreakFromUploads(userId: number): Streak {
     } else if (baselineEnd === nextLastDate) {
       nextCurrent = Math.max(nextCurrent, baselineCurrent);
     }
+  }
+
+  if (rejectedToday) {
+    nextCurrent = 0;
   }
 
   const nextLongest = Math.max(longest, streak.longest_streak, baselineLongest, baselineStreak, nextCurrent);
