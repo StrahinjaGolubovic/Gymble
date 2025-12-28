@@ -28,7 +28,10 @@ export async function POST(request: NextRequest) {
     const trophies = body.trophies;
     const currentStreak = body.current_streak;
     const longestStreak = body.longest_streak;
-    const lastActivityDate = body.last_activity_date;
+    // Treat empty string as "not provided" (admin UI often submits empty)
+    // To clear last_activity_date explicitly, send null.
+    const lastActivityDate =
+      body.last_activity_date === '' ? undefined : (body.last_activity_date as unknown);
 
     // Validate numeric fields if present
     const parseNonNegativeInt = (v: unknown) => {
@@ -46,13 +49,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Trophies/streak values must be non-negative integers' }, { status: 400 });
     }
 
-    if (
-      lastActivityDate !== undefined &&
-      lastActivityDate !== null &&
-      lastActivityDate !== '' &&
-      !isValidYMD(lastActivityDate)
-    ) {
-      return NextResponse.json({ error: 'last_activity_date must be YYYY-MM-DD (or empty)' }, { status: 400 });
+    if (lastActivityDate !== undefined && lastActivityDate !== null && !isValidYMD(lastActivityDate)) {
+      return NextResponse.json({ error: 'last_activity_date must be YYYY-MM-DD (or null)' }, { status: 400 });
     }
 
     // Ensure user exists
@@ -94,7 +92,7 @@ export async function POST(request: NextRequest) {
         //   - current == 0 -> clear last_activity_date (unless explicitly provided)
         let desiredLast: string | null | undefined = undefined;
         if (lastActivityDate !== undefined) {
-          desiredLast = lastActivityDate === '' || lastActivityDate === null ? null : (lastActivityDate as string);
+          desiredLast = lastActivityDate === null ? null : (lastActivityDate as string);
         } else if (currentInt !== undefined) {
           desiredLast = desiredCurrent > 0 ? formatDateSerbia() : null;
         }
