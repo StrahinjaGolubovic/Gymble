@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { formatDateTimeDisplay } from '@/lib/timezone';
+import { ConfirmModal } from '@/components/ConfirmModal';
 
 interface FeedbackEntry {
   id: number;
@@ -13,11 +14,26 @@ interface FeedbackEntry {
   createdAt: string;
 }
 
+interface ConfirmModalState {
+  isOpen: boolean;
+  title: string;
+  message: string;
+  onConfirm: () => void;
+  variant: 'danger' | 'default';
+}
+
 export default function AdminFeedbackPage() {
   const router = useRouter();
   const [feedback, setFeedback] = useState<FeedbackEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [confirmModal, setConfirmModal] = useState<ConfirmModalState>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    variant: 'default',
+  });
 
   const fetchFeedback = useCallback(async () => {
     try {
@@ -41,6 +57,42 @@ export default function AdminFeedbackPage() {
   useEffect(() => {
     fetchFeedback();
   }, [fetchFeedback]);
+
+  function showConfirm(
+    title: string,
+    message: string,
+    onConfirm: () => void,
+    variant: 'danger' | 'default' = 'default'
+  ) {
+    setConfirmModal({ isOpen: true, title, message, onConfirm, variant });
+  }
+
+  async function handleDeleteFeedback(feedbackId: number) {
+    showConfirm(
+      'Delete Feedback',
+      'Are you sure you want to delete this feedback? This action cannot be undone.',
+      async () => {
+        try {
+          const response = await fetch('/api/admin/feedback', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ feedbackId }),
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            setFeedback((prev) => prev.filter((f) => f.id !== feedbackId));
+          } else {
+            alert(data.error || 'Failed to delete feedback');
+          }
+        } catch (err) {
+          alert('An error occurred');
+        }
+      },
+      'danger'
+    );
+  }
 
   if (loading) {
     return (
@@ -151,9 +203,18 @@ export default function AdminFeedbackPage() {
                         </Link>
                       )}
                     </div>
-                    <span className="text-xs sm:text-sm text-gray-400">
-                      {formatDateTimeDisplay(entry.createdAt)}
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs sm:text-sm text-gray-400">
+                        {formatDateTimeDisplay(entry.createdAt)}
+                      </span>
+                      <button
+                        onClick={() => handleDeleteFeedback(entry.id)}
+                        className="px-3 py-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-xs sm:text-sm"
+                        title="Delete feedback"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                   <p className="text-gray-200 whitespace-pre-wrap break-words">
                     {entry.text}
@@ -164,6 +225,18 @@ export default function AdminFeedbackPage() {
           )}
         </div>
       </main>
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={() => {
+          confirmModal.onConfirm();
+          setConfirmModal({ ...confirmModal, isOpen: false });
+        }}
+        onCancel={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+        variant={confirmModal.variant}
+      />
     </div>
   );
 }

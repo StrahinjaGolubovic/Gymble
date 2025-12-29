@@ -72,3 +72,48 @@ export async function GET(request: NextRequest) {
   }
 }
 
+export async function DELETE(request: NextRequest) {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('token')?.value;
+
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const decoded = verifyToken(token);
+    if (!decoded) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+
+    // Check if user is admin
+    const user = db.prepare('SELECT username FROM users WHERE id = ?').get(decoded.userId) as { username: string } | undefined;
+    if (!user || !['admin', 'seuq', 'jakow', 'nikola'].includes(user.username)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const { feedbackId } = await request.json();
+
+    if (!feedbackId || typeof feedbackId !== 'number') {
+      return NextResponse.json({ error: 'Invalid feedback ID' }, { status: 400 });
+    }
+
+    // Check if feedback exists
+    const feedback = db.prepare('SELECT id FROM feedback WHERE id = ?').get(feedbackId) as { id: number } | undefined;
+    if (!feedback) {
+      return NextResponse.json({ error: 'Feedback not found' }, { status: 404 });
+    }
+
+    // Delete feedback
+    db.prepare('DELETE FROM feedback WHERE id = ?').run(feedbackId);
+
+    return NextResponse.json({ success: true, message: 'Feedback deleted successfully' });
+  } catch (error: any) {
+    console.error('Admin delete feedback error:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete feedback' },
+      { status: 500 }
+    );
+  }
+}
+

@@ -28,6 +28,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Feedback is too long (max 5000 characters)' }, { status: 400 });
     }
 
+    // Check if user has already submitted 5 feedbacks (max limit)
+    const existingCount = db
+      .prepare('SELECT COUNT(*) as count FROM feedback WHERE user_id = ?')
+      .get(userId) as { count: number } | undefined;
+
+    if (existingCount && existingCount.count >= 5) {
+      return NextResponse.json(
+        { error: 'Maximum feedback limit reached (5 submissions per user)' },
+        { status: 400 }
+      );
+    }
+
     db.prepare('INSERT INTO feedback (user_id, feedback_text) VALUES (?, ?)').run(
       userId,
       feedback.trim()
