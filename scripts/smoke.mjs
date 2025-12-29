@@ -17,6 +17,19 @@ function formatDateSerbia(date = new Date()) {
   return fmt.format(date);
 }
 
+function addDaysYMD(dateString, deltaDays) {
+  const [year, month, day] = dateString.split('-').map(Number);
+  const dt = new Date(Date.UTC(year, month - 1, day + deltaDays));
+  const y = dt.getUTCFullYear();
+  const m = String(dt.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(dt.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function baseTrophiesForUpload(uploadId) {
+  return 26 + (Math.abs(uploadId) % 7);
+}
+
 function tokenForUserId(userId) {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '7d' });
 }
@@ -153,6 +166,25 @@ async function main() {
     console.log(`[smoke] upload OK (id=${uploadId})`);
   }
 
+  // Ensure "rest day yesterday => full reward today" (no half-penalty).
+  // We simulate yesterday as a rest day within the same active challenge before approving today's upload.
+  let expectedApprovedStreak = 1;
+  {
+    const yesterday = addDaysYMD(today, -1);
+    const row = db
+      .prepare('SELECT challenge_id FROM daily_uploads WHERE id = ?')
+      .get(uploadId);
+    const challengeId = row?.challenge_id;
+    if (challengeId) {
+      db.prepare('INSERT OR IGNORE INTO rest_days (challenge_id, user_id, rest_date) VALUES (?, ?, ?)').run(
+        challengeId,
+        uploadUserId,
+        yesterday
+      );
+      expectedApprovedStreak = 2; // yesterday rest day + today's upload
+    }
+  }
+
   // Approve -> reject -> approve toggle (tests streak recompute + trophy idempotency)
   for (const status of ['approved', 'rejected', 'approved']) {
     const { res, text } = await apiFetch('/api/admin/verify-upload', {
@@ -171,10 +203,20 @@ async function main() {
     assert(dash.res.ok, `dashboard after verify ${status} failed: ${dash.res.status} ${dash.text}`);
     const s = Number(dash.json?.streak?.current_streak ?? -1);
     if (status === 'approved') {
-      assert(s === 1, `expected current_streak=1 after approve, got ${s}`);
+      assert(s === expectedApprovedStreak, `expected current_streak=${expectedApprovedStreak} after approve, got ${s}`);
     } else if (status === 'rejected') {
       assert(s === 0, `expected current_streak=0 after reject, got ${s}`);
     }
+  }
+
+  // Verify reward wasn't halved on the first approval (because we inserted a rest day yesterday).
+  {
+    const net = db
+      .prepare('SELECT COALESCE(SUM(delta), 0) as net FROM trophy_transactions WHERE upload_id = ?')
+      .get(uploadId)?.net;
+    const expectedBase = baseTrophiesForUpload(uploadId);
+    assert(net === expectedBase, `expected upload net=${expectedBase} when rest day yesterday, got ${net}`);
+    console.log('[smoke] rest-day maintained reward OK');
   }
 
   // Maintenance toggle should 503 user API calls when ON

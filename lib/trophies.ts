@@ -19,22 +19,6 @@ export function baseTrophiesForUpload(uploadId: number): number {
   return 26 + (Math.abs(uploadId) % 7); // 26..32
 }
 
-function getLastApprovedDateBefore(userId: number, uploadDate: string, uploadId: number): string | null {
-  const row = db
-    .prepare(
-      `SELECT upload_date
-       FROM daily_uploads
-       WHERE user_id = ?
-         AND verification_status = 'approved'
-         AND upload_date < ?
-         AND id != ?
-       ORDER BY upload_date DESC
-       LIMIT 1`
-    )
-    .get(userId, uploadDate, uploadId) as { upload_date: string } | undefined;
-  return row?.upload_date ?? null;
-}
-
 /**
  * Approval reward:
  * - Base reward: 26-32 trophies (deterministic)
@@ -42,17 +26,58 @@ function getLastApprovedDateBefore(userId: number, uploadDate: string, uploadId:
  */
 export function trophiesAwardForApproval(userId: number, uploadId: number, uploadDate: string): number {
   const base = baseTrophiesForUpload(uploadId);
-  const lastApproved = getLastApprovedDateBefore(userId, uploadDate, uploadId);
-  
-  // Check if streak was maintained (yesterday had an approved upload)
-  let maintainedStreak = false;
-  if (lastApproved) {
-    const yesterday = addDaysYMD(uploadDate, -1);
-    maintainedStreak = lastApproved === yesterday;
-  } else {
-    // First upload ever - treat as maintained
-    maintainedStreak = true;
+
+  const yesterday = addDaysYMD(uploadDate, -1);
+
+  // "Maintained streak" should consider Rest Days as valid activity.
+  const hasYesterdayApproved = !!db
+    .prepare(
+      `SELECT 1
+       FROM daily_uploads
+       WHERE user_id = ?
+         AND verification_status = 'approved'
+         AND upload_date = ?
+         AND id != ?
+       LIMIT 1`
+    )
+    .get(userId, yesterday, uploadId);
+
+  let hasYesterdayRestDay = false;
+  try {
+    hasYesterdayRestDay = !!db
+      .prepare('SELECT 1 FROM rest_days WHERE user_id = ? AND rest_date = ? LIMIT 1')
+      .get(userId, yesterday);
+  } catch {
+    // rest_days may not exist in very old DBs; treat as no rest day
+    hasYesterdayRestDay = false;
   }
+
+  const hasYesterdayActivity = hasYesterdayApproved || hasYesterdayRestDay;
+
+  // If this is the user's first-ever activity, don't penalize.
+  const hasPriorApproved = !!db
+    .prepare(
+      `SELECT 1
+       FROM daily_uploads
+       WHERE user_id = ?
+         AND verification_status = 'approved'
+         AND upload_date < ?
+         AND id != ?
+       LIMIT 1`
+    )
+    .get(userId, uploadDate, uploadId);
+
+  let hasPriorRestDay = false;
+  try {
+    hasPriorRestDay = !!db
+      .prepare('SELECT 1 FROM rest_days WHERE user_id = ? AND rest_date < ? LIMIT 1')
+      .get(userId, uploadDate);
+  } catch {
+    hasPriorRestDay = false;
+  }
+
+  const hasPriorActivity = hasPriorApproved || hasPriorRestDay;
+  const maintainedStreak = hasPriorActivity ? hasYesterdayActivity : true;
 
   // Apply missed streak penalty (half) if streak was broken
   return maintainedStreak ? base : Math.max(1, Math.round(base / 2));
