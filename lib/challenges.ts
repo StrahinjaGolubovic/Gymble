@@ -1,6 +1,6 @@
 import db from './db';
 import { formatDateSerbia, formatDateDisplay, isTodaySerbia, isPastSerbia, parseSerbiaDate } from './timezone';
-import { deductWeeklyFailurePenalty, awardWeeklyCompletionBonus, getUserTrophies } from './trophies';
+import { awardWeeklyCompletionBonus, getUserTrophies } from './trophies';
 import { purgeUserUploadsBeforeDate } from './purge';
 
 function parseYMD(dateString: string): { year: number; month: number; day: number } {
@@ -323,13 +323,11 @@ export function getOrCreateActiveChallenge(userId: number): WeeklyChallenge {
         previousChallenge.id
       );
 
-      // Apply trophy penalty for failed challenge (replaces old debt system)
-      if (status === 'failed') {
-        deductWeeklyFailurePenalty(userId, previousChallenge.id);
-      } else if (status === 'completed') {
-        // Award bonus for completing weekly challenge
+      // Award bonus only for perfect weeks (7/7)
+      if (status === 'completed') {
         awardWeeklyCompletionBonus(userId, previousChallenge.id);
       }
+      // No penalty for failing weeks - users just don't get the bonus
 
       // Update streak
       updateStreak(userId, status === 'completed');

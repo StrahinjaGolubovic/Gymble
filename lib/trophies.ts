@@ -207,13 +207,3 @@ export function awardWeeklyCompletionBonus(userId: number, challengeId: number):
   );
 }
 
-/**
- * Deduct trophies for failing a weekly challenge (< 5 days).
- * Penalty is proportional to encourage consistency.
- */
-export function deductWeeklyFailurePenalty(userId: number, challengeId: number): void {
-  const penalty = -150; // More forgiving than old debt system, but still meaningful
-  applyTrophyDelta(userId, null, penalty, `weekly_failure:challenge_${challengeId}`);
-}
-
-
