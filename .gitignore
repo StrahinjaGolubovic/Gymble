@@ -35,6 +35,10 @@ yarn-error.log*
 *.db
 *.db-journal
 
+# user uploads and profiles (from smoke tests and production)
+/data/uploads/
+/data/profiles/
+
 # uploads (keep structure but ignore files)
 /public/uploads/*
 !/public/uploads/.gitkeep
