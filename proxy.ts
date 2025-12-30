@@ -33,6 +33,11 @@ function isPublicAsset(pathname: string): boolean {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Skip rate limiting for healthcheck endpoint
+  if (pathname === '/api/health') {
+    return NextResponse.next();
+  }
+
   // Apply rate limiting to all API routes FIRST (before maintenance check)
   if (pathname.startsWith('/api/')) {
     const clientIp = getClientIp(request);
