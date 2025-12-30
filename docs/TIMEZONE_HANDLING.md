@@ -48,6 +48,40 @@ formatDateTimeDisplay(dateString)
 formatTimeDisplay(dateString)
 ```
 
+## Critical Issue: SQLite CURRENT_TIMESTAMP Uses UTC
+
+**ROOT CAUSE OF 1-HOUR OFFSET**: SQLite's `CURRENT_TIMESTAMP` function returns UTC time, NOT the local timezone. This was causing all timestamps to be 1 hour behind Europe/Belgrade time (during CET/winter) or 2 hours behind (during CEST/summer).
+
+### ❌ **Before: Using DEFAULT CURRENT_TIMESTAMP**
+
+```sql
+-- WRONG: This stores UTC time, not Serbia time
+CREATE TABLE daily_uploads (
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- WRONG: This updates with UTC time
+UPDATE daily_uploads 
+SET verified_at = CURRENT_TIMESTAMP 
+WHERE id = ?;
+```
+
+### ✅ **After: Explicit Serbia Timezone**
+
+```typescript
+// CORRECT: Explicitly provide Serbia timezone timestamp
+const createdAt = formatDateTimeSerbia();  // "2025-12-30 04:40:00" in Serbia time
+db.prepare(
+  'INSERT INTO daily_uploads (challenge_id, user_id, upload_date, photo_path, verification_status, created_at) VALUES (?, ?, ?, ?, ?, ?)'
+).run(challengeId, userId, uploadDate, photoPath, 'pending', createdAt);
+
+// CORRECT: Explicitly provide Serbia timezone timestamp for updates
+const verifiedAt = formatDateTimeSerbia();
+db.prepare(
+  'UPDATE daily_uploads SET verification_status = ?, verified_at = ?, verified_by = ? WHERE id = ?'
+).run(status, verifiedAt, verifiedBy, uploadId);
+```
+
 ## Fixed Issues
 
 ### ❌ **Before: Incorrect Timezone Handling**
@@ -77,6 +111,22 @@ const today = formatDateSerbia();  // Returns "2025-12-30"
 // CORRECT: String-based date arithmetic
 const weekEnd = addDaysYMD(weekStart, 6);  // Returns "2026-01-05"
 ```
+
+## Files Fixed
+
+### **Core Library Files**
+1. **`lib/challenges.ts`** - Added `formatDateTimeSerbia` import, fixed all INSERT statements for `daily_uploads`, `weekly_challenges`, and `rest_days`
+2. **`lib/trophies.ts`** - Fixed `trophy_transactions` INSERT to use Serbia timezone
+3. **`lib/verification.ts`** - Fixed `verified_at` UPDATE to use Serbia timezone instead of CURRENT_TIMESTAMP
+4. **`lib/settings.ts`** - Fixed `app_settings` INSERT/UPDATE to use Serbia timezone
+5. **`lib/friends.ts`** - Fixed `invite_codes` and `friends` INSERT to use Serbia timezone
+6. **`lib/crews.ts`** - Fixed `crews`, `crew_members`, and `crew_requests` INSERT/UPDATE to use Serbia timezone
+7. **`lib/notifications.ts`** - Already correctly using `formatDateTimeSerbia()`
+8. **`lib/chat.ts`** - Already correctly using `formatDateTimeSerbia()` or client-provided time
+
+### **API Routes**
+1. **`app/api/friends/nudge/route.ts`** - Fixed to use `formatDateSerbia()` directly
+2. **`app/api/friends/list/route.ts`** - Fixed to use `formatDateSerbia()` directly
 
 ## Key Changes Made
 
@@ -250,9 +300,24 @@ If you need to migrate existing data:
 -- (This is already handled by formatDateTimeSerbia() in the app)
 ```
 
+## Important: Database Schema DEFAULT Values
+
+**WARNING**: The database schema in `lib/db.ts` still has `DEFAULT CURRENT_TIMESTAMP` for backward compatibility with existing data. However, **all application code now explicitly provides Serbia timezone timestamps**, so the DEFAULT is never used in practice.
+
+If you need to manually insert data into the database, always provide explicit timestamps:
+
+```sql
+-- DON'T rely on DEFAULT
+INSERT INTO daily_uploads (user_id, upload_date, photo_path) VALUES (1, '2025-12-30', '/path/to/photo.jpg');
+
+-- DO provide explicit timestamp
+INSERT INTO daily_uploads (user_id, upload_date, photo_path, created_at) 
+VALUES (1, '2025-12-30', '/path/to/photo.jpg', '2025-12-30 04:40:00');
+```
+
 ## Summary
 
-**Golden Rule**: Use YYYY-MM-DD strings for all date logic. Use Serbia timezone functions for all date operations. Never use JavaScript Date methods for business logic.
+**Golden Rule**: Use YYYY-MM-DD strings for all date logic. Use Serbia timezone functions for all date operations. Never use JavaScript Date methods for business logic. **Always explicitly provide timestamps - never rely on DEFAULT CURRENT_TIMESTAMP**.
 
 This ensures the application behaves consistently regardless of:
 - Server location/timezone

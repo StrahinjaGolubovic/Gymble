@@ -1,5 +1,5 @@
 import db from './db';
-import { formatDateSerbia, formatDateDisplay, isTodaySerbia, isPastSerbia, parseSerbiaDate } from './timezone';
+import { formatDateSerbia, formatDateTimeSerbia, formatDateDisplay, isTodaySerbia, isPastSerbia, parseSerbiaDate } from './timezone';
 import { awardWeeklyCompletionBonus, getUserTrophies } from './trophies';
 import { purgeUserUploadsBeforeDate } from './purge';
 
@@ -334,19 +334,20 @@ export function getOrCreateActiveChallenge(userId: number): WeeklyChallenge {
     // Create new challenge (reset rest days to 3 for new week)
     // Check if rest_days_available column exists
     let result;
+    const createdAt = formatDateTimeSerbia();
     try {
       result = db
         .prepare(
-          'INSERT INTO weekly_challenges (user_id, start_date, end_date, status, rest_days_available) VALUES (?, ?, ?, ?, ?)'
+          'INSERT INTO weekly_challenges (user_id, start_date, end_date, status, rest_days_available, created_at) VALUES (?, ?, ?, ?, ?, ?)'
         )
-        .run(userId, weekStart, weekEnd, 'active', 3);
+        .run(userId, weekStart, weekEnd, 'active', 3, createdAt);
     } catch (error) {
       // Column doesn't exist, insert without it
       result = db
         .prepare(
-          'INSERT INTO weekly_challenges (user_id, start_date, end_date, status) VALUES (?, ?, ?, ?)'
+          'INSERT INTO weekly_challenges (user_id, start_date, end_date, status, created_at) VALUES (?, ?, ?, ?, ?)'
         )
-        .run(userId, weekStart, weekEnd, 'active');
+        .run(userId, weekStart, weekEnd, 'active', createdAt);
     }
 
     // Ensure rest_days_available is always in the returned challenge
@@ -483,11 +484,12 @@ export function addDailyUpload(
     throw new Error('Rest day already used for this date');
   }
 
+  const createdAt = formatDateTimeSerbia();
   const result = db
     .prepare(
-      'INSERT INTO daily_uploads (challenge_id, user_id, upload_date, photo_path, verification_status) VALUES (?, ?, ?, ?, ?)'
+      'INSERT INTO daily_uploads (challenge_id, user_id, upload_date, photo_path, verification_status, created_at) VALUES (?, ?, ?, ?, ?, ?)'
     )
-    .run(challengeId, userId, uploadDate, photoPath, 'pending');
+    .run(challengeId, userId, uploadDate, photoPath, 'pending', createdAt);
 
   // Update streak immediately on upload submit (pending uploads still count as "done" for the day)
   // This keeps streak consistent even before admin verification.
@@ -682,8 +684,9 @@ export function useRestDay(userId: number, challengeId: number, restDate: string
   try {
     // Insert rest day (wrap in try-catch in case table doesn't exist)
     try {
-      db.prepare('INSERT INTO rest_days (challenge_id, user_id, rest_date) VALUES (?, ?, ?)')
-        .run(challengeId, userId, restDate);
+      const createdAt = formatDateTimeSerbia();
+      db.prepare('INSERT INTO rest_days (challenge_id, user_id, rest_date, created_at) VALUES (?, ?, ?, ?)')
+        .run(challengeId, userId, restDate, createdAt);
     } catch (error) {
       // If rest_days table doesn't exist, the migration should have created it
       // But if it still fails, throw error

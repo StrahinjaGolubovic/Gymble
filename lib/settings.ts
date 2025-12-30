@@ -1,4 +1,5 @@
 import db from './db';
+import { formatDateTimeSerbia } from './timezone';
 
 export function getSetting(key: string): string | null {
   const row = db.prepare('SELECT value FROM app_settings WHERE key = ?').get(key) as { value: string } | undefined;
@@ -6,11 +7,12 @@ export function getSetting(key: string): string | null {
 }
 
 export function setSetting(key: string, value: string): void {
+  const updatedAt = formatDateTimeSerbia();
   db.prepare(
     `INSERT INTO app_settings (key, value, updated_at)
-     VALUES (?, ?, CURRENT_TIMESTAMP)
-     ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP`
-  ).run(key, value);
+     VALUES (?, ?, ?)
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`
+  ).run(key, value, updatedAt);
 }
 
 const MAINTENANCE_KEY = 'maintenance_mode';

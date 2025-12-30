@@ -1,6 +1,6 @@
 import db from './db';
 import { getUserStreak } from './challenges';
-import { formatDateSerbia } from './timezone';
+import { formatDateSerbia, formatDateTimeSerbia } from './timezone';
 
 export interface InviteCode {
   id: number;
@@ -57,9 +57,10 @@ export function getOrCreateInviteCode(userId: number): InviteCode {
     } while (db.prepare('SELECT * FROM invite_codes WHERE code = ?').get(code));
 
     // Create invite code
+    const createdAt = formatDateTimeSerbia();
     const result = db
-      .prepare('INSERT INTO invite_codes (user_id, code) VALUES (?, ?)')
-      .run(userId, code);
+      .prepare('INSERT INTO invite_codes (user_id, code, created_at) VALUES (?, ?, ?)')
+      .run(userId, code, createdAt);
 
     inviteCode = db
       .prepare('SELECT * FROM invite_codes WHERE id = ?')
@@ -95,8 +96,9 @@ export function acceptInviteCode(userId: number, code: string): { success: boole
   }
 
   // Create bidirectional friendship
-  db.prepare('INSERT INTO friends (user_id, friend_id) VALUES (?, ?)').run(userId, inviteCode.user_id);
-  db.prepare('INSERT INTO friends (user_id, friend_id) VALUES (?, ?)').run(inviteCode.user_id, userId);
+  const createdAt = formatDateTimeSerbia();
+  db.prepare('INSERT INTO friends (user_id, friend_id, created_at) VALUES (?, ?, ?)').run(userId, inviteCode.user_id, createdAt);
+  db.prepare('INSERT INTO friends (user_id, friend_id, created_at) VALUES (?, ?, ?)').run(inviteCode.user_id, userId, createdAt);
 
   return { success: true, message: 'Friend added successfully' };
 }

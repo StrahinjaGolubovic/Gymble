@@ -97,14 +97,16 @@ export function createCrew(userId: number, name: string): { success: boolean; cr
 
   try {
     // Create crew
+    const { formatDateTimeSerbia } = require('./timezone');
+    const createdAt = formatDateTimeSerbia();
     const result = db
-      .prepare('INSERT INTO crews (name, leader_id) VALUES (?, ?)')
-      .run(name, userId);
+      .prepare('INSERT INTO crews (name, leader_id, created_at) VALUES (?, ?, ?)')
+      .run(name, userId, createdAt);
 
     const crewId = result.lastInsertRowid as number;
 
     // Add creator as member
-    db.prepare('INSERT INTO crew_members (crew_id, user_id) VALUES (?, ?)').run(crewId, userId);
+    db.prepare('INSERT INTO crew_members (crew_id, user_id, joined_at) VALUES (?, ?, ?)').run(crewId, userId, createdAt);
 
     // Set crew_id on users table for badge display
     db.prepare('UPDATE users SET crew_id = ? WHERE id = ?').run(crewId, userId);
@@ -297,13 +299,17 @@ export function requestToJoinCrew(userId: number, crewId: number): { success: bo
       return { success: false, message: 'You already have a pending request for this crew' };
     }
     // If rejected, allow new request
-    db.prepare('UPDATE crew_requests SET status = ?, created_at = CURRENT_TIMESTAMP WHERE id = ?').run('pending', existingRequest.id);
+    const { formatDateTimeSerbia } = require('./timezone');
+    const createdAt = formatDateTimeSerbia();
+    db.prepare('UPDATE crew_requests SET status = ?, created_at = ? WHERE id = ?').run('pending', createdAt, existingRequest.id);
     return { success: true, message: 'Join request sent' };
   }
 
   // Create new request
   try {
-    db.prepare('INSERT INTO crew_requests (crew_id, user_id, status) VALUES (?, ?, ?)').run(crewId, userId, 'pending');
+    const { formatDateTimeSerbia } = require('./timezone');
+    const createdAt = formatDateTimeSerbia();
+    db.prepare('INSERT INTO crew_requests (crew_id, user_id, status, created_at) VALUES (?, ?, ?, ?)').run(crewId, userId, 'pending', createdAt);
     return { success: true, message: 'Join request sent' };
   } catch (error) {
     return { success: false, message: 'Failed to send request' };
@@ -349,7 +355,9 @@ export function acceptJoinRequest(leaderId: number, requestId: number): { succes
 
   try {
     // Add user to crew
-    db.prepare('INSERT INTO crew_members (crew_id, user_id) VALUES (?, ?)').run(request.crew_id, request.user_id);
+    const { formatDateTimeSerbia } = require('./timezone');
+    const joinedAt = formatDateTimeSerbia();
+    db.prepare('INSERT INTO crew_members (crew_id, user_id, joined_at) VALUES (?, ?, ?)').run(request.crew_id, request.user_id, joinedAt);
 
     // Set crew_id on users table for badge display
     db.prepare('UPDATE users SET crew_id = ? WHERE id = ?').run(request.crew_id, request.user_id);

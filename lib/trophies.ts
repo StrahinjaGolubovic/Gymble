@@ -117,11 +117,14 @@ function applyTrophyDelta(userId: number, uploadId: number | null, delta: number
 
     if (appliedDelta !== 0) {
       db.prepare('UPDATE users SET trophies = COALESCE(trophies, 0) + ? WHERE id = ?').run(appliedDelta, userId);
-      db.prepare('INSERT INTO trophy_transactions (user_id, upload_id, delta, reason) VALUES (?, ?, ?, ?)').run(
+      const { formatDateTimeSerbia } = require('./timezone');
+      const createdAt = formatDateTimeSerbia();
+      db.prepare('INSERT INTO trophy_transactions (user_id, upload_id, delta, reason, created_at) VALUES (?, ?, ?, ?, ?)').run(
         userId,
         uploadId,
         appliedDelta,
-        reason
+        reason,
+        createdAt
       );
     }
     db.exec('COMMIT');

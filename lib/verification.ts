@@ -121,20 +121,18 @@ export function getAllUploads(limit: number = 50, offset: number = 0): UploadFor
 }
 
 // Verify an upload
-export function verifyUpload(
-  uploadId: number,
-  status: 'approved' | 'rejected',
-  verifiedBy: number
-): boolean {
+export function verifyUpload(uploadId: number, status: 'approved' | 'rejected', verifiedBy: number): boolean {
+  const { formatDateTimeSerbia } = require('./timezone');
+  const verifiedAt = formatDateTimeSerbia();
   const result = db
     .prepare(
       `
     UPDATE daily_uploads 
-    SET verification_status = ?, verified_at = CURRENT_TIMESTAMP, verified_by = ?
+    SET verification_status = ?, verified_at = ?, verified_by = ?
     WHERE id = ?
   `
     )
-    .run(status, verifiedBy, uploadId);
+    .run(status, verifiedAt, verifiedBy, uploadId);
 
   return result.changes > 0;
 }
