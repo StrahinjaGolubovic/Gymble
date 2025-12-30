@@ -17,17 +17,18 @@ export async function GET(request: NextRequest) {
       // Table might already exist
     }
 
-    // Clean up old entries (older than 2 minutes) - users who left
+    // Calculate cutoff time (5 minutes ago to match admin panel)
     const now = new Date();
-    const twoMinutesAgo = new Date(now.getTime() - 2 * 60 * 1000);
-    const cutoffTime = formatDateTimeSerbia(twoMinutesAgo);
+    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+    const cutoffTime = formatDateTimeSerbia(fiveMinutesAgo);
     
-    // Delete old entries
-    db.prepare(
-      `DELETE FROM user_activity WHERE last_seen < ?`
-    ).run(cutoffTime);
-
-    // Count users who have sent a heartbeat in the last 2 minutes
+    // Clean up very old entries (older than 1 hour) to prevent database bloat
+    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+    const cleanupTime = formatDateTimeSerbia(oneHourAgo);
+    db.prepare(`DELETE FROM user_activity WHERE last_seen < ?`).run(cleanupTime);
+    
+    // Count users who have sent a heartbeat in the last 5 minutes
+    // Using string comparison works because format is YYYY-MM-DD HH:MM:SS
     const onlineUsers = db
       .prepare(
         `SELECT COUNT(*) as count 
