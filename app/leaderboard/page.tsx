@@ -18,16 +18,37 @@ interface LeaderboardEntry {
   longest_streak: number;
 }
 
+interface CrewLeaderboardEntry {
+  rank: number;
+  id: number;
+  name: string;
+  tag: string | null;
+  tag_color: string;
+  leader_username: string;
+  member_count: number;
+  total_trophies: number;
+  avg_trophies: number;
+  avg_streak: number;
+}
+
+type TabType = 'users' | 'crews';
+
 export default function LeaderboardPage() {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<TabType>('users');
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [crewsLeaderboard, setCrewsLeaderboard] = useState<CrewLeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [brokenPics, setBrokenPics] = useState<Set<number>>(() => new Set());
 
   useEffect(() => {
-    fetchLeaderboard();
-  }, []);
+    if (activeTab === 'users') {
+      fetchLeaderboard();
+    } else {
+      fetchCrewsLeaderboard();
+    }
+  }, [activeTab]);
 
   async function fetchLeaderboard() {
     try {
@@ -38,6 +59,23 @@ export default function LeaderboardPage() {
         setLeaderboard(data.leaderboard);
       } else {
         setError('Failed to load leaderboard');
+      }
+    } catch (err) {
+      setError('An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function fetchCrewsLeaderboard() {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/leaderboard/crews?limit=100');
+      if (response.ok) {
+        const data = await response.json();
+        setCrewsLeaderboard(data.leaderboard);
+      } else {
+        setError('Failed to load crews leaderboard');
       }
     } catch (err) {
       setError('An error occurred');
@@ -95,6 +133,33 @@ export default function LeaderboardPage() {
         <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-4 sm:p-6 md:p-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-100 mb-4 sm:mb-6">Leaderboard</h1>
           
+          {/* Tabs */}
+          <div className="flex gap-2 mb-4 sm:mb-6 border-b border-gray-700 pb-4">
+            <button
+              onClick={() => setActiveTab('users')}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                activeTab === 'users'
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              👤 Users
+            </button>
+            <button
+              onClick={() => setActiveTab('crews')}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                activeTab === 'crews'
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              👥 Crews
+            </button>
+          </div>
+
+          {/* Users Leaderboard */}
+          {activeTab === 'users' && (
+          <>
           {/* Mobile Card Layout */}
           <div className="md:hidden space-y-3">
             {leaderboard.map((user) => (
@@ -313,6 +378,186 @@ export default function LeaderboardPage() {
               </div>
             )}
           </div>
+          </>
+          )}
+
+          {/* Crews Leaderboard */}
+          {activeTab === 'crews' && (
+          <>
+          {/* Mobile Card Layout */}
+          <div className="md:hidden space-y-3">
+            {crewsLeaderboard.map((crew) => (
+              <Link
+                key={crew.id}
+                href={`/crews?id=${crew.id}`}
+                className="block bg-gray-700/50 border border-gray-600 rounded-xl p-4 hover:bg-gray-700 transition-colors active:bg-gray-600"
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="flex-shrink-0 w-10 flex items-center justify-center">
+                    {crew.rank <= 3 ? (
+                      <span className="text-2xl">
+                        {crew.rank === 1 ? '🥇' : crew.rank === 2 ? '🥈' : '🥉'}
+                      </span>
+                    ) : (
+                      <span className="text-lg font-bold text-gray-400">
+                        #{crew.rank}
+                      </span>
+                    )}
+                  </div>
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-600 to-primary-800 border-2 border-primary-500 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <div className="font-semibold text-gray-100 truncate">{crew.name}</div>
+                      {crew.tag && (
+                        <span
+                          className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold border flex-shrink-0"
+                          style={{
+                            backgroundColor: `${crew.tag_color}20`,
+                            borderColor: crew.tag_color,
+                            color: crew.tag_color,
+                          }}
+                        >
+                          {crew.tag}
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-400">Led by @{crew.leader_username}</div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between gap-4 pt-3 border-t border-gray-600">
+                  <div className="flex items-center gap-1.5">
+                    <Image
+                      src="/streakd_dumbbells.png"
+                      alt="Dumbbells"
+                      width={43}
+                      height={24}
+                      className="h-6 w-auto"
+                      unoptimized
+                    />
+                    <span className="font-bold text-yellow-400 text-base">{crew.total_trophies.toLocaleString()}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-1">
+                    <span className="text-orange-500">🔥</span>
+                    <span className="text-sm font-semibold text-orange-400">{crew.avg_streak}</span>
+                  </div>
+                  
+                  <div className="text-sm text-gray-400">
+                    {crew.member_count}/30
+                  </div>
+                </div>
+              </Link>
+            ))}
+            
+            {crewsLeaderboard.length === 0 && (
+              <div className="text-center py-12 text-gray-400">
+                No crews found on the leaderboard yet.
+              </div>
+            )}
+          </div>
+
+          {/* Desktop Table Layout */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-700">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">Rank</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">Crew</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-300">Leader</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-300">Total Dumbbells</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-300">Avg Streak</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-300">Members</th>
+                </tr>
+              </thead>
+              <tbody>
+                {crewsLeaderboard.map((crew) => (
+                  <tr
+                    key={crew.id}
+                    className="border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors"
+                  >
+                    <td className="py-4 px-4">
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg font-bold text-gray-400 w-8 flex items-center justify-center">
+                          {crew.rank <= 3 ? (
+                            <span className="text-2xl">
+                              {crew.rank === 1 ? '🥇' : crew.rank === 2 ? '🥈' : '🥉'}
+                            </span>
+                          ) : (
+                            `#${crew.rank}`
+                          )}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <Link
+                        href={`/crews?id=${crew.id}`}
+                        className="flex items-center gap-3 hover:text-primary-400 transition-colors"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-600 to-primary-800 border-2 border-primary-500 flex items-center justify-center flex-shrink-0">
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <span className="font-medium text-gray-100">{crew.name}</span>
+                          {crew.tag && (
+                            <span
+                              className="ml-2 inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold border"
+                              style={{
+                                backgroundColor: `${crew.tag_color}20`,
+                                borderColor: crew.tag_color,
+                                color: crew.tag_color,
+                              }}
+                            >
+                              {crew.tag}
+                            </span>
+                          )}
+                        </div>
+                      </Link>
+                    </td>
+                    <td className="py-4 px-4">
+                      <span className="text-gray-300">@{crew.leader_username}</span>
+                    </td>
+                    <td className="py-4 px-4 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <Image
+                          src="/streakd_dumbbells.png"
+                          alt="Dumbbells"
+                          width={43}
+                          height={24}
+                          className="h-6 w-auto"
+                          unoptimized
+                        />
+                        <span className="font-bold text-yellow-400">{crew.total_trophies.toLocaleString()}</span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-4 text-right">
+                      <div className="flex items-center gap-1 justify-end">
+                        <span className="text-orange-500">🔥</span>
+                        <span className="text-sm font-semibold text-orange-400">{crew.avg_streak}</span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-4 text-right">
+                      <span className="text-gray-300">{crew.member_count}/30</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            
+            {crewsLeaderboard.length === 0 && (
+              <div className="text-center py-12 text-gray-400">
+                No crews found on the leaderboard yet.
+              </div>
+            )}
+          </div>
+          </>
+          )}
         </div>
       </main>
     </div>

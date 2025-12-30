@@ -251,21 +251,21 @@ export function CrewChat({ crewId, currentUserId, currentUsername, currentUserPr
         <div ref={messagesEndRef} />
       </div>
 
-      <form onSubmit={sendMessage} className="p-3 sm:p-4 border-t border-gray-700 bg-gray-750">
-        <div className="flex gap-2">
+      <form onSubmit={sendMessage} className="border-t border-gray-700 p-3 sm:p-4 bg-gray-750">
+        <div className="flex gap-2 sm:gap-3">
           <input
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Type a message..."
-            className="flex-1 px-3 sm:px-4 py-2.5 sm:py-2 bg-gray-900 border border-gray-600 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-base min-h-[44px]"
+            className="flex-1 bg-gray-900 border border-gray-600 rounded-md px-3 sm:px-4 py-2 sm:py-2.5 text-sm sm:text-base text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 min-h-[44px]"
             disabled={sending}
             maxLength={500}
           />
           <button
             type="submit"
             disabled={!newMessage.trim() || sending}
-            className="px-4 sm:px-6 py-2.5 sm:py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm sm:text-base whitespace-nowrap min-h-[44px] touch-manipulation"
+            className="px-4 sm:px-6 py-2 sm:py-2.5 bg-primary-600 text-white rounded-md hover:bg-primary-700 active:bg-primary-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base font-medium touch-manipulation min-h-[44px] whitespace-nowrap flex-shrink-0"
           >
             {sending ? 'Sending...' : 'Send'}
           </button>

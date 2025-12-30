@@ -768,6 +768,32 @@ export default function CrewsPage() {
                 </div>
               </div>
 
+              {/* Request to Join Button (Non-members only) */}
+              {!crewDetails.crew.is_member && !crewDetails.crew.is_leader && (
+                <div className="mb-4 sm:mb-6">
+                  {crewDetails.crew.has_pending_request ? (
+                    <div className="bg-yellow-900/20 border border-yellow-600/30 rounded-xl p-4 text-center">
+                      <span className="text-yellow-400 font-medium">Request pending - waiting for leader approval</span>
+                    </div>
+                  ) : crewDetails.crew.member_count >= 30 ? (
+                    <div className="bg-gray-700/50 border border-gray-600 rounded-xl p-4 text-center">
+                      <span className="text-gray-400 font-medium">This crew is full (30/30 members)</span>
+                    </div>
+                  ) : myCrew ? (
+                    <div className="bg-gray-700/50 border border-gray-600 rounded-xl p-4 text-center">
+                      <span className="text-gray-400 font-medium">You are already in a crew</span>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleRequestJoin(crewDetails.crew.id)}
+                      className="w-full px-4 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 active:bg-primary-800 transition-colors font-semibold text-base shadow-lg"
+                    >
+                      Request to Join
+                    </button>
+                  )}
+                </div>
+              )}
+
               {/* Pending Requests (Leader Only) */}
               {crewDetails.crew.is_leader && crewDetails.requests.length > 0 && (
                 <div className="mb-4 sm:mb-6">
