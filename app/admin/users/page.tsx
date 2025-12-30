@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { ToastContainer, Toast } from '@/components/Toast';
 import { ConfirmModal } from '@/components/ConfirmModal';
 import { getImageUrl } from '@/lib/image-utils';
-import { formatDateDisplay } from '@/lib/timezone';
+import { formatDateDisplay, formatDateTimeDisplay } from '@/lib/timezone';
 
 interface User {
   id: number;
@@ -27,7 +27,7 @@ export default function AdminUsers() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState<'username' | 'trophies' | 'streak' | 'created'>('username');
+  const [sortBy, setSortBy] = useState<'username' | 'trophies' | 'streak' | 'created' | 'lastOnline'>('username');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [confirmModal, setConfirmModal] = useState<{
@@ -251,6 +251,10 @@ export default function AdminUsers() {
           aVal = new Date(a.created_at).getTime();
           bVal = new Date(b.created_at).getTime();
           break;
+        case 'lastOnline':
+          aVal = a.last_activity_date ? new Date(a.last_activity_date).getTime() : 0;
+          bVal = b.last_activity_date ? new Date(b.last_activity_date).getTime() : 0;
+          break;
         default:
           aVal = a.username.toLowerCase();
           bVal = b.username.toLowerCase();
@@ -360,7 +364,7 @@ export default function AdminUsers() {
               value={sortBy}
               onChange={(e) => {
                 const value = e.target.value;
-                if (value === 'username' || value === 'trophies' || value === 'streak' || value === 'created') {
+                if (value === 'username' || value === 'trophies' || value === 'streak' || value === 'created' || value === 'lastOnline') {
                   setSortBy(value);
                 }
               }}
@@ -370,6 +374,7 @@ export default function AdminUsers() {
               <option value="trophies">Sort by Dumbbells</option>
               <option value="streak">Sort by Streak</option>
               <option value="created">Sort by Created</option>
+              <option value="lastOnline">Sort by Last Online</option>
             </select>
             <button
               onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
@@ -391,6 +396,7 @@ export default function AdminUsers() {
                   <th className="px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-200">Streak</th>
                   <th className="px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-200">Uploads</th>
                   <th className="px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-200">Joined</th>
+                  <th className="px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-200">Last Online</th>
                   <th className="px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-200">Actions</th>
                 </tr>
               </thead>
@@ -448,6 +454,11 @@ export default function AdminUsers() {
                     <td className="px-4 py-3">
                       <span className="text-xs sm:text-sm text-gray-300">
                         {formatDateDisplay(user.created_at)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-xs sm:text-sm text-gray-300">
+                        {user.last_activity_date ? formatDateTimeDisplay(user.last_activity_date) : 'Never'}
                       </span>
                     </td>
                     <td className="px-4 py-3">
