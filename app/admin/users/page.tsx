@@ -396,7 +396,7 @@ export default function AdminUsers() {
                   <th className="px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-200">Streak</th>
                   <th className="px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-200">Uploads</th>
                   <th className="px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-200">Joined</th>
-                  <th className="px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-200">Last Online</th>
+                  <th className="px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-200">Status</th>
                   <th className="px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-200">Actions</th>
                 </tr>
               </thead>
@@ -457,9 +457,26 @@ export default function AdminUsers() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-xs sm:text-sm text-gray-300">
-                        {user.last_activity_date ? formatDateTimeDisplay(user.last_activity_date) : 'Never'}
-                      </span>
+                      {(() => {
+                        if (!user.last_activity_date) {
+                          return <span className="text-xs sm:text-sm text-gray-500">Offline</span>;
+                        }
+                        
+                        // Check if user was active in last 5 minutes
+                        const lastActivity = new Date(user.last_activity_date).getTime();
+                        const now = Date.now();
+                        const fiveMinutes = 5 * 60 * 1000;
+                        const isOnline = (now - lastActivity) < fiveMinutes;
+                        
+                        return (
+                          <div className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-500'}`} />
+                            <span className={`text-xs sm:text-sm font-medium ${isOnline ? 'text-green-400' : 'text-gray-500'}`}>
+                              {isOnline ? 'Online' : 'Offline'}
+                            </span>
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-col sm:flex-row gap-2">
