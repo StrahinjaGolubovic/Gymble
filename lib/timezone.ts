@@ -24,16 +24,31 @@ function getSerbiaTimeComponents(date: Date = new Date()): {
     minute: '2-digit',
     second: '2-digit',
     hour12: false,
+    hourCycle: 'h23', // Force 0-23 hour range (not 1-24)
   });
 
   const parts = formatter.formatToParts(date);
   const getPart = (type: string) => parseInt(parts.find(p => p.type === type)?.value || '0', 10);
 
+  let hours = getPart('hour');
+  
+  // Safety check: hour 24 should be converted to 0
+  // This handles edge cases where some browsers/locales might return 24 for midnight
+  if (hours === 24) {
+    hours = 0;
+  }
+  
+  // Validate hour range
+  if (hours < 0 || hours > 23) {
+    console.error(`Invalid hour value: ${hours} from date: ${date.toISOString()}`);
+    hours = 0; // Fallback to midnight
+  }
+
   return {
     year: getPart('year'),
     month: getPart('month'),
     day: getPart('day'),
-    hours: getPart('hour'),
+    hours,
     minutes: getPart('minute'),
     seconds: getPart('second'),
   };
@@ -92,7 +107,23 @@ export function parseSerbiaDate(dateString: string): Date {
   if (dateString.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
     const [datePart, timePart] = dateString.split(' ');
     const [year, month, day] = datePart.split('-').map(Number);
-    const [hour, minute, second] = timePart.split(':').map(Number);
+    let [hour, minute, second] = timePart.split(':').map(Number);
+    
+    // Handle hour 24 edge case (some systems use 24:00:00 for midnight)
+    // Convert to next day at 00:00:00
+    let adjustedDay = day;
+    let adjustedMonth = month;
+    let adjustedYear = year;
+    
+    if (hour === 24) {
+      hour = 0;
+      // Add one day
+      const nextDay = new Date(Date.UTC(year, month - 1, day + 1));
+      adjustedYear = nextDay.getUTCFullYear();
+      adjustedMonth = nextDay.getUTCMonth() + 1;
+      adjustedDay = nextDay.getUTCDate();
+    }
+    
     // Validate all components
     if (isNaN(year) || isNaN(month) || isNaN(day) || isNaN(hour) || isNaN(minute) || isNaN(second) ||
         month < 1 || month > 12 || day < 1 || day > 31 || hour < 0 || hour > 23 || minute < 0 || minute > 59 || second < 0 || second > 59) {
@@ -100,7 +131,7 @@ export function parseSerbiaDate(dateString: string): Date {
     }
     // Create UTC date with the time components
     // This ensures consistent parsing regardless of client timezone
-    return new Date(Date.UTC(year, month - 1, day, hour, minute, second));
+    return new Date(Date.UTC(adjustedYear, adjustedMonth - 1, adjustedDay, hour, minute, second));
   }
   
   // Throw error for unsupported formats instead of silently failing
