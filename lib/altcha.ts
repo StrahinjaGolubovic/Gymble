@@ -1,11 +1,12 @@
 import { verifySolution } from 'altcha-lib';
 
-// Get HMAC key from environment variable or use the provided key
-// Must match the key used in the challenge endpoint
-const HMAC_KEY = process.env.ALTCHA_HMAC_KEY;
-
-if (!HMAC_KEY) {
-  throw new Error('CRITICAL: ALTCHA_HMAC_KEY environment variable must be set');
+// Get ALTCHA_HMAC_KEY and validate on first use (not at module load to allow build)
+function getHmacKey(): string {
+  const key = process.env.ALTCHA_HMAC_KEY;
+  if (!key) {
+    throw new Error('CRITICAL: ALTCHA_HMAC_KEY environment variable must be set');
+  }
+  return key;
 }
 
 export async function verifyAltcha(solution: string): Promise<boolean> {
@@ -13,7 +14,7 @@ export async function verifyAltcha(solution: string): Promise<boolean> {
     if (!solution) {
       return false;
     }
-    const isValid = await verifySolution(solution, HMAC_KEY);
+    const isValid = await verifySolution(solution, getHmacKey());
     return isValid;
   } catch (error) {
     console.error('ALTCHA verification error:', error);
