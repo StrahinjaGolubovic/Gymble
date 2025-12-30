@@ -113,8 +113,13 @@ export default function RegisterPage() {
       return;
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters');
+      return;
+    }
+
+    if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+      setError('Password must contain at least one letter and one number');
       return;
     }
 
@@ -227,6 +232,7 @@ export default function RegisterPage() {
                 className="mt-1 appearance-none relative block w-full px-4 py-3 bg-gray-700 border border-gray-600 placeholder-gray-400 text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 focus:z-10 text-base sm:text-sm min-h-[44px]"
                 placeholder="Enter your password"
               />
+              <p className="mt-1 text-xs text-gray-400">8+ characters, must include at least one letter and one number</p>
             </div>
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300">

@@ -27,21 +27,37 @@ export async function GET(request: NextRequest) {
       // Database file might not exist or be inaccessible
     }
 
-    // Get table count
-    const tables = db
-      .prepare(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
-      )
-      .all() as Array<{ name: string }>;
+    // Whitelist of known tables to prevent SQL injection
+    const allowedTables = [
+      'users',
+      'weekly_challenges',
+      'daily_uploads',
+      'streaks',
+      'trophy_transactions',
+      'user_activity',
+      'invite_codes',
+      'friends',
+      'chat_messages',
+      'crews',
+      'crew_members',
+      'crew_requests',
+      'crew_chat_messages',
+      'notifications',
+      'nudges',
+      'rest_days',
+      'feedback',
+      'app_settings'
+    ];
 
-    // Get total record count across all tables
+    // Get total record count across all whitelisted tables
     let totalRecords = 0;
-    for (const table of tables) {
+    for (const tableName of allowedTables) {
       try {
-        const count = db.prepare(`SELECT COUNT(*) as count FROM ${table.name}`).get() as { count: number };
+        // Safe: tableName is from whitelist, not user input
+        const count = db.prepare(`SELECT COUNT(*) as count FROM ${tableName}`).get() as { count: number };
         totalRecords += count.count;
       } catch (error) {
-        // Skip if table doesn't exist or error
+        // Skip if table doesn't exist
       }
     }
 
@@ -56,7 +72,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       databaseSize: dbSize,
-      totalTables: tables.length,
+      totalTables: allowedTables.length,
       totalRecords,
       oldestUser: oldestUser ? `${oldestUser.username} (${formatDateDisplay(oldestUser.created_at)})` : 'N/A',
       newestUser: newestUser ? `${newestUser.username} (${formatDateDisplay(newestUser.created_at)})` : 'N/A',

@@ -2,7 +2,11 @@ import { verifySolution } from 'altcha-lib';
 
 // Get HMAC key from environment variable or use the provided key
 // Must match the key used in the challenge endpoint
-const HMAC_KEY = process.env.ALTCHA_HMAC_KEY || 'fe48b4e61bad34a78d018f4f43e5c2f286760c7898a0aebd8891196b17e89a20';
+const HMAC_KEY = process.env.ALTCHA_HMAC_KEY;
+
+if (!HMAC_KEY) {
+  throw new Error('CRITICAL: ALTCHA_HMAC_KEY environment variable must be set');
+}
 
 export async function verifyAltcha(solution: string): Promise<boolean> {
   try {

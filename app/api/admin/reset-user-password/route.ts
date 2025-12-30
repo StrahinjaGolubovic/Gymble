@@ -41,8 +41,14 @@ export async function POST(request: NextRequest) {
         ? newPasswordInput.trim()
         : generateTempPassword();
 
-    if (newPassword.length < 6) {
-      return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 });
+    if (newPassword.length < 8) {
+      return NextResponse.json({ error: 'Password must be at least 8 characters' }, { status: 400 });
+    }
+
+    if (!/[a-zA-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+      return NextResponse.json({ 
+        error: 'Password must contain at least one letter and one number' 
+      }, { status: 400 });
     }
 
     const passwordHash = await hashPassword(newPassword);

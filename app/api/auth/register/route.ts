@@ -26,8 +26,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Username must be at least 3 characters' }, { status: 400 });
     }
 
-    if (password.length < 6) {
-      return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 });
+    if (password.length < 8) {
+      return NextResponse.json({ error: 'Password must be at least 8 characters' }, { status: 400 });
+    }
+
+    // Require at least one letter and one number
+    if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+      return NextResponse.json({ 
+        error: 'Password must contain at least one letter and one number' 
+      }, { status: 400 });
     }
 
     // Validate username format (alphanumeric and underscores only)
