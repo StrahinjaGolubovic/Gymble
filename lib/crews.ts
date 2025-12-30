@@ -699,6 +699,7 @@ export function updateCrewTag(leaderId: number, crewId: number, tag: string | nu
 export function clearExpiredCrewTags(): { cleared: number } {
   try {
     const { formatDateTimeSerbia } = require('./timezone');
+    // CRITICAL: Arithmetic on UTC, then convert to Serbia for comparison
     const now = new Date();
     const fortyEightHoursAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000);
     const cutoffTime = formatDateTimeSerbia(fortyEightHoursAgo);

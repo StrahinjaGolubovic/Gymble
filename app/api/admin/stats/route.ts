@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
 
     // Get active users (users with streak > 0 or recent activity)
     // Calculate 7 days ago in Serbia timezone
+    // CRITICAL: Arithmetic on UTC, then convert to Serbia for comparison
     const now = new Date();
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const cutoffTime = formatDateTimeSerbia(sevenDaysAgo);
@@ -49,6 +50,7 @@ export async function GET(request: NextRequest) {
       .get() as { avg: number | null };
 
     // Get chat messages in last 24 hours (Serbia timezone)
+    // CRITICAL: Arithmetic on UTC, then convert to Serbia for comparison
     const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     const messageCutoffTime = formatDateTimeSerbia(yesterday);
     const totalMessages = db

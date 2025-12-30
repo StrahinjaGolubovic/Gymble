@@ -15,6 +15,7 @@ export interface CrewChatMessage {
 export function cleanupOldCrewMessages(): void {
   try {
     // Delete messages older than 48 hours (using Serbia timezone)
+    // CRITICAL: Arithmetic on UTC, then convert to Serbia for comparison
     const nowDate = new Date();
     const fortyEightHoursAgo = new Date(nowDate.getTime() - 48 * 60 * 60 * 1000);
     const cutoffTime = formatDateTimeSerbia(fortyEightHoursAgo);
@@ -41,6 +42,7 @@ export function getCrewChatMessages(crewId: number, limit: number = 100): CrewCh
   
   try {
     // Calculate 48 hours ago in Serbia timezone
+    // CRITICAL: Arithmetic on UTC, then convert to Serbia for comparison
     const nowDate = new Date();
     const fortyEightHoursAgo = new Date(nowDate.getTime() - 48 * 60 * 60 * 1000);
     const cutoffTime = formatDateTimeSerbia(fortyEightHoursAgo);

@@ -18,8 +18,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Calculate cutoff time (5 minutes ago to match admin panel)
-    const now = Date.now();
-    const fiveMinutesAgo = new Date(now - 5 * 60 * 1000);
+    // CRITICAL: Must use Serbia timezone for both current time and calculation
+    const nowSerbia = formatDateTimeSerbia(); // Current time in Serbia
+    const nowDate = new Date(); // Get UTC Date object
+    const fiveMinutesAgo = new Date(nowDate.getTime() - 5 * 60 * 1000);
     const cutoffTime = formatDateTimeSerbia(fiveMinutesAgo);
     
     // Count users who have sent a heartbeat in the last 5 minutes
