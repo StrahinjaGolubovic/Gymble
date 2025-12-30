@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
+import { formatDateTimeSerbia } from '@/lib/timezone';
 import { cookies } from 'next/headers';
 import db from '@/lib/db';
 
@@ -40,9 +41,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    db.prepare('INSERT INTO feedback (user_id, feedback_text) VALUES (?, ?)').run(
+    const createdAt = formatDateTimeSerbia();
+    db.prepare('INSERT INTO feedback (user_id, feedback_text, created_at) VALUES (?, ?, ?)').run(
       userId,
-      feedback.trim()
+      feedback.trim(),
+      createdAt
     );
 
     return NextResponse.json({ success: true, message: 'Feedback submitted successfully' });

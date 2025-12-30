@@ -80,9 +80,11 @@ export async function POST(request: NextRequest) {
 
         db.prepare('UPDATE users SET trophies = ? WHERE id = ?').run(trophiesInt, userId);
         if (delta !== 0) {
+          const { formatDateTimeSerbia } = require('@/lib/timezone');
+          const createdAt = formatDateTimeSerbia();
           db.prepare(
-            'INSERT INTO trophy_transactions (user_id, upload_id, delta, reason) VALUES (?, NULL, ?, ?)'
-          ).run(userId, delta, 'admin_set');
+            'INSERT INTO trophy_transactions (user_id, upload_id, delta, reason, created_at) VALUES (?, NULL, ?, ?, ?)'
+          ).run(userId, delta, 'admin_set', createdAt);
         }
       }
 
