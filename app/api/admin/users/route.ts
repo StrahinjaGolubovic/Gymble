@@ -23,11 +23,12 @@ export async function GET(request: NextRequest) {
           u.profile_picture,
           COALESCE(s.current_streak, 0) as current_streak,
           COALESCE(s.longest_streak, 0) as longest_streak,
-          s.last_activity_date as last_activity_date,
+          ua.last_seen as last_activity_date,
           (SELECT COUNT(*) FROM daily_uploads WHERE user_id = u.id) as total_uploads,
           (SELECT COUNT(*) FROM daily_uploads WHERE user_id = u.id AND verification_status = 'approved') as approved_uploads
          FROM users u
          LEFT JOIN streaks s ON u.id = s.user_id
+         LEFT JOIN user_activity ua ON u.id = ua.user_id
          ORDER BY u.username ASC`
       )
       .all();
