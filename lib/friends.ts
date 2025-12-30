@@ -1,5 +1,6 @@
 import db from './db';
 import { getUserStreak } from './challenges';
+import { formatDateSerbia } from './timezone';
 
 export interface InviteCode {
   id: number;
@@ -122,8 +123,8 @@ export function getUserFriends(userId: number, todayDate?: string): FriendInfo[]
     )
     .all(userId) as Array<FriendInfo & { trophies: number; current_streak: number; longest_streak: number; profile_picture: string | null }>;
 
-  // Get today's date if not provided
-  const today = todayDate || new Date().toISOString().split('T')[0];
+  // Get today's date if not provided (Serbia timezone)
+  const today = todayDate || formatDateSerbia();
   
   // Check which friends have been nudged today
   const nudgedFriendIds = new Set(

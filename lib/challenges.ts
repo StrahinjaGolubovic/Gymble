@@ -214,44 +214,31 @@ export function recomputeUserStreakFromUploads(userId: number): Streak {
 
 // Get the start of the current week based on user registration date
 // registrationDate: YYYY-MM-DD string (Serbia timezone)
-export function getWeekStartForUser(registrationDate: string | Date, currentDate: Date = new Date()): Date {
-  // Parse registration date string (YYYY-MM-DD) - treat as Serbia local date
+// Returns: YYYY-MM-DD string in Serbia timezone
+export function getWeekStartForUser(registrationDate: string | Date, currentDate?: Date): string {
+  // Parse registration date string (YYYY-MM-DD) - treat as Serbia date
   const regDateStr = typeof registrationDate === 'string' ? registrationDate : formatDateSerbia(registrationDate);
-  const [regYear, regMonth, regDay] = regDateStr.split('-').map(Number);
-  
-  // Create registration date object (treat as local time, representing Serbia date)
-  // Using local time constructor to avoid UTC conversion issues
-  const regDate = new Date(regYear, regMonth - 1, regDay);
-  regDate.setHours(0, 0, 0, 0);
   
   // Get current date in Serbia timezone (YYYY-MM-DD string)
-  const currentDateStr = formatDateSerbia(currentDate);
-  const [currYear, currMonth, currDay] = currentDateStr.split('-').map(Number);
-  const current = new Date(currYear, currMonth - 1, currDay);
-  current.setHours(0, 0, 0, 0);
+  const currentDateStr = currentDate ? formatDateSerbia(currentDate) : formatDateSerbia();
   
-  // Calculate days since registration (using YYYY-MM-DD string comparison to avoid timezone issues)
+  // Calculate days since registration (using YYYY-MM-DD string comparison)
   const daysSinceReg = diffDaysYMD(currentDateStr, regDateStr);
   
   // Calculate which week (0-indexed) we're in
   const weekNumber = Math.floor(daysSinceReg / 7);
   
   // Start date is registration date + (weekNumber * 7 days)
-  // Use addDaysYMD to avoid timezone issues
   const weekStartStr = addDaysYMD(regDateStr, weekNumber * 7);
-  const [wsYear, wsMonth, wsDay] = weekStartStr.split('-').map(Number);
-  const weekStart = new Date(wsYear, wsMonth - 1, wsDay);
-  weekStart.setHours(0, 0, 0, 0);
   
-  return weekStart;
+  return weekStartStr;
 }
 
 // Get the end of the current week (6 days after start)
-export function getWeekEndForUser(weekStart: Date): Date {
-  const end = new Date(weekStart);
-  end.setDate(end.getDate() + 6);
-  end.setHours(23, 59, 59, 999);
-  return end;
+// weekStart: YYYY-MM-DD string
+// Returns: YYYY-MM-DD string
+export function getWeekEndForUser(weekStart: string): string {
+  return addDaysYMD(weekStart, 6);
 }
 
 // Format date as YYYY-MM-DD (using Serbia timezone)
@@ -267,14 +254,10 @@ export function getOrCreateActiveChallenge(userId: number): WeeklyChallenge {
     throw new Error('User not found');
   }
   
-  // Parse created_at as Serbia date (YYYY-MM-DD) - treat as local time, not UTC
-  // Don't use new Date() constructor as it interprets strings as UTC
+  // Get week start and end as YYYY-MM-DD strings (Serbia timezone)
   const registrationDateStr = user.created_at; // Already YYYY-MM-DD format
-  const weekStartDate = getWeekStartForUser(registrationDateStr);
-  const weekEndDate = getWeekEndForUser(weekStartDate);
-  
-  const weekStart = formatDate(weekStartDate);
-  const weekEnd = formatDate(weekEndDate);
+  const weekStart = getWeekStartForUser(registrationDateStr);
+  const weekEnd = getWeekEndForUser(weekStart);
 
   // Check if active challenge exists
   // Try to get challenge with rest_days_available, fallback if column doesn't exist

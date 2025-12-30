@@ -14,9 +14,10 @@ export function cleanupOldMessages(): void {
   try {
     // Delete messages older than 24 hours (using Serbia timezone)
     // Calculate 24 hours ago in Serbia timezone
-    const now = new Date();
-    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    const cutoffTime = formatDateTimeSerbia(yesterday);
+    const now = formatDateTimeSerbia();
+    const nowDate = new Date();
+    const yesterday24h = new Date(nowDate.getTime() - 24 * 60 * 60 * 1000);
+    const cutoffTime = formatDateTimeSerbia(yesterday24h);
     
     const result = db
       .prepare(
@@ -44,9 +45,9 @@ export function getRecentMessages(limit: number = 100): ChatMessageWithProfile[]
   
   try {
     // Calculate 24 hours ago in Serbia timezone
-    const now = new Date();
-    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    const cutoffTime = formatDateTimeSerbia(yesterday);
+    const nowDate = new Date();
+    const yesterday24h = new Date(nowDate.getTime() - 24 * 60 * 60 * 1000);
+    const cutoffTime = formatDateTimeSerbia(yesterday24h);
     
     const messages = db
       .prepare(

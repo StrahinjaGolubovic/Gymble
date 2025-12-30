@@ -71,31 +71,22 @@ export function getSerbiaDateSQLite(): string {
 
 /**
  * Parse a date string (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS) and return Date object
- * Treats the string as Serbia local time
+ * WARNING: This function is for DISPLAY purposes only (with Intl.DateTimeFormat).
+ * For date arithmetic and comparisons, always use YYYY-MM-DD strings with addDaysYMD/diffDaysYMD.
+ * 
+ * This creates a Date object that when formatted with timeZone: 'Europe/Belgrade' will show the correct values.
  */
 export function parseSerbiaDate(dateString: string): Date {
-  // If it's YYYY-MM-DD format
+  // If it's YYYY-MM-DD format, append midnight
   if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-    const [year, month, day] = dateString.split('-').map(Number);
-    // Create date in Serbia timezone by using a formatter
-    const date = new Date();
-    date.setFullYear(year, month - 1, day);
-    date.setHours(0, 0, 0, 0);
-    return date;
+    dateString = dateString + 'T00:00:00';
+  } else if (dateString.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
+    // Convert space to T for ISO format
+    dateString = dateString.replace(' ', 'T');
   }
   
-  // If it's YYYY-MM-DD HH:MM:SS format
-  if (dateString.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
-    const [datePart, timePart] = dateString.split(' ');
-    const [year, month, day] = datePart.split('-').map(Number);
-    const [hours, minutes, seconds] = timePart.split(':').map(Number);
-    const date = new Date();
-    date.setFullYear(year, month - 1, day);
-    date.setHours(hours, minutes, seconds, 0);
-    return date;
-  }
-  
-  // Fallback to parsing as ISO
+  // Parse as ISO string and let the browser handle it
+  // When we format this with timeZone: 'Europe/Belgrade', it will display correctly
   return new Date(dateString);
 }
 

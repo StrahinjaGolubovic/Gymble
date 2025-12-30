@@ -49,8 +49,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Friend not found' }, { status: 404 });
     }
 
-    // Check if user has already nudged this friend today
-    const today = formatDateSerbia(new Date()).split(' ')[0]; // Get just the date part (YYYY-MM-DD)
+    // Check if user has already nudged this friend today (Serbia timezone)
+    const today = formatDateSerbia(); // Returns YYYY-MM-DD in Serbia timezone
     const existingNudge = db
       .prepare(
         'SELECT id FROM nudges WHERE from_user_id = ? AND to_user_id = ? AND nudge_date = ?'

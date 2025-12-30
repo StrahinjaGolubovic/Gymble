@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    const today = formatDateSerbia(new Date());
+    const today = formatDateSerbia(); // Serbia timezone YYYY-MM-DD
     const friends = getUserFriends(decoded.userId, today);
 
     return NextResponse.json({ friends });
