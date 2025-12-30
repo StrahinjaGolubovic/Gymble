@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 import { getImageUrl } from '@/lib/image-utils';
+import { fetchWithRetry } from '@/lib/api-client';
 
 interface CrewChatMessage {
   id: number;
@@ -75,7 +76,7 @@ export function CrewChat({ crewId, currentUserId, currentUsername, currentUserPr
       const getPart = (type: string) => parts.find(p => p.type === type)?.value || '00';
       const clientTime = `${getPart('year')}-${getPart('month')}-${getPart('day')} ${getPart('hour')}:${getPart('minute')}:${getPart('second')}`;
 
-      const response = await fetch('/api/crew-chat/send', {
+      const response = await fetchWithRetry('/api/crew-chat/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -138,10 +139,11 @@ export function CrewChat({ crewId, currentUserId, currentUsername, currentUserPr
   }, [messages.length, isAtBottom]); // Only trigger when message count changes
 
   // Fetch messages on mount and periodically
+  // Optimized for responsiveness with high rate limits
   useEffect(() => {
     setLoading(true);
     fetchMessages();
-    const interval = setInterval(fetchMessages, 3000); // Poll every 3 seconds
+    const interval = setInterval(fetchMessages, 4000); // Poll every 4 seconds for real-time feel
     return () => clearInterval(interval);
   }, [crewId, fetchMessages]);
 

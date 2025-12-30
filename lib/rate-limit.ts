@@ -74,22 +74,22 @@ export function checkRateLimit(
   };
 }
 
-// Preset configurations
+// Preset configurations - Increased limits for better responsiveness
 export const RATE_LIMITS = {
-  // Strict limits for authentication endpoints
+  // Strict limits for authentication endpoints (keep strict for security)
   AUTH: { windowMs: 15 * 60 * 1000, max: 5 },        // 5 per 15 minutes
   
-  // Standard limits for most API endpoints
-  STANDARD: { windowMs: 60 * 60 * 1000, max: 100 },  // 100 per hour
+  // Standard limits for most API endpoints - INCREASED
+  STANDARD: { windowMs: 60 * 1000, max: 200 },       // 200 per minute (was 100/hour)
   
   // Stricter limits for resource-intensive operations
   UPLOAD: { windowMs: 60 * 60 * 1000, max: 20 },     // 20 per hour
   
-  // Chat/messaging limits
-  CHAT: { windowMs: 60 * 1000, max: 30 },            // 30 per minute
+  // Chat/messaging limits - INCREASED for real-time feel
+  CHAT: { windowMs: 60 * 1000, max: 100 },           // 100 per minute (was 30/min)
   
   // Admin operations (still limited but higher)
-  ADMIN: { windowMs: 60 * 60 * 1000, max: 500 },     // 500 per hour
+  ADMIN: { windowMs: 60 * 60 * 1000, max: 1000 },    // 1000 per hour (was 500/hour)
 };
 
 // Helper to get client IP from request

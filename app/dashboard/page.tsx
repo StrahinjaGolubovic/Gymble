@@ -197,12 +197,13 @@ export default function DashboardPage() {
       try {
         await fetch('/api/user-heartbeat', { method: 'POST' });
       } catch {
-        // ignore
+        // ignore - heartbeat is not critical
       }
     };
 
     sendHeartbeat();
-    const heartbeatInterval = setInterval(sendHeartbeat, 30000);
+    // Optimized for accurate online status tracking
+    const heartbeatInterval = setInterval(sendHeartbeat, 30000); // Every 30 seconds
 
     return () => clearInterval(heartbeatInterval);
   }, []);

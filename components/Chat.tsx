@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
+import { fetchWithRetry, throttle } from '@/lib/api-client';
 import { getImageUrl } from '@/lib/image-utils';
 
 interface ChatMessage {
@@ -153,14 +154,19 @@ export function Chat({ currentUserId, currentUsername, currentUserProfilePicture
     sendHeartbeat(); // Send initial heartbeat
     fetchOnlineUsers();
 
-    // Send heartbeat and refresh messages/online users every 5 seconds
-    const interval = setInterval(() => {
-      fetchMessages();
-      sendHeartbeat(); // Keep user marked as online
-      fetchOnlineUsers();
-    }, 5000);
+    // Optimized polling for responsiveness with high rate limits
+    // Messages: every 5 seconds for real-time feel
+    // Heartbeat: every 10 seconds to maintain online status
+    // Active users: every 10 seconds for accurate count
+    const messagesInterval = setInterval(fetchMessages, 5000);
+    const heartbeatInterval = setInterval(sendHeartbeat, 10000);
+    const usersInterval = setInterval(fetchOnlineUsers, 10000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(messagesInterval);
+      clearInterval(heartbeatInterval);
+      clearInterval(usersInterval);
+    };
   }, []);
 
   // Auto-scroll to bottom only if user is at bottom or when sending a message

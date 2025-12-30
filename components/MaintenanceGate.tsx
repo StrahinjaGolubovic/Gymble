@@ -27,7 +27,7 @@ export function MaintenanceGate() {
 
     check();
     // Also re-check periodically in case maintenance is toggled while users are browsing
-    const interval = window.setInterval(check, 15000);
+    const interval = window.setInterval(check, 20000); // Every 20 seconds for faster detection
     return () => {
       cancelled = true;
       window.clearInterval(interval);

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
+import { fetchWithRetry } from '@/lib/api-client';
 import { formatDateDisplay, formatDateTimeDisplay } from '@/lib/timezone';
 
 interface Notification {
@@ -29,11 +30,11 @@ export function Notifications({ userId }: NotificationsProps) {
 
   const fetchNotifications = async () => {
     try {
-      const response = await fetch('/api/notifications');
+      const response = await fetchWithRetry('/api/notifications');
       if (response.ok) {
         const data = await response.json();
         setNotifications(data.notifications || []);
-        setUnreadCount(data.unreadCount || 0);
+        setUnreadCount(data.notifications?.filter((n: Notification) => !n.read).length || 0);
       }
     } catch (err) {
       console.error('Failed to fetch notifications:', err);
@@ -44,7 +45,7 @@ export function Notifications({ userId }: NotificationsProps) {
 
   const markAsRead = async (notificationId: number) => {
     try {
-      const response = await fetch('/api/notifications/read', {
+      const response = await fetchWithRetry('/api/notifications/read', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notification_id: notificationId }),
@@ -93,6 +94,7 @@ export function Notifications({ userId }: NotificationsProps) {
   useEffect(() => {
     setLoading(true);
     fetchNotifications();
+    // Optimized for responsiveness - notifications appear faster
     const interval = setInterval(fetchNotifications, 10000); // Poll every 10 seconds
     return () => clearInterval(interval);
   }, [userId]);
