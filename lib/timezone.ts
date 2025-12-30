@@ -80,6 +80,10 @@ export function parseSerbiaDate(dateString: string): Date {
   // Handle YYYY-MM-DD format
   if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
     const [year, month, day] = dateString.split('-').map(Number);
+    // Validate date components
+    if (isNaN(year) || isNaN(month) || isNaN(day) || month < 1 || month > 12 || day < 1 || day > 31) {
+      throw new Error(`Invalid date format: ${dateString}`);
+    }
     // Create UTC date at midnight, then adjust for display
     return new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
   }
@@ -89,13 +93,18 @@ export function parseSerbiaDate(dateString: string): Date {
     const [datePart, timePart] = dateString.split(' ');
     const [year, month, day] = datePart.split('-').map(Number);
     const [hour, minute, second] = timePart.split(':').map(Number);
+    // Validate all components
+    if (isNaN(year) || isNaN(month) || isNaN(day) || isNaN(hour) || isNaN(minute) || isNaN(second) ||
+        month < 1 || month > 12 || day < 1 || day > 31 || hour < 0 || hour > 23 || minute < 0 || minute > 59 || second < 0 || second > 59) {
+      throw new Error(`Invalid datetime format: ${dateString}`);
+    }
     // Create UTC date with the time components
     // This ensures consistent parsing regardless of client timezone
     return new Date(Date.UTC(year, month - 1, day, hour, minute, second));
   }
   
-  // Fallback for other formats
-  return new Date(dateString);
+  // Throw error for unsupported formats instead of silently failing
+  throw new Error(`Unsupported date format: ${dateString}. Expected YYYY-MM-DD or YYYY-MM-DD HH:MM:SS`);
 }
 
 /**
