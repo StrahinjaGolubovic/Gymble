@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { formatDateTimeSerbia } from '@/lib/timezone';
 
+// Track last cleanup time to avoid running DELETE on every request
+let lastCleanup = 0;
+const CLEANUP_INTERVAL = 5 * 60 * 1000; // Clean up every 5 minutes
+
 export async function GET(request: NextRequest) {
   try {
     // Ensure user_activity table exists
@@ -18,14 +22,23 @@ export async function GET(request: NextRequest) {
     }
 
     // Calculate cutoff time (5 minutes ago to match admin panel)
-    const now = new Date();
-    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+    const now = Date.now();
+    const fiveMinutesAgo = new Date(now - 5 * 60 * 1000);
     const cutoffTime = formatDateTimeSerbia(fiveMinutesAgo);
     
-    // Clean up very old entries (older than 1 hour) to prevent database bloat
-    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
-    const cleanupTime = formatDateTimeSerbia(oneHourAgo);
-    db.prepare(`DELETE FROM user_activity WHERE last_seen < ?`).run(cleanupTime);
+    // Only clean up old entries periodically (not on every request)
+    // This prevents database locks during high-frequency polling
+    if (now - lastCleanup > CLEANUP_INTERVAL) {
+      try {
+        const oneHourAgo = new Date(now - 60 * 60 * 1000);
+        const cleanupTime = formatDateTimeSerbia(oneHourAgo);
+        db.prepare(`DELETE FROM user_activity WHERE last_seen < ?`).run(cleanupTime);
+        lastCleanup = now;
+      } catch (cleanupError) {
+        // Don't fail the request if cleanup fails
+        console.error('Cleanup error:', cleanupError);
+      }
+    }
     
     // Count users who have sent a heartbeat in the last 5 minutes
     // Using string comparison works because format is YYYY-MM-DD HH:MM:SS
