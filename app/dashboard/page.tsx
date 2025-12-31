@@ -320,11 +320,53 @@ export default function DashboardPage() {
 
       // If no EXIF data found (camera-captured photo), inject timestamp metadata
       if (!metadataToSend) {
+        // Use Serbia timezone for metadata timestamps
         const now = new Date();
+        const serbiaFormatter = new Intl.DateTimeFormat('en-US', {
+          timeZone: 'Europe/Belgrade',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false,
+          hourCycle: 'h23',
+        });
+        
+        const parts = serbiaFormatter.formatToParts(now);
+        const getPart = (type: string) => parts.find(p => p.type === type)?.value || '0';
+        
+        const year = getPart('year');
+        const month = getPart('month');
+        const day = getPart('day');
+        const hour = getPart('hour');
+        const minute = getPart('minute');
+        const second = getPart('second');
+        
+        // Calculate UTC offset for Serbia at this moment
+        const utcTimestamp = now.getTime();
+        const localTimestamp = Date.UTC(
+          parseInt(year), 
+          parseInt(month) - 1, 
+          parseInt(day), 
+          parseInt(hour), 
+          parseInt(minute), 
+          parseInt(second)
+        );
+        const offsetMinutes = Math.round((localTimestamp - utcTimestamp) / 60000);
+        const offsetHours = Math.floor(Math.abs(offsetMinutes) / 60);
+        const offsetMins = Math.abs(offsetMinutes) % 60;
+        const offsetSign = offsetMinutes >= 0 ? '+' : '-';
+        const offsetStr = `${offsetSign}${String(offsetHours).padStart(2, '0')}:${String(offsetMins).padStart(2, '0')}`;
+        
+        // Create ISO timestamp with Serbia timezone offset
+        const serbiaISO = `${year}-${month}-${day}T${hour}:${minute}:${second}${offsetStr}`;
+        
         metadataToSend = {
-          DateTimeOriginal: now.toISOString(),
-          CreateDate: now.toISOString(),
-          ModifyDate: now.toISOString(),
+          DateTimeOriginal: serbiaISO,
+          CreateDate: serbiaISO,
+          ModifyDate: serbiaISO,
           Software: 'STREAKD',
           source: 'browser_upload',
         };
