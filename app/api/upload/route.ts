@@ -75,10 +75,11 @@ export async function POST(request: NextRequest) {
       await mkdir(uploadsDir, { recursive: true });
     }
 
-    // Generate unique filename
+    // Generate unique filename with collision prevention
     const timestamp = Date.now();
+    const randomSuffix = Math.random().toString(36).substring(2, 8);
     const extension = (file.name.split('.').pop() || 'jpg').toLowerCase();
-    const filename = `${timestamp}.${extension}`;
+    const filename = `${timestamp}-${randomSuffix}.${extension}`;
     const filepath = join(uploadsDir, filename);
     // Use API route to serve the file
     const relativePath = `/api/files/uploads/${userId}/${filename}`;

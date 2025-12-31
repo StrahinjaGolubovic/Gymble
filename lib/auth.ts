@@ -2,13 +2,23 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import db from './db';
 
-// Get JWT_SECRET and validate on first use (not at module load to allow build)
+// Validate JWT_SECRET at module load in production runtime
+// Allow missing during build and development
+const JWT_SECRET = process.env.JWT_SECRET;
+
+// Defer validation to runtime - only check when getJwtSecret() is actually called
+// This allows builds to succeed while still enforcing the requirement in production
+
+// Get JWT_SECRET with runtime validation
 function getJwtSecret(): string {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
+  if (!JWT_SECRET) {
+    // In production, this is a fatal error
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('FATAL: JWT_SECRET environment variable must be set in production');
+    }
     throw new Error('CRITICAL: JWT_SECRET environment variable must be set');
   }
-  return secret;
+  return JWT_SECRET;
 }
 
 export interface User {

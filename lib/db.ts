@@ -1,12 +1,15 @@
 import Database, { Statement } from 'better-sqlite3';
 import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
+import { logError, logWarning } from './logger';
 
 const dbPath = process.env.DATABASE_PATH || './data/gymble.db';
 
 let databaseInstance: Database | null = null;
 let initialized = false;
 let migrationsRun = false;
+let migrationsLock = false;
+let migrationStartTime = 0;
 
 // Ensure directories exist (lazy)
 function ensureDirectories() {
@@ -40,14 +43,46 @@ function getDb(): Database {
     databaseInstance.pragma('foreign_keys = ON');
     // Initialize schema immediately after creating db
     if (!initialized) {
-      initDatabase(databaseInstance);
-      initialized = true;
+      try {
+        initDatabase(databaseInstance);
+        initialized = true;
+      } catch (error) {
+        // Reset ALL state on failure to allow clean retry
+        databaseInstance = null;
+        initialized = false;
+        throw error;
+      }
     }
   }
   
   // Run migrations only once to avoid blocking startup
+  // Double-check locking pattern to prevent race conditions
   if (!migrationsRun) {
-    migrationsRun = true;
+    // Check if another request is running migrations with timeout
+    const now = Date.now();
+    if (migrationsLock) {
+      // If lock held for >30 seconds, assume deadlock and reset
+      if (migrationStartTime > 0 && (now - migrationStartTime) > 30000) {
+        logError('db:migration', new Error('Migration timeout detected, resetting lock'), { duration: now - migrationStartTime });
+        migrationsLock = false;
+        migrationStartTime = 0;
+      } else {
+        // Lock held by another request, skip migrations
+        return databaseInstance;
+      }
+    }
+    
+    // Acquire lock
+    migrationsLock = true;
+    migrationStartTime = now;
+    
+    // Double-check after acquiring lock
+    if (migrationsRun) {
+      migrationsLock = false;
+      migrationStartTime = 0;
+      return databaseInstance;
+    }
+    
     try {
       // Check and add rest_days_available column if needed
       const challengesInfo = databaseInstance.prepare("PRAGMA table_info(weekly_challenges)").all() as Array<{ name: string }>;
@@ -58,7 +93,7 @@ function getDb(): Database {
           databaseInstance.exec(`UPDATE weekly_challenges SET rest_days_available = 3 WHERE rest_days_available IS NULL;`);
         } catch (alterError: any) {
           // Column might already exist or there's another issue - continue
-          console.error('Migration: Failed to add rest_days_available column:', alterError?.message);
+          logWarning('db:migration', 'Failed to add rest_days_available column', { error: alterError?.message });
         }
       }
 
@@ -85,13 +120,18 @@ function getDb(): Database {
             CREATE INDEX IF NOT EXISTS idx_rest_days_date ON rest_days(rest_date);
           `);
         } catch (createError: any) {
-          console.error('Migration: Failed to create rest_days table:', createError?.message);
+          logError('db:migration', createError, { context: 'create rest_days table' });
         }
       }
+      // Mark as complete only after all migrations succeed
+      migrationsRun = true;
     } catch (error: any) {
       // Don't block app startup if migrations fail - they'll be retried on next request
-      console.error('Migration: Error running migrations:', error?.message);
-      migrationsRun = false; // Allow retry on next call
+      logError('db:migration', error, { context: 'running migrations' });
+    } finally {
+      // Always release lock and reset timer
+      migrationsLock = false;
+      migrationStartTime = 0;
     }
   }
   

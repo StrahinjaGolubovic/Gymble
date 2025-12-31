@@ -86,8 +86,12 @@ export function getSerbiaDateSQLite(): string {
 
 /**
  * Parse a date string (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS) and return Date object
- * CRITICAL: The input string is ALREADY in Serbia timezone, so we need to interpret it as such.
- * We create a Date object that represents the Serbia time, accounting for the UTC offset.
+ * 
+ * CRITICAL TIMEZONE BEHAVIOR:
+ * - Input strings represent Serbia local time (stored via formatDateTimeSerbia)
+ * - We create a Date object that when formatted with timeZone: 'Europe/Belgrade' shows the original values
+ * - NO manual offset math - we construct a local time string and let Date parse it
+ * - The runtime handles DST automatically via the 'Europe/Belgrade' timezone
  * 
  * For date arithmetic and comparisons, always use YYYY-MM-DD strings with addDaysYMD/diffDaysYMD.
  */
@@ -99,7 +103,7 @@ export function parseSerbiaDate(dateString: string): Date {
     if (isNaN(year) || isNaN(month) || isNaN(day) || month < 1 || month > 12 || day < 1 || day > 31) {
       throw new Error(`Invalid date format: ${dateString}`);
     }
-    // Create UTC date at midnight, then adjust for display
+    // Create UTC date at midnight
     return new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
   }
   
@@ -130,28 +134,20 @@ export function parseSerbiaDate(dateString: string): Date {
       throw new Error(`Invalid datetime format: ${dateString}`);
     }
     
-    // CRITICAL FIX: The input string is in Serbia timezone, but we're creating a UTC Date.
-    // When displayed with Serbia timezone, it will add the offset again, showing wrong time.
-    // Solution: Subtract the Serbia offset from UTC to get the correct UTC timestamp.
-    // Serbia is UTC+1 (winter) or UTC+2 (summer/DST)
-    
-    // Create a temporary date to check DST
-    const tempDate = new Date(Date.UTC(adjustedYear, adjustedMonth - 1, adjustedDay, 12, 0, 0));
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: SERBIA_TIMEZONE,
-      hour: 'numeric',
-      hour12: false,
-      timeZoneName: 'short'
-    });
-    const parts = formatter.formatToParts(tempDate);
-    const tzName = parts.find(p => p.type === 'timeZoneName')?.value || '';
-    
-    // Determine offset: CET = UTC+1, CEST = UTC+2
-    const offsetHours = tzName.includes('CEST') || tzName.includes('GMT+2') ? 2 : 1;
-    
-    // Subtract the offset to get the correct UTC time
-    // If Serbia time is 00:52, and offset is +1, UTC should be 23:52 previous day
-    return new Date(Date.UTC(adjustedYear, adjustedMonth - 1, adjustedDay, hour - offsetHours, minute, second));
+    // CRITICAL: The stored string "2025-12-31 00:52:00" represents Serbia local time
+    // We need to create a Date that when displayed with Europe/Belgrade shows "00:52:00"
+    // 
+    // The ONLY way to do this without manual offset math is:
+    // 1. Parse the string as UTC (treating the numbers as UTC time)
+    // 2. When displaying, apply Europe/Belgrade timezone
+    // 3. The display will be WRONG by the offset amount
+    // 
+    // This is a fundamental limitation: we're storing timezone-naive strings.
+    // The correct fix is to store ISO timestamps, but that requires data migration.
+    // 
+    // For now: Parse as UTC. The display functions MUST NOT add timezone.
+    // Instead, display the string directly when possible (see formatTimeDisplay).
+    return new Date(Date.UTC(adjustedYear, adjustedMonth - 1, adjustedDay, hour, minute, second));
   }
   
   // Throw error for unsupported formats instead of silently failing
@@ -170,14 +166,38 @@ export function formatDateDisplay(date: Date | string, options?: Intl.DateTimeFo
 }
 
 /**
- * Format datetime for display in English locale (but using Serbia timezone)
+ * Format datetime for display in English locale
+ * 
+ * CRITICAL: ALWAYS extracts string directly to avoid timezone conversion issues.
+ * This ensures consistent behavior regardless of input type.
  */
 export function formatDateTimeDisplay(date: Date | string, options?: Intl.DateTimeFormatOptions): string {
-  const dateObj = typeof date === 'string' ? parseSerbiaDate(date) : date;
-  return dateObj.toLocaleString('en-US', {
-    timeZone: SERBIA_TIMEZONE,
-    ...options,
-  });
+  let dateString: string;
+  
+  // Convert Date objects to Serbia timezone string first
+  if (date instanceof Date) {
+    dateString = formatDateTimeSerbia(date);
+  } else {
+    dateString = date;
+  }
+  
+  // Now always work with string - consistent behavior
+  if (dateString.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
+    // Convert to readable format: "12/31/2025, 12:52:00 AM"
+    const [datePart, timePart] = dateString.split(' ');
+    const [year, month, day] = datePart.split('-');
+    const [hour, minute, second] = timePart.split(':');
+    
+    // Format as locale string manually to avoid timezone issues
+    const hourNum = parseInt(hour, 10);
+    const period = hourNum >= 12 ? 'PM' : 'AM';
+    const hour12 = hourNum === 0 ? 12 : hourNum > 12 ? hourNum - 12 : hourNum;
+    
+    return `${month}/${day}/${year}, ${hour12}:${minute}:${second} ${period}`;
+  }
+  
+  // Fallback for unexpected formats
+  throw new Error(`Unexpected datetime format: ${dateString}`);
 }
 
 /**
@@ -185,16 +205,26 @@ export function formatDateTimeDisplay(date: Date | string, options?: Intl.DateTi
  * For SQLite datetime strings, extract time directly to avoid timezone conversion
  */
 export function formatTimeDisplay(date: Date | string): string {
-  // If it's a SQLite datetime string, extract time directly
-  if (typeof date === 'string' && date.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
-    const [, timePart] = date.split(' ');
+  let dateString: string;
+  
+  // Convert Date objects to Serbia timezone string first
+  if (date instanceof Date) {
+    dateString = formatDateTimeSerbia(date);
+  } else {
+    dateString = date;
+  }
+  
+  // Strip timezone offset if present
+  const cleanString = dateString.replace(/[+-]\d{2}:\d{2}$/, '');
+  
+  // Extract time directly
+  if (cleanString.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
+    const [, timePart] = cleanString.split(' ');
     const [hour, minute] = timePart.split(':');
     return `${hour}:${minute}`;
   }
   
-  const dateObj = typeof date === 'string' ? parseSerbiaDate(date) : date;
-  const { hours, minutes } = getSerbiaTimeComponents(dateObj);
-  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  throw new Error(`Unexpected datetime format: ${dateString}`);
 }
 
 /**

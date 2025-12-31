@@ -1,4 +1,5 @@
 import db from '@/lib/db';
+import { logError } from '@/lib/logger';
 
 export type UploadVerifyStatus = 'approved' | 'rejected' | 'pending';
 
@@ -47,8 +48,9 @@ export function trophiesAwardForApproval(userId: number, uploadId: number, uploa
     hasYesterdayRestDay = !!db
       .prepare('SELECT 1 FROM rest_days WHERE user_id = ? AND rest_date = ? LIMIT 1')
       .get(userId, yesterday);
-  } catch {
+  } catch (error) {
     // rest_days may not exist in very old DBs; treat as no rest day
+    logError('trophies:hasYesterdayRestDay', error, { userId, yesterday });
     hasYesterdayRestDay = false;
   }
 
@@ -72,7 +74,8 @@ export function trophiesAwardForApproval(userId: number, uploadId: number, uploa
     hasPriorRestDay = !!db
       .prepare('SELECT 1 FROM rest_days WHERE user_id = ? AND rest_date < ? LIMIT 1')
       .get(userId, uploadDate);
-  } catch {
+  } catch (error) {
+    logError('trophies:hasPriorRestDay', error, { userId, uploadDate });
     hasPriorRestDay = false;
   }
 

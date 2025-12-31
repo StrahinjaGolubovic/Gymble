@@ -2,6 +2,7 @@ import db from './db';
 import { formatDateSerbia, formatDateTimeSerbia, formatDateDisplay, isTodaySerbia, isPastSerbia, parseSerbiaDate } from './timezone';
 import { awardWeeklyCompletionBonus, getUserTrophies } from './trophies';
 import { purgeUserUploadsBeforeDate } from './purge';
+import { logError, logWarning } from './logger';
 
 function parseYMD(dateString: string): { year: number; month: number; day: number } {
   const [year, month, day] = dateString.split('-').map(Number);
@@ -270,6 +271,7 @@ export function getOrCreateActiveChallenge(userId: number): WeeklyChallenge {
       .get(userId, weekStart, 'active') as WeeklyChallenge | undefined;
   } catch (error) {
     // If rest_days_available column doesn't exist yet, select without it and add default
+    logWarning('challenges:getOrCreateActiveChallenge', 'rest_days_available column missing, using fallback', { userId });
     const challengeRow = db
       .prepare(
         'SELECT * FROM weekly_challenges WHERE user_id = ? AND start_date = ? AND status = ?'
