@@ -161,7 +161,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, user: updated });
   } catch (error) {
     console.error('Admin update user error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: `Internal server error: ${message}` }, { status: 500 });
   }
 }
 

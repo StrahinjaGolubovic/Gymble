@@ -132,7 +132,7 @@ export function applyTrophyDelta(
 ): void {
   if (delta === 0) return;
 
-  db.exec('BEGIN');
+  db.exec('SAVEPOINT trophy_delta');
   try {
     // Get current balance
     const row = db
@@ -159,9 +159,14 @@ export function applyTrophyDelta(
       `).run(userId, uploadId, appliedDelta, reason, createdAt);
     }
 
-    db.exec('COMMIT');
+    db.exec('RELEASE trophy_delta');
   } catch (e) {
-    try { db.exec('ROLLBACK'); } catch { /* ignore */ }
+    try {
+      db.exec('ROLLBACK TO trophy_delta');
+      db.exec('RELEASE trophy_delta');
+    } catch {
+      /* ignore */
+    }
     throw e;
   }
 }
