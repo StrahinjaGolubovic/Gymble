@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkAdmin } from '@/lib/admin';
 import { verifyUpload, extractImageMetadata, updateUploadMetadata, getPendingUploads } from '@/lib/verification';
-import { recomputeUserStreakFromUploads, getChallengeProgress } from '@/lib/challenges';
-import { syncTrophiesForUpload } from '@/lib/trophies';
+import { onUploadVerified } from '@/lib/challenges';
 import { cookies } from 'next/headers';
 import db from '@/lib/db';
 
@@ -43,23 +42,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Upload not found' }, { status: 404 });
     }
 
-    // Always recompute streak from uploads so rejections correctly reduce streak.
-    recomputeUserStreakFromUploads(upload.user_id);
-
-    // Always update challenge completed_days (rejections should reduce it).
-    const progress = getChallengeProgress(upload.challenge_id);
-    db.prepare('UPDATE weekly_challenges SET completed_days = ? WHERE id = ?').run(
-      progress.completedDays,
-      upload.challenge_id
-    );
-
-    // Sync trophies for this upload (award on approve, penalty on reject, idempotent across toggles).
-    syncTrophiesForUpload({
-      userId: upload.user_id,
-      uploadId,
-      uploadDate: upload.upload_date,
-      status,
-    });
+    // Use unified handler that updates streak, trophies, and challenge status atomically
+    // This is the SINGLE entry point for all verification-related state changes
+    onUploadVerified(uploadId, upload.user_id, upload.challenge_id, status);
 
     return NextResponse.json({ message: `Upload ${status} successfully` });
   } catch (error) {

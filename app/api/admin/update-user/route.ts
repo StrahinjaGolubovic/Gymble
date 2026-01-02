@@ -3,6 +3,8 @@ import { cookies } from 'next/headers';
 import { checkAdmin } from '@/lib/admin';
 import db from '@/lib/db';
 import { formatDateSerbia } from '@/lib/timezone';
+import { setAdminBaseline, recomputeAndPersistStreak, ensureStreakRowExists } from '@/lib/streak-core';
+import { adminSetTrophies } from '@/lib/trophy-core';
 
 function isValidYMD(value: unknown): value is string {
   return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
@@ -71,44 +73,31 @@ export async function POST(request: NextRequest) {
     // `@/lib/db` is a thin wrapper, so we use explicit BEGIN/COMMIT for atomic updates.
     db.exec('BEGIN');
     try {
+      // Handle trophy update via unified trophy system
       if (trophiesInt !== undefined) {
-        const currentRow = db
-          .prepare('SELECT COALESCE(trophies, 0) as trophies FROM users WHERE id = ?')
-          .get(userId) as { trophies: number } | undefined;
-        const currentTrophies = currentRow?.trophies ?? 0;
-        const delta = trophiesInt - currentTrophies;
-
-        db.prepare('UPDATE users SET trophies = ? WHERE id = ?').run(trophiesInt, userId);
-        if (delta !== 0) {
-          const { formatDateTimeSerbia } = require('@/lib/timezone');
-          const createdAt = formatDateTimeSerbia();
-          db.prepare(
-            'INSERT INTO trophy_transactions (user_id, upload_id, delta, reason, created_at) VALUES (?, NULL, ?, ?, ?)'
-          ).run(userId, delta, 'admin_set', createdAt);
-        }
+        adminSetTrophies(userId, trophiesInt);
       }
 
+      // Handle streak update via unified streak system
       const needsStreakUpdate =
         currentInt !== undefined || longestInt !== undefined || lastActivityDate !== undefined;
 
       if (needsStreakUpdate) {
-        // Ensure streak row exists
-        db.prepare('INSERT OR IGNORE INTO streaks (user_id, current_streak, longest_streak) VALUES (?, 0, 0)').run(
-          userId
-        );
+        ensureStreakRowExists(userId);
 
         const existing = db
-          .prepare(
-            'SELECT current_streak, longest_streak, last_activity_date, admin_baseline_date, admin_baseline_streak, admin_baseline_longest FROM streaks WHERE user_id = ?'
-          )
+          .prepare(`
+            SELECT current_streak, longest_streak, last_activity_date, 
+                   admin_baseline_date, admin_baseline_streak, admin_baseline_longest 
+            FROM streaks WHERE user_id = ?`)
           .get(userId) as {
-          current_streak: number;
-          longest_streak: number;
-          last_activity_date: string | null;
-          admin_baseline_date: string | null;
-          admin_baseline_streak: number | null;
-          admin_baseline_longest: number | null;
-        };
+            current_streak: number;
+            longest_streak: number;
+            last_activity_date: string | null;
+            admin_baseline_date: string | null;
+            admin_baseline_streak: number | null;
+            admin_baseline_longest: number | null;
+          };
 
         const desiredCurrent = currentInt !== undefined ? currentInt : (existing?.current_streak ?? 0);
         let desiredLongest = longestInt !== undefined ? longestInt : (existing?.longest_streak ?? 0);
@@ -116,41 +105,32 @@ export async function POST(request: NextRequest) {
         // Invariant: longest_streak must always be >= current_streak
         if (desiredCurrent > desiredLongest) desiredLongest = desiredCurrent;
 
-        // Baseline rules:
-        // - If admin sets a non-zero current streak and does NOT explicitly provide last_activity_date,
-        //   we treat the baseline as "as of yesterday", so the next upload becomes +1.
-        // - If admin provides last_activity_date, that is the baseline date.
-        // - Setting current_streak to 0 clears the baseline.
+        // NEW BASELINE LOGIC:
+        // - Admin baseline is a HARD FLOOR that does NOT decay
+        // - If admin sets current_streak > 0, set baseline to that value
+        // - baseline_date defaults to yesterday (so next upload extends it)
+        // - Setting current_streak to 0 clears the baseline
         const defaultBaselineDate = addDaysYMD(formatDateSerbia(), -1);
         const baselineDate =
           desiredCurrent > 0
-            ? lastActivityDate !== undefined
-              ? lastActivityDate === null
-                ? null
-                : (lastActivityDate as string)
+            ? lastActivityDate !== undefined && lastActivityDate !== null
+              ? (lastActivityDate as string)
               : defaultBaselineDate
             : null;
 
-        const baselineStreak = desiredCurrent > 0 ? desiredCurrent : 0;
-        const baselineLongest = desiredCurrent > 0 ? desiredLongest : 0;
-
-        // last_activity_date defaults to baselineDate when current is set.
-        const desiredLast =
-          lastActivityDate !== undefined ? (lastActivityDate === null ? null : (lastActivityDate as string)) : baselineDate;
-
-        db.prepare('UPDATE streaks SET current_streak = ?, longest_streak = ? WHERE user_id = ?').run(
-          desiredCurrent,
-          desiredLongest,
-          userId
-        );
-        if (desiredLast !== undefined) {
-          db.prepare('UPDATE streaks SET last_activity_date = ? WHERE user_id = ?').run(desiredLast, userId);
+        // Use the new setAdminBaseline which properly handles the hard floor
+        if (desiredCurrent > 0) {
+          setAdminBaseline(userId, desiredCurrent, baselineDate, desiredLongest);
+        } else {
+          // Clear baseline and let recompute determine streak from uploads
+          setAdminBaseline(userId, 0, null, 0);
         }
 
-        // Persist baseline so verify/recompute can't reset admin-set streaks to 1.
-        db.prepare(
-          'UPDATE streaks SET admin_baseline_date = ?, admin_baseline_streak = ?, admin_baseline_longest = ? WHERE user_id = ?'
-        ).run(baselineDate, baselineStreak, baselineLongest, userId);
+        // If admin explicitly set last_activity_date, update it directly
+        if (lastActivityDate !== undefined) {
+          db.prepare('UPDATE streaks SET last_activity_date = ? WHERE user_id = ?')
+            .run(lastActivityDate, userId);
+        }
       }
 
       db.exec('COMMIT');
