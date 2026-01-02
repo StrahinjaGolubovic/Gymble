@@ -360,17 +360,23 @@ export function setAdminBaseline(
     UPDATE streaks
     SET admin_baseline_streak = ?,
         admin_baseline_date = ?,
-        admin_baseline_longest = ?
+        admin_baseline_longest = ?,
+        current_streak = ?,
+        longest_streak = ?,
+        last_activity_date = ?
     WHERE user_id = ?
   `).run(
     baselineStreak,
     baselineDate,
     effectiveLongest,
+    baselineStreak,
+    effectiveLongest,
+    baselineDate,
     userId
   );
 
-  // Immediately recompute to apply the new baseline
-  recomputeAndPersistStreak(userId);
+  // Note: We don't call recomputeAndPersistStreak here to avoid circular issues
+  // The baseline is now set and will be respected in future recomputes
 }
 
 /**
