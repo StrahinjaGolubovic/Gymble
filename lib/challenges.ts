@@ -100,18 +100,19 @@ export interface Streak {
 /**
  * Get user streak - PURE READ, no side effects.
  * 
- * CHANGE: Removed auto-reset logic. Streak is computed from approved uploads.
+ * CHANGE: Reads persisted streak from database (updated by verification and daily rollup).
+ * This ensures consistency with admin panel and prevents recomputing on every dashboard load.
  */
 export function getUserStreak(userId: number): Streak {
   ensureStreakRowExists(userId);
-  const computed = getComputedStreakForDisplay(userId);
+  const data = getStreakData(userId);
   
   return {
     id: 0, // Not used
     user_id: userId,
-    current_streak: computed.current_streak,
-    longest_streak: computed.longest_streak,
-    last_activity_date: computed.last_activity_date,
+    current_streak: data.current_streak,
+    longest_streak: data.longest_streak,
+    last_activity_date: data.last_activity_date,
   };
 }
 

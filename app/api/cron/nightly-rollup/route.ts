@@ -53,10 +53,12 @@ export async function POST(request: NextRequest) {
         else rollupsSkipped++;
 
         // Ensure week rollover happens on schedule even without user traffic.
+        // This evaluates the previous week's challenge and sets its status to completed/failed.
         getOrCreateActiveChallenge(u.id);
         weekSynced++;
 
-        // Weekly bonuses are applied only during this cron run (midnight rollup).
+        // Weekly bonuses are applied AFTER week rollover so the previous week's status is finalized.
+        // This ensures completed weeks (7/7) get their bonus before creating the new week.
         syncAllWeeklyBonuses(u.id);
         bonusSynced++;
       } catch (e: any) {
