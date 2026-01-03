@@ -12,7 +12,7 @@
 
 import db from './db';
 import { formatDateSerbia } from './timezone';
-import { calculateMissedDayPenalty, applyTrophyDelta } from './trophy-core';
+import { applyMissedDayPenalty } from './trophy-core';
 
 // ============================================================================
 // Date Utilities (internal)
@@ -282,16 +282,36 @@ export function recomputeAndPersistStreak(userId: number): ComputedStreak {
   
   // Compute new streak
   const computed = computeStreakFromDatabase(userId);
-  
-  // Check if streak broke (went from >0 to 0)
-  if (oldStreak > 0 && computed.current_streak === 0 && oldLastActivity) {
-    // Calculate how many days were missed
+
+  // Apply missed-day penalties for any fully-past dates since the last activity.
+  // "Missed" means: no upload attempt (any status) AND no rest day for that date.
+  // We only consider dates up to yesterday (today isn't "missed" yet).
+  if (oldLastActivity) {
     const today = formatDateSerbia();
-    const missedDays = diffDaysYMD(today, oldLastActivity) - 1; // -1 because last_activity_date itself was valid
-    
-    if (missedDays > 0) {
-      const penalty = calculateMissedDayPenalty(missedDays);
-      applyTrophyDelta(userId, null, penalty, `streak_broken:missed_${missedDays}_days`);
+    const upTo = addDaysYMD(today, -1);
+
+    if (oldLastActivity < upTo) {
+      let d = addDaysYMD(oldLastActivity, 1);
+      while (d <= upTo) {
+        const hasAnyUpload = !!db
+          .prepare('SELECT 1 FROM daily_uploads WHERE user_id = ? AND upload_date = ? LIMIT 1')
+          .get(userId, d);
+
+        let hasRest = false;
+        try {
+          hasRest = !!db
+            .prepare('SELECT 1 FROM rest_days WHERE user_id = ? AND rest_date = ? LIMIT 1')
+            .get(userId, d);
+        } catch {
+          hasRest = false;
+        }
+
+        if (!hasAnyUpload && !hasRest) {
+          applyMissedDayPenalty(userId, d);
+        }
+
+        d = addDaysYMD(d, 1);
+      }
     }
   }
   

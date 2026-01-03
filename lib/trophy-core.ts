@@ -29,8 +29,7 @@ const REJECTION_PENALTY_MULTIPLIER = 2;
 const WEEKLY_BONUS_PER_WEEK = 10;
 const WEEKLY_BONUS_CAP = 70;
 
-// Missed day penalty: half of average base (29 / 2 = 14.5)
-const MISSED_DAY_PENALTY = -15; // Half of ~30 average
+// Missed day penalty is half of 26-32 -> 13-16 (deterministic per user+date)
 
 // ============================================================================
 // Trophy Calculation (PURE functions)
@@ -42,6 +41,19 @@ const MISSED_DAY_PENALTY = -15; // Half of ~30 average
  */
 export function baseTrophiesForUpload(uploadId: number): number {
   return BASE_TROPHY_MIN + (Math.abs(uploadId) % BASE_TROPHY_RANGE);
+}
+
+/**
+ * Apply a missed-day penalty for a specific date.
+ * Idempotent: reason is unique per date, so re-calls won't double-penalize.
+ */
+export function applyMissedDayPenalty(userId: number, dateYMD: string): void {
+  const targetNet = trophiesForMissedDay(userId, dateYMD);
+  const currentNet = getMissedDayNet(userId, dateYMD);
+  const delta = targetNet - currentNet;
+  if (delta !== 0) {
+    applyTrophyDelta(userId, null, delta, `missed:${dateYMD}`);
+  }
 }
 
 /**
@@ -68,13 +80,31 @@ export function calculateWeeklyBonus(consecutivePerfectWeeks: number): number {
 }
 
 /**
- * Calculate penalty for missed days.
- * Returns negative value (trophy loss).
+ * Deterministic hash for (userId, date) -> stable integer.
  */
-export function calculateMissedDayPenalty(missedDays: number): number {
-  // Cap at 3 days to prevent excessive penalties
-  const cappedDays = Math.min(missedDays, 3);
-  return MISSED_DAY_PENALTY * cappedDays;
+function hashUserDate(userId: number, dateYMD: string): number {
+  const s = `${userId}:${dateYMD}`;
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+/**
+ * Base value for a missed day, matching the same 26-32 range.
+ */
+export function baseTrophiesForMissedDay(userId: number, dateYMD: string): number {
+  return BASE_TROPHY_MIN + (hashUserDate(userId, dateYMD) % BASE_TROPHY_RANGE);
+}
+
+/**
+ * Penalty for a missed day: -half of 26-32 => -13..-16.
+ */
+export function trophiesForMissedDay(userId: number, dateYMD: string): number {
+  const base = baseTrophiesForMissedDay(userId, dateYMD);
+  return -Math.round(base / 2);
 }
 
 // ============================================================================
@@ -98,6 +128,17 @@ function getUploadTrophyNet(uploadId: number): number {
   const row = db
     .prepare('SELECT COALESCE(SUM(delta), 0) as net FROM trophy_transactions WHERE upload_id = ?')
     .get(uploadId) as { net: number };
+  return row?.net ?? 0;
+}
+
+function getMissedDayNet(userId: number, dateYMD: string): number {
+  const row = db
+    .prepare(`
+      SELECT COALESCE(SUM(delta), 0) as net
+      FROM trophy_transactions
+      WHERE user_id = ? AND reason = ?
+    `)
+    .get(userId, `missed:${dateYMD}`) as { net: number };
   return row?.net ?? 0;
 }
 

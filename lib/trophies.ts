@@ -31,8 +31,9 @@ export type UploadVerifyStatus = 'approved' | 'rejected' | 'pending';
  * Returns negative value (trophy loss).
  */
 export function trophiesPenaltyForMissedDay(userId: number): number {
-  const { calculateMissedDayPenalty } = require('./trophy-core');
-  return calculateMissedDayPenalty(1); // Single day penalty
+  const { trophiesForMissedDay } = require('./trophy-core');
+  const { formatDateSerbia } = require('./timezone');
+  return trophiesForMissedDay(userId, formatDateSerbia());
 }
 
 /**
