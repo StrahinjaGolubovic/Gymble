@@ -3,13 +3,14 @@
 /// <reference path="../../types/altcha.d.ts" />
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Script from 'next/script';
 import Image from 'next/image';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -19,6 +20,14 @@ export default function RegisterPage() {
   const [altchaSolution, setAltchaSolution] = useState<string | null>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [altchaReady, setAltchaReady] = useState(false);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+
+  useEffect(() => {
+    const ref = searchParams.get('ref');
+    if (ref) {
+      setReferralCode(ref);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     // Check if script is already loaded and element is defined
@@ -140,7 +149,7 @@ export default function RegisterPage() {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password, altcha: altchaSolution }),
+        body: JSON.stringify({ username, password, altcha: altchaSolution, referralCode }),
       });
 
       const data = await response.json();

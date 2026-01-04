@@ -87,6 +87,7 @@ export default function DashboardPage() {
   const [error, setError] = useState('');
   const [friends, setFriends] = useState<Friend[]>([]);
   const [inviteCode, setInviteCode] = useState<string>('');
+  const [inviteLink, setInviteLink] = useState<string>('');
   const [inviteInput, setInviteInput] = useState('');
   const [friendsLoading, setFriendsLoading] = useState(false);
   const [inviteLoading, setInviteLoading] = useState(false);
@@ -153,10 +154,17 @@ export default function DashboardPage() {
 
   const fetchInviteCode = useCallback(async () => {
     try {
-      const response = await fetch('/api/friends/invite-code');
-      if (response.ok) {
-        const data = await response.json();
-        setInviteCode(data.code);
+      // Fetch both friend invite code and referral link
+      const friendResponse = await fetch('/api/friends/invite-code');
+      if (friendResponse.ok) {
+        const friendData = await friendResponse.json();
+        setInviteCode(friendData.code);
+      }
+
+      const referralResponse = await fetch('/api/referral/generate-link');
+      if (referralResponse.ok) {
+        const referralData = await referralResponse.json();
+        setInviteLink(referralData.inviteLink);
       }
     } catch (err) {
       console.error('Failed to fetch invite code:', err);
@@ -556,6 +564,33 @@ export default function DashboardPage() {
     if (inviteCode) {
       await navigator.clipboard.writeText(inviteCode);
       showToast('Invite code copied to clipboard!', 'success');
+    }
+  }
+
+  async function handleCopyInviteLink() {
+    if (inviteLink) {
+      await navigator.clipboard.writeText(inviteLink);
+      showToast('Invite link copied to clipboard!', 'success');
+    }
+  }
+
+  async function handleShareInviteLink() {
+    if (!inviteLink) return;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Join STREAKD',
+          text: 'Join me on STREAKD and earn 150 coins when you upload your first verified photo!',
+          url: inviteLink,
+        });
+      } catch (err) {
+        // User cancelled or share failed
+        console.log('Share cancelled');
+      }
+    } else {
+      // Fallback to copy
+      handleCopyInviteLink();
     }
   }
 
@@ -982,6 +1017,34 @@ export default function DashboardPage() {
           {mobileMenuOpen && (
             <div className="sm:hidden mt-3 pt-3 border-t border-gray-700">
               <div className="flex flex-col gap-2">
+                {/* Coins Display - Mobile */}
+                <Link
+                  href="/shop"
+                  className="px-3 py-2.5 flex items-center justify-between bg-yellow-900/20 border border-yellow-700/30 rounded-md hover:bg-yellow-900/30 transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-yellow-400 text-lg">🪙</span>
+                    <span className="text-base font-medium text-yellow-300">Coins</span>
+                  </div>
+                  <span className="text-base font-semibold text-yellow-200">
+                    {data?.coins ?? 0}
+                  </span>
+                </Link>
+                
+                {/* Daily Claim Button - Mobile */}
+                {data?.canClaimDaily && (
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      handleClaimDailyCoins();
+                    }}
+                    className="px-3 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-md font-semibold text-base transition-all"
+                  >
+                    Claim Daily Coins
+                  </button>
+                )}
+                
                 {/* Rest Days Counter - In Hamburger Menu */}
                 {data && (
                   <div className="px-3 py-2.5 flex items-center justify-between bg-blue-900/20 border border-blue-700/30 rounded-md">
@@ -1396,9 +1459,45 @@ export default function DashboardPage() {
         <div className="bg-gray-800 border border-gray-700 rounded-lg shadow-lg p-4 sm:p-5 md:p-6 mb-4 sm:mb-6">
           <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-100 mb-4 sm:mb-5 md:mb-6">Friends</h2>
 
-          {/* Invite Code Section */}
+          {/* Referral Invite Link Section */}
+          <div className="mb-4 sm:mb-6 md:mb-8 p-4 sm:p-5 bg-gradient-to-br from-primary-900/20 to-purple-900/20 border border-primary-700/30 rounded-xl">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-2xl">🎁</span>
+              <h3 className="text-base sm:text-lg font-bold text-primary-300">Invite Friends & Earn Coins</h3>
+            </div>
+            <p className="text-sm text-gray-400 mb-4">
+              Share your invite link and earn <strong className="text-yellow-400">150 coins</strong> when your friend uploads their first verified photo!
+            </p>
+            
+            <div className="space-y-3">
+              {/* Invite Link */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <div className="flex-1 bg-gray-900 border border-gray-600 rounded-lg px-3 py-2.5 text-xs sm:text-sm text-gray-300 break-all min-h-[44px] flex items-center">
+                  {inviteLink || 'Loading...'}
+                </div>
+                <button
+                  onClick={handleCopyInviteLink}
+                  disabled={!inviteLink}
+                  className="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap min-h-[44px]"
+                >
+                  📋 Copy Link
+                </button>
+              </div>
+
+              {/* Share Button */}
+              <button
+                onClick={handleShareInviteLink}
+                disabled={!inviteLink}
+                className="w-full px-4 py-3 bg-gradient-to-r from-primary-600 to-purple-600 hover:from-primary-700 hover:to-purple-700 text-white rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg min-h-[44px]"
+              >
+                🚀 Share Invite Link
+              </button>
+            </div>
+          </div>
+
+          {/* Friend Invite Code Section (for adding friends) */}
           <div className="mb-4 sm:mb-6 md:mb-8 p-3 sm:p-4 bg-gray-700/50 rounded-lg">
-            <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-100 mb-3 sm:mb-4">Your Invite Code</h3>
+            <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-100 mb-3 sm:mb-4">Your Friend Code</h3>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
               <div className="flex-1 bg-gray-900 border border-gray-600 rounded-md px-3 sm:px-4 py-3 sm:py-3.5 font-mono text-sm sm:text-base md:text-lg font-bold text-primary-400 break-all min-h-[44px] flex items-center">
                 {inviteCode || 'Loading...'}
